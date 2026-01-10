@@ -83,25 +83,21 @@ document.addEventListener('change', e => {
 
 // GUARDAR PLANTA + FOTO (Cloudinary)
 window.crearPlanta = async function() {
-    // 1. Capturar elementos
     const nombre = document.getElementById('nombre-comun').value;
     const cientifico = document.getElementById('nombre-cientifico').value;
     const fotoInput = document.getElementById('foto-planta');
 
-    // 2. Validaciones básicas
-    if (!nombre) return alert("Escribe el nombre de la planta");
-    if (fotoInput.files.length === 0) return alert("Toma o selecciona una foto");
+    if (!nombre || fotoInput.files.length === 0) {
+        return alert("❌ Error: Falta nombre o foto.");
+    }
 
     const file = fotoInput.files[0];
-    console.log("Archivo detectado:", file.name);
-
+    
     try {
-        // 3. Preparar datos para Cloudinary
+        // 1. SUBIDA A CLOUDINARY
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', UPLOAD_PRESET); // <--- Revisa que esta variable sea la correcta
-
-        alert("Subiendo imagen... espera la confirmación.");
+        formData.append('upload_preset', UPLOAD_PRESET);
 
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
             method: 'POST',
@@ -109,34 +105,51 @@ window.crearPlanta = async function() {
         });
 
         const json = await res.json();
+        if (!res.ok) throw new Error("Error Cloudinary: " + json.error.message);
 
-        // 4. Si Cloudinary falla
-        if (!res.ok) {
-            console.error("Error Cloudinary:", json);
-            alert("Error Cloudinary: " + (json.error ? json.error.message : "Desconocido"));
-            return;
-        }
-
-        // 5. Si tiene éxito, guardamos en Supabase
         const urlFotoReal = json.secure_url;
-        console.log("URL recibida:", urlFotoReal);
 
-        const { error: errorSupabase } = await _supabase.from('plantas').insert([{ 
-            nombre_comun: nombre, 
-            nombre_cientifico: cientifico,
-            foto_url: urlFotoReal 
-        }]);
+        // 2. GUARDAR PLANTA EN SUPABASE
+        const { data: nuevaPlanta, error: errPlanta } = await _supabase
+            .from('plantas')
+            .insert([{ 
+                nombre_comun: nombre, 
+                nombre_cientifico: cientifico,
+                foto_url: urlFotoReal 
+            }])
+            .select() // Esto es clave para obtener el ID de la planta creada
+            .single();
 
-        if (errorSupabase) {
-            alert("Error en Supabase: " + errorSupabase.message);
+        if (errPlanta) throw errPlanta;
+
+        // 3. CONFIRMACIÓN DE UBICACIÓN AUTOMÁTICA
+        const deseaUbicacion = confirm("✅ Planta guardada. ¿Deseas registrar tu ubicación actual automáticamente?");
+        
+        if (deseaUbicacion) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { error: errUbi } = await _supabase.from('ubicaciones').insert([{
+                    planta_id: nuevaPlanta.id,
+                    latitud: pos.coords.latitude,
+                    longitud: pos.coords.longitude,
+                    ciudad: "Registro Automático",
+                    distrito: "Punto de Campo"
+                }]);
+                
+                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS.");
+                else alert("¡Planta y ubicación registradas con éxito! 📍");
+                location.reload();
+            }, (error) => {
+                alert("No se pudo obtener el GPS: " + error.message);
+                location.reload();
+            }, { enableHighAccuracy: true }); // Para mayor precisión en campo
         } else {
-            alert("✅ ¡Planta y Foto guardadas con éxito!");
+            alert("Planta guardada (sin ubicación).");
             location.reload();
         }
 
     } catch (err) {
-        console.error("Error crítico:", err);
-        alert("Ocurrió un error inesperado: " + err.message);
+        alert("❌ ERROR: " + err.message);
+        console.error(err);
     }
 }
 
