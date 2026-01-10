@@ -145,7 +145,7 @@ window.crearPlanta = async function() {
                     latitud: pos.coords.latitude,
                     longitud: pos.coords.longitude,
                     ciudad: "Registro Automático",
-                    distrito: "Punto de Campo"
+                    distrito: "Punto de Campo",
 					distrito: "Punto de Campo",
                     verificada: false // La nueva ubicación nace sin verificar
                 }]);
