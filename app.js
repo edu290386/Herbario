@@ -4,6 +4,10 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const USER_ADMIN = "ilemerinadde";
 const PASS_ADMIN = "ilemerinadde";
+// Ejemplo de cómo mostraremos la foto para que acepte HEIC
+const urlOptimizada = planta.foto_url.replace("/upload/", "/upload/f_auto,q_auto/");
+// f_auto: convierte HEIC a JPG automáticamente
+// q_auto: comprime la foto para que cargue rápido en el campo
 console.log("Archivo app.js cargado correctamente");
 
 // --- 2. NAVEGACIÓN (Funciones Globales) ---
@@ -38,19 +42,43 @@ window.mostrarFormAdmin = function(tipo) {
 window.crearPlanta = async function() {
     const nombre = document.getElementById('nombre-comun').value;
     const cientifico = document.getElementById('nombre-cientifico').value;
+    const fotoInput = document.getElementById('foto-planta');
 
-    if (!nombre) return alert("Pon un nombre");
+    if (!nombre || fotoInput.files.length === 0) {
+        return alert("El nombre y la foto son obligatorios");
+    }
 
-    const { data, error } = await _supabase
-        .from('plantas')
-        .insert([{ nombre_comun: nombre, nombre_cientifico: cientifico }]);
+    const file = fotoInput.files[0];
+    
+    // --- PASO A: SUBIR A CLOUDINARY ---
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'plantas_preset'); // El nombre que creaste
 
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        alert("¡Planta guardada!");
-        document.getElementById('nombre-comun').value = "";
-        document.getElementById('nombre-cientifico').value = "";
+    try {
+        const res = await fetch('https://api.cloudinary.com/v1_1/dk9faaztd/image/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const json = await res.json();
+        const urlFotoReal = json.secure_url; // Esta es la dirección de la foto en internet
+
+        // --- PASO B: GUARDAR EN SUPABASE CON LA URL REAL ---
+        const { error } = await _supabase
+            .from('plantas')
+            .insert([{ 
+                nombre_comun: nombre, 
+                nombre_cientifico: cientifico,
+                foto_url: urlFotoReal 
+            }]);
+
+        if (error) throw error;
+
+        alert("¡Planta y foto guardadas en la nube!");
+        location.reload(); // Recarga para limpiar todo
+
+    } catch (err) {
+        alert("Error al subir: " + err.message);
     }
 }
 
