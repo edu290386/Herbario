@@ -83,69 +83,60 @@ document.addEventListener('change', e => {
 
 // GUARDAR PLANTA + FOTO (Cloudinary)
 window.crearPlanta = async function() {
+    // 1. Capturar elementos
     const nombre = document.getElementById('nombre-comun').value;
     const cientifico = document.getElementById('nombre-cientifico').value;
     const fotoInput = document.getElementById('foto-planta');
 
-    if (!nombre || fotoInput.files.length === 0) {
-        return alert("El nombre y la foto son obligatorios.");
-    }
+    // 2. Validaciones básicas
+    if (!nombre) return alert("Escribe el nombre de la planta");
+    if (fotoInput.files.length === 0) return alert("Toma o selecciona una foto");
 
     const file = fotoInput.files[0];
-    
+    console.log("Archivo detectado:", file.name);
+
     try {
-        // 1. Subir a Cloudinary
+        // 3. Preparar datos para Cloudinary
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('upload_preset', UPLOAD_PRESET); // <--- Revisa que esta variable sea la correcta
+
+        alert("Subiendo imagen... espera la confirmación.");
 
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: formData
         });
+
         const json = await res.json();
+
+        // 4. Si Cloudinary falla
+        if (!res.ok) {
+            console.error("Error Cloudinary:", json);
+            alert("Error Cloudinary: " + (json.error ? json.error.message : "Desconocido"));
+            return;
+        }
+
+        // 5. Si tiene éxito, guardamos en Supabase
         const urlFotoReal = json.secure_url;
+        console.log("URL recibida:", urlFotoReal);
 
-        // 2. Guardar Planta en Supabase
-        const { data: nuevaPlanta, error } = await _supabase
-            .from('plantas')
-            .insert([{ 
-                nombre_comun: nombre, 
-                nombre_cientifico: cientifico,
-                foto_url: urlFotoReal 
-            }])
-            .select() // Esto nos devuelve la planta recién creada para obtener su ID
-            .single();
+        const { error: errorSupabase } = await _supabase.from('plantas').insert([{ 
+            nombre_comun: nombre, 
+            nombre_cientifico: cientifico,
+            foto_url: urlFotoReal 
+        }]);
 
-        if (error) throw error;
-
-        // 3. PREGUNTA MÁGICA: ¿Ubicación automática?
-        const deseaUbicacion = confirm("✅ Planta guardada. ¿Deseas registrar tu ubicación actual automáticamente para esta planta?");
-        
-        if (deseaUbicacion) {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { error: errUbi } = await _supabase.from('ubicaciones').insert([{
-                    planta_id: nuevaPlanta.id,
-                    latitud: pos.coords.latitude,
-                    longitud: pos.coords.longitude,
-                    ciudad: "Registro Automático",
-                    distrito: "Punto de Campo"
-                }]);
-                
-                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS.");
-                else alert("¡Ubicación y Planta registradas con éxito!");
-                location.reload();
-            }, () => {
-                alert("No se pudo obtener el GPS. Planta guardada sin ubicación.");
-                location.reload();
-            });
+        if (errorSupabase) {
+            alert("Error en Supabase: " + errorSupabase.message);
         } else {
-            alert("Planta guardada con éxito (sin ubicación).");
+            alert("✅ ¡Planta y Foto guardadas con éxito!");
             location.reload();
         }
 
     } catch (err) {
-        alert("Hubo un error: " + err.message);
+        console.error("Error crítico:", err);
+        alert("Ocurrió un error inesperado: " + err.message);
     }
 }
 
