@@ -84,48 +84,55 @@ document.addEventListener('change', e => {
 // GUARDAR PLANTA + FOTO (Cloudinary)
 
 window.crearPlanta = async function() {
-	// CAPTURA DE ELEMENTOS (Referencias al HTML)
-    const btnGuardar = document.getElementById('btn-guardar-planta'); // Asegúrate que tu botón tenga este ID
-    const nombreInput = document.getElementById('nombre-comun').value;
-    const cientifico = document.getElementById('nombre-cientifico').value;
-    const fotoInput = document.getElementById('foto-planta');
+    // 1. CAPTURA DE ELEMENTOS (Buscamos los objetos en el HTML)
+    const btnGuardar = document.getElementById('btn-guardar-planta');
+    const inputNombre = document.getElementById('nombre-comun');
+    const inputCientifico = document.getElementById('nombre-cientifico');
+    const inputFoto = document.getElementById('foto-planta');
 
-    // VALIDACIÓN DE ENTRADA (Que no falten datos críticos)
-    if (!nombreInput.value || fotoInput.files.length === 0) {
-        return alert("❌ Error: Debes poner un nombre y tomar una foto.");
+    // 2. EXTRACCIÓN DE VALORES (Capturamos lo que el usuario escribió/subió)
+    const nombreValor = inputNombre ? inputNombre.value.trim() : "";
+    const cientificoValor = inputCientifico ? inputCientifico.value.trim() : "";
+    const tieneFoto = inputFoto && inputFoto.files.length > 0;
+
+    // 3. VALIDACIÓN DETALLADA (Para saber exactamente qué campo falla)
+    if (!nombreValor) {
+        return alert("❌ Error: El campo 'Nombre Común' está vacío.");
+    }
+    if (!tieneFoto) {
+        return alert("❌ Error: No has seleccionado ninguna foto.");
     }
 
-    // --- MEJORA: Bloquear el botón para evitar doble clic ---
+    // 4. BLOQUEO DE SEGURIDAD (Evita duplicados)
     if (btnGuardar) {
-        if (btnGuardar.disabled) return; // Si ya se está subiendo, ignoramos el clic
+        if (btnGuardar.disabled) return; 
         btnGuardar.disabled = true;
         btnGuardar.innerText = "Subiendo imagen... ⏳";
     }
-    
-    const file = fotoInput.files[0];
-    
+
     try {
-        // Subida a Cloudinary
+        // 5. PROCESO DE SUBIDA A CLOUDINARY
+        const file = inputFoto.files[0];
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
 
-        const resCloudinary = await fetch(`https://api.cloudinary.com/v1_1/dk9faaztd/image/upload`, {
+        const resCloud = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: formData
         });
 
-        const jsonCloudinary = await resCloudinary.json();
-        if (!resCloudinary.ok) throw new Error("Error Cloudinary: " + jsonCloudinary.error.message);
+        const jsonCloud = await resCloud.json();
+        if (!resCloud.ok) throw new Error("Cloudinary: " + jsonCloud.error.message);
 
-        const urlFotoReal = jsonCloudinary.secure_url;
+        const urlFotoReal = jsonCloud.secure_url;
 
-        // Guardar en Supabase (Tabla: plantas)
+        // 6. GUARDAR EN SUPABASE (Tabla: plantas)
         const { data: plantasCreadas, error: errPlanta } = await _supabase
             .from('plantas')
             .insert([{ 
-                nombre_comun: nombre, 
-                nombre_cientifico: cientifico,
+                nombre_comun: nombreValor, 
+                nombre_cientifico: cientificoValor,
                 foto_url: urlFotoReal 
             }])
             .select('*');
@@ -133,8 +140,8 @@ window.crearPlanta = async function() {
         if (errPlanta) throw errPlanta;
         const nuevaPlanta = plantasCreadas[0];
 
-        // --- Solicitud de GPS ---
- 		const deseaUbicacion = confirm("✅ ¡Planta guardada! ¿Deseas registrar la ubicación GPS ahora?");
+        // 7. PROCESO DE GPS CON CONFIRMACIÓN
+        const deseaUbicacion = confirm("✅ ¡Planta guardada! ¿Deseas registrar la ubicación GPS actual?");
         
         if (deseaUbicacion) {
             if (btnGuardar) btnGuardar.innerText = "Obteniendo GPS... 📍";
@@ -146,12 +153,11 @@ window.crearPlanta = async function() {
                     longitud: pos.coords.longitude,
                     ciudad: "Registro Automático",
                     distrito: "Punto de Campo",
-					distrito: "Punto de Campo",
-                    verificada: false // La nueva ubicación nace sin verificar
+                    verificada: false
                 }]);
                 
                 if (errUbi) alert("Planta guardada, pero el GPS falló: " + errUbi.message);
-                else alert("¡Registro completo con ubicación! 📍");
+                else alert("¡Todo guardado con éxito! 📍");
                 location.reload();
             }, (error) => {
                 alert("No se pudo obtener el GPS: " + error.message);
@@ -163,15 +169,15 @@ window.crearPlanta = async function() {
         }
 
     } catch (err) {
-        alert("❌ ERROR: " + err.message);
-        // Desbloqueamos el botón solo si hubo error para permitir reintentar
+        alert("❌ Error crítico: " + err.message);
+        
+        // 8. RESET DEL BOTÓN (En caso de fallo para permitir reintento)
         if (btnGuardar) {
             btnGuardar.disabled = false;
             btnGuardar.innerText = "Guardar Planta";
         }
     }
-};
-
+}; 
 // ==========================================
 // 5. POKEDEX (MOSTRAR DATOS)
 // ==========================================
