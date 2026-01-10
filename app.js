@@ -88,40 +88,61 @@ window.crearPlanta = async function() {
     const fotoInput = document.getElementById('foto-planta');
 
     if (!nombre || fotoInput.files.length === 0) {
-        return alert("El nombre y la foto son obligatorios para el registro");
+        return alert("El nombre y la foto son obligatorios.");
     }
 
     const file = fotoInput.files[0];
     
     try {
-        // A. Subir imagen a Cloudinary
+        // 1. Subir a Cloudinary
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/dk9faaztd/image/upload`, {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
             method: 'POST',
             body: formData
         });
-
-        if (!res.ok) throw new Error("Error al subir a Cloudinary");
-        
         const json = await res.json();
         const urlFotoReal = json.secure_url;
 
-        // B. Guardar datos en Supabase
-        const { error } = await _supabase
+        // 2. Guardar Planta en Supabase
+        const { data: nuevaPlanta, error } = await _supabase
             .from('plantas')
             .insert([{ 
                 nombre_comun: nombre, 
                 nombre_cientifico: cientifico,
                 foto_url: urlFotoReal 
-            }]);
+            }])
+            .select() // Esto nos devuelve la planta recién creada para obtener su ID
+            .single();
 
         if (error) throw error;
 
-        alert("✅ Planta y foto guardadas correctamente");
-        location.reload(); 
+        // 3. PREGUNTA MÁGICA: ¿Ubicación automática?
+        const deseaUbicacion = confirm("✅ Planta guardada. ¿Deseas registrar tu ubicación actual automáticamente para esta planta?");
+        
+        if (deseaUbicacion) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { error: errUbi } = await _supabase.from('ubicaciones').insert([{
+                    planta_id: nuevaPlanta.id,
+                    latitud: pos.coords.latitude,
+                    longitud: pos.coords.longitude,
+                    ciudad: "Registro Automático",
+                    distrito: "Punto de Campo"
+                }]);
+                
+                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS.");
+                else alert("¡Ubicación y Planta registradas con éxito!");
+                location.reload();
+            }, () => {
+                alert("No se pudo obtener el GPS. Planta guardada sin ubicación.");
+                location.reload();
+            });
+        } else {
+            alert("Planta guardada con éxito (sin ubicación).");
+            location.reload();
+        }
 
     } catch (err) {
         alert("Hubo un error: " + err.message);
@@ -131,27 +152,68 @@ window.crearPlanta = async function() {
 // ==========================================
 // 5. POKEDEX (MOSTRAR DATOS)
 // ==========================================
+// Variable global para guardar los datos y que el buscador sea instantáneo
+let todasLasPlantas = []; 
+
 window.cargarPokedex = async function() {
+    console.log("Cargando datos de la Pokedex...");
     const grid = document.getElementById('grid-plantas');
-    const { data, error } = await _supabase.from('plantas').select('*');
     
-    if (error || !data || data.length === 0) {
-        grid.innerHTML = "<p>No hay plantas registradas aún.</p>";
+    // Traemos los datos de Supabase
+    const { data, error } = await _supabase
+        .from('plantas')
+        .select('*')
+        .order('nombre_comun', { ascending: true }); // Ordenadas alfabéticamente
+    
+    if (error) {
+        console.error("Error en Supabase:", error);
+        grid.innerHTML = "<p>Error al cargar los datos.</p>";
         return;
     }
 
-    grid.innerHTML = data.map(p => {
-        // f_auto convierte HEIC de iPhone a JPG/WebP automáticamente
-        const fotoOptimizada = p.foto_url ? p.foto_url.replace("/upload/", "/upload/f_auto,q_auto/") : "";
-        
+    // Guardamos en la variable global y dibujamos
+    todasLasPlantas = data || [];
+    renderizarPlantas(todasLasPlantas);
+}
+
+// Función encargada de crear el HTML de las tarjetas
+function renderizarPlantas(lista) {
+    const grid = document.getElementById('grid-plantas');
+    
+    if (lista.length === 0) {
+        grid.innerHTML = "<p style='text-align:center; color:gray;'>No se encontraron plantas.</p>";
+        return;
+    }
+
+    grid.innerHTML = lista.map(p => {
+        // f_auto: formato automático (HEIC a JPG/WebP)
+        // q_auto: calidad automática para que cargue rápido en el cel
+        const fotoOptimizada = p.foto_url 
+            ? p.foto_url.replace("/upload/", "/upload/f_auto,q_auto/") 
+            : "https://via.placeholder.com/150?text=Sin+Foto";
+
         return `
-            <div class="card-planta">
-                <img src="${fotoOptimizada}" style="width:100%; height:160px; object-fit:cover; border-radius:8px;">
-                <h3>${p.nombre_comun}</h3>
-                <p><i>${p.nombre_cientifico || ''}</i></p>
+            <div class="card-planta" style="border:1px solid #ddd; border-radius:12px; padding:10px; background:#fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <img src="${fotoOptimizada}" style="width:100%; height:180px; object-fit:cover; border-radius:8px;">
+                <h3 style="margin: 10px 0 5px 0; color: #2e7d32;">${p.nombre_comun}</h3>
+                <p style="margin:0; font-style:italic; color: #666;">${p.nombre_cientifico || 'S/N científico'}</p>
             </div>
         `;
     }).join('');
+}
+
+// Función del Buscador (se activa al escribir en el input)
+window.filtrarPlantas = function() {
+    const termino = document.getElementById('buscador-planta').value.toLowerCase();
+    
+    // Filtramos la lista local sin pedir datos a internet otra vez
+    const filtradas = todasLasPlantas.filter(p => {
+        const nComun = (p.nombre_comun || "").toLowerCase();
+        const nCientifico = (p.nombre_cientifico || "").toLowerCase();
+        return nComun.includes(termino) || nCientifico.includes(termino);
+    });
+
+    renderizarPlantas(filtradas);
 }
 
 // ==========================================

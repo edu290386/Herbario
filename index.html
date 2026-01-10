@@ -16,12 +16,24 @@
     </nav>
 
     <main>
-        <section id="vista-pokedex">
-            <h1>Catálogo</h1>
+           
+        <section id="vista-pokedex" style="display: block; padding: 20px;">
+             <h1 style="text-align: center; color: #2e7d32;">Catálogo de Plantas</h1>
+
+             <div style="margin-bottom: 20px;">
+                  <input type="text" 
+                        id="buscador-planta" 
+                        onkeyup="filtrarPlantas()" 
+                        placeholder="🔍 Buscar por nombre común o científico..." 
+                        style="width: 100%; padding: 12px; border-radius: 25px; border: 1px solid #ccc; font-size: 16px; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            </div>
+
             <div id="grid-plantas" class="grid-plantas">
-                <p>Cargando catálogo...</p>
+                <p style="text-align: center;">Cargando catálogo...</p>
             </div>
         </section>
+
+
 
         <section id="vista-trabajo" style="display:none;">
             <h1>Trabajo de Campo</h1>
