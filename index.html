@@ -50,11 +50,15 @@
                 </div>
 
                 <div id="form-planta" style="display:none; border: 2px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
-                    <h3>Registrar Nueva Planta</h3>
-                    <input type="text" id="nombre-comun" placeholder="Nombre Común">
-                    <input type="text" id="nombre-cientifico" placeholder="Nombre Científico">
-                    <button onclick="crearPlanta()" class="btn-verde">Guardar Planta</button>
-                </div>
+    <h3>Registrar Nueva Planta</h3>
+    <input type="text" id="nombre-comun" placeholder="Nombre Común (Obligatorio)">
+    <input type="text" id="nombre-cientifico" placeholder="Nombre Científico">
+    
+    <label style="display:block; margin-top:10px;">Foto de la planta (Obligatoria):</label>
+    <input type="file" id="foto-planta" accept="image/*" capture="environment" style="border:none; padding:5px;">
+    
+    <button onclick="crearPlanta()" class="btn-verde">Guardar Planta y Foto</button>
+</div>
 
                 <div id="form-ubicacion" style="display:none; border: 2px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
                     <h3>Añadir Ubicación GPS</h3>
