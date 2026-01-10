@@ -4,7 +4,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ==========================================
 // 1. CONFIGURACIÓN (Reemplaza con tus datos)
 // ==========================================
-const CLOUD_NAME = "TU_CLOUD_NAME_AQUI"; // Tu nombre de usuario en Cloudinary
+const CLOUD_NAME = "dk9faaztd"; // Tu nombre de usuario en Cloudinary
 const UPLOAD_PRESET = "plantas_preset"; // El preset "Unsigned" que creaste
 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
