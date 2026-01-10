@@ -1,1 +1,94 @@
-inicio
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Plantas - Novato Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="nav-principal">
+        <button onclick="mostrarVista('pokedex')">📚 Pokedex</button>
+        <button onclick="mostrarVista('trabajo')">🛠️ Trabajo</button>
+        <button onclick="mostrarVista('admin')">🔐 Admin</button>
+    </nav>
+
+    <main class="contenedor-principal">
+
+        <section id="vista-pokedex">
+            <div class="header-seccion">
+                <h1>Catálogo de Plantas</h1>
+                <input type="text" id="busqueda-pokedex" placeholder="Buscar planta por nombre...">
+            </div>
+            <div id="grid-plantas" class="grid-plantas">
+                <p>Cargando plantas...</p>
+            </div>
+        </section>
+
+        <section id="vista-trabajo" style="display:none;">
+            <div class="header-seccion">
+                <h1>Modo Trabajo de Campo</h1>
+                <div class="selector-ubicacion">
+                    <p id="status-gps">📍 GPS: Pendiente</p>
+                    <button class="btn-amarillo" onclick="usarGPS()">📍 Usar mi GPS (Auto)</button>
+                    <button class="btn-secundario" onclick="document.getElementById('form-manual').style.display='block'">Elegir Manualmente</button>
+                </div>
+
+                <div id="form-manual" style="display:none;" class="manual-box">
+                    <input type="text" id="ciudad-manual" placeholder="Ciudad">
+                    <input type="text" id="distrito-manual" placeholder="Distrito">
+                </div>
+            </div>
+
+            <div id="lista-checklist" class="lista-nombres">
+                <h3>Selecciona las plantas a visitar:</h3>
+                <div id="nombres-alfabetico">
+                    </div>
+                <button class="btn-verde" onclick="generarRuta()">Ver Fotos y Ubicaciones</button>
+            </div>
+
+            <div id="resultados-trabajo"></div>
+        </section>
+
+        <section id="vista-admin" style="display:none;">
+            <div id="login-seccion" class="card-admin">
+                <h2>Acceso Restringido</h2>
+                <input type="text" id="user" placeholder="Usuario">
+                <input type="password" id="pass" placeholder="Contraseña">
+                <button class="btn-verde" onclick="login()">Entrar</button>
+            </div>
+
+            <div id="panel-admin" style="display:none;">
+                <div class="tabs-admin">
+                    <button class="btn-amarillo" onclick="mostrarFormAdmin('planta')">➕ Nueva Planta</button>
+                    <button class="btn-amarillo" onclick="mostrarFormAdmin('ubicacion')">📍 Añadir Ubicación</button>
+                </div>
+
+                <div id="form-planta" class="formulario" style="display:none;">
+                    <h3>Registrar Nueva Planta</h3>
+                    <input type="text" id="nombre-comun" placeholder="Nombre Común (Ej: Palmera)">
+                    <input type="text" id="nombre-cientifico" placeholder="Nombre Científico (Ej: Phoenix dactylifera)">
+                    <p><i>Pronto: Subida de fotos con Cloudinary</i></p>
+                    <button class="btn-verde" onclick="crearPlanta()">Guardar Planta en Base de Datos</button>
+                </div>
+
+                <div id="form-ubicacion" class="formulario" style="display:none;">
+                    <h3>Añadir Ubicación a Planta</h3>
+                    <select id="select-plantas">
+                        </select>
+                    <input type="text" id="u-ciudad" placeholder="Ciudad">
+                    <input type="text" id="u-distrito" placeholder="Distrito">
+                    <div class="gps-admin-box">
+                        <button onclick="capturarGPSAdmin()">Capturar Coordenadas GPS</button>
+                        <p id="coords-admin">Lat: -, Lon: -</p>
+                    </div>
+                    <button class="btn-verde" onclick="guardarUbicacion()">Guardar Ubicación</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="
