@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App de Plantas</title>
+    <title>App Plantas - Campo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,26 +17,23 @@
 
     <main>
         <section id="vista-pokedex">
-            <h1>Catálogo Educativo</h1>
+            <h1>Catálogo</h1>
             <div id="grid-plantas" class="grid-plantas">
                 <p>Cargando catálogo...</p>
             </div>
         </section>
 
         <section id="vista-trabajo" style="display:none;">
-            <h1>Modo Trabajo de Campo</h1>
+            <h1>Trabajo de Campo</h1>
             <p id="status-gps">📍 GPS: No detectado</p>
-            <button onclick="usarGPS()" class="btn-amarillo">📍 Activar Mi Ubicación</button>
+            <button onclick="usarGPS()" class="btn-amarillo">📍 Activar GPS</button>
             <hr>
-            <div id="lista-checklist">
-                <h3>Plantas registradas:</h3>
-                </div>
+            <div id="lista-checklist"></div>
         </section>
 
         <section id="vista-admin" style="display:none;">
-            
             <div id="login-seccion">
-                <h2>Acceso Administrador</h2>
+                <h2>Acceso Admin</h2>
                 <input type="text" id="user" placeholder="Usuario">
                 <input type="password" id="pass" placeholder="Contraseña">
                 <button onclick="login()" class="btn-verde">Entrar</button>
@@ -44,42 +41,33 @@
 
             <div id="panel-admin" style="display:none;">
                 <h2>Panel de Control</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="mostrarFormAdmin('planta')" class="btn-amarillo">➕ Nueva Planta</button>
-                    <button onclick="mostrarFormAdmin('ubicacion')" class="btn-amarillo">📍 Nueva Ubicación</button>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="mostrarFormAdmin('planta')" class="btn-amarillo">➕ Planta</button>
+                    <button onclick="mostrarFormAdmin('ubicacion')" class="btn-amarillo">📍 Ubicación</button>
                 </div>
 
-                <div id="form-planta" style="display:none; border: 2px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
-    <h3>Registrar Nueva Planta</h3>
-    <input type="text" id="nombre-comun" placeholder="Nombre Común (Obligatorio)">
-    <input type="text" id="nombre-cientifico" placeholder="Nombre Científico">
-    
-    <label style="display:block; margin-top:10px; font-weight: bold;">Foto de la planta:</label>
-    <input type="file" id="foto-planta" accept="image/*" style="margin-bottom: 10px;">
-    
-    <div id="preview-container" style="width: 100%; text-align: center; margin-bottom: 10px;">
-        <img id="img-preview" src="" style="max-width: 100%; display: none; border-radius: 10px; border: 1px solid #ccc;">
-    </div>
-    
-    <button onclick="crearPlanta()" class="btn-verde">Guardar Planta y Foto</button>
-</div>
+                <div id="form-planta" style="display:none; border: 1px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
+                    <h3>Registrar Nueva Planta</h3>
+                    <input type="text" id="nombre-comun" placeholder="Nombre Común">
+                    <input type="text" id="nombre-cientifico" placeholder="Nombre Científico">
+                    <label>Foto (Obligatoria):</label>
+                    <input type="file" id="foto-planta" accept="image/*">
+                    <div id="preview-container" style="margin: 10px 0;">
+                        <img id="img-preview" src="" style="max-width: 100%; display: none; border-radius: 8px;">
+                    </div>
+                    <button onclick="crearPlanta()" class="btn-verde">Guardar en Base de Datos</button>
+                </div>
 
-                <div id="form-ubicacion" style="display:none; border: 2px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
+                <div id="form-ubicacion" style="display:none; border: 1px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px;">
                     <h3>Añadir Ubicación GPS</h3>
-                    <label>Seleccionar Planta:</label>
-                    <select id="select-plantas-ubicacion">
-                        <option value="">Cargando plantas...</option>
-                    </select>
-                    <input type="text" id="u-ciudad" placeholder="Ciudad (Ej: Lima)">
-                    <input type="text" id="u-distrito" placeholder="Distrito (Ej: Miraflores)">
-                    
-                    <button onclick="capturarGPSAdmin()" style="background: #eee; border: 1px solid #ccc; color: black;">📍 Capturar Coordenadas</button>
-                    <p id="coords-admin" style="text-align: center; font-weight: bold; margin: 10px 0;">Lat: -, Lon: -</p>
-                    
-                    <button onclick="guardarUbicacion()" class="btn-verde">Guardar en Mapa</button>
+                    <select id="select-plantas-ubicacion"><option>Cargando...</option></select>
+                    <input type="text" id="u-ciudad" placeholder="Ciudad">
+                    <input type="text" id="u-distrito" placeholder="Distrito">
+                    <button onclick="capturarGPSAdmin()">📍 Capturar Coordenadas</button>
+                    <p id="coords-admin" style="text-align: center; font-weight: bold;">Lat: -, Lon: -</p>
+                    <button onclick="guardarUbicacion()" class="btn-verde">Guardar Ubicación</button>
                 </div>
             </div>
-
         </section>
     </main>
 
