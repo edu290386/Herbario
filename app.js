@@ -2,7 +2,8 @@
 const SUPABASE_URL = "https://pejxmmmvreffllovzjan.supabase.co"; 
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlanhtbW12cmVmZmxsb3Z6amFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwMTQ4MzgsImV4cCI6MjA4MzU5MDgzOH0.XiZddvHzJBN8nbwEgA_BHUDyKzF0_EdFLFg-S4n5acU";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+const USER_ADMIN = "ilemerinadde";
+const PASS_ADMIN = "ilemerinadde";
 console.log("Archivo app.js cargado correctamente");
 
 // --- 2. NAVEGACIÓN (Funciones Globales) ---
