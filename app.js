@@ -82,21 +82,26 @@ document.addEventListener('change', e => {
 });
 
 // GUARDAR PLANTA + FOTO (Cloudinary)
+
 window.crearPlanta = async function() {
+	// CAPTURA DE ELEMENTOS (Referencias al HTML)
     const btnGuardar = document.getElementById('btn-guardar-planta'); // Asegúrate que tu botón tenga este ID
-    const nombre = document.getElementById('nombre-comun').value;
+    const nombreInput = document.getElementById('nombre-comun').value;
     const cientifico = document.getElementById('nombre-cientifico').value;
     const fotoInput = document.getElementById('foto-planta');
 
-    if (!nombre || fotoInput.files.length === 0) {
-        return alert("❌ Error: Falta nombre o foto.");
+    // VALIDACIÓN DE ENTRADA (Que no falten datos críticos)
+    if (!nombreInput.value || fotoInput.files.length === 0) {
+        return alert("❌ Error: Debes poner un nombre y tomar una foto.");
     }
 
     // --- MEJORA: Bloquear el botón para evitar doble clic ---
-    btnGuardar.disabled = true;
-    btnGuardar.innerText = "Subiendo imagen... ⏳";
-    btnGuardar.style.opacity = "0.5";
-
+    if (btnGuardar) {
+        if (btnGuardar.disabled) return; // Si ya se está subiendo, ignoramos el clic
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Subiendo imagen... ⏳";
+    }
+    
     const file = fotoInput.files[0];
     
     try {
@@ -105,7 +110,6 @@ window.crearPlanta = async function() {
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
 
-        // Subida a Cloudinary
         const resCloudinary = await fetch(`https://api.cloudinary.com/v1_1/dk9faaztd/image/upload`, {
             method: 'POST',
             body: formData
@@ -116,7 +120,7 @@ window.crearPlanta = async function() {
 
         const urlFotoReal = jsonCloudinary.secure_url;
 
-        // Guardar en Supabase
+        // Guardar en Supabase (Tabla: plantas)
         const { data: plantasCreadas, error: errPlanta } = await _supabase
             .from('plantas')
             .insert([{ 
@@ -129,11 +133,11 @@ window.crearPlanta = async function() {
         if (errPlanta) throw errPlanta;
         const nuevaPlanta = plantasCreadas[0];
 
-        // --- GPS ---
- const deseaUbicacion = confirm("✅ ¡Planta guardada! ¿Deseas registrar la ubicación GPS ahora?");
+        // --- Solicitud de GPS ---
+ 		const deseaUbicacion = confirm("✅ ¡Planta guardada! ¿Deseas registrar la ubicación GPS ahora?");
         
         if (deseaUbicacion) {
-            btnGuardar.innerText = "Obteniendo GPS... 📍";
+            if (btnGuardar) btnGuardar.innerText = "Obteniendo GPS... 📍";
             
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { error: errUbi } = await _supabase.from('ubicaciones').insert([{
@@ -142,10 +146,12 @@ window.crearPlanta = async function() {
                     longitud: pos.coords.longitude,
                     ciudad: "Registro Automático",
                     distrito: "Punto de Campo"
+					distrito: "Punto de Campo",
+                    verificada: false // La nueva ubicación nace sin verificar
                 }]);
                 
-                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS: " + errUbi.message);
-                else alert("¡Todo guardado con éxito! 📍");
+                if (errUbi) alert("Planta guardada, pero el GPS falló: " + errUbi.message);
+                else alert("¡Registro completo con ubicación! 📍");
                 location.reload();
             }, (error) => {
                 alert("No se pudo obtener el GPS: " + error.message);
@@ -159,10 +165,12 @@ window.crearPlanta = async function() {
     } catch (err) {
         alert("❌ ERROR: " + err.message);
         // Desbloqueamos el botón solo si hubo error para permitir reintentar
-        btnGuardar.disabled = false;
-        btnGuardar.innerText = "Guardar Planta";
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerText = "Guardar Planta";
+        }
     }
-}
+};
 
 // ==========================================
 // 5. POKEDEX (MOSTRAR DATOS)
