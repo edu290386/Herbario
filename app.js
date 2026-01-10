@@ -83,6 +83,7 @@ document.addEventListener('change', e => {
 
 // GUARDAR PLANTA + FOTO (Cloudinary)
 window.crearPlanta = async function() {
+    const btnGuardar = document.getElementById('btn-guardar-planta'); // Asegúrate que tu botón tenga este ID
     const nombre = document.getElementById('nombre-comun').value;
     const cientifico = document.getElementById('nombre-cientifico').value;
     const fotoInput = document.getElementById('foto-planta');
@@ -91,41 +92,49 @@ window.crearPlanta = async function() {
         return alert("❌ Error: Falta nombre o foto.");
     }
 
+    // --- MEJORA: Bloquear el botón para evitar doble clic ---
+    btnGuardar.disabled = true;
+    btnGuardar.innerText = "Subiendo imagen... ⏳";
+    btnGuardar.style.opacity = "0.5";
+
     const file = fotoInput.files[0];
     
     try {
-        // 1. SUBIDA A CLOUDINARY
+        // Subida a Cloudinary
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', UPLOAD_PRESET);
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        // Subida a Cloudinary
+        const resCloudinary = await fetch(`https://api.cloudinary.com/v1_1/dk9faaztd/image/upload`, {
             method: 'POST',
             body: formData
         });
 
-        const json = await res.json();
-        if (!res.ok) throw new Error("Error Cloudinary: " + json.error.message);
+        const jsonCloudinary = await resCloudinary.json();
+        if (!resCloudinary.ok) throw new Error("Error Cloudinary: " + jsonCloudinary.error.message);
 
-        const urlFotoReal = json.secure_url;
+        const urlFotoReal = jsonCloudinary.secure_url;
 
-        // 2. GUARDAR PLANTA EN SUPABASE
-        const { data: nuevaPlanta, error: errPlanta } = await _supabase
+        // Guardar en Supabase
+        const { data: plantasCreadas, error: errPlanta } = await _supabase
             .from('plantas')
             .insert([{ 
                 nombre_comun: nombre, 
                 nombre_cientifico: cientifico,
                 foto_url: urlFotoReal 
             }])
-            .select() // Esto es clave para obtener el ID de la planta creada
-            .single();
+            .select('*');
 
         if (errPlanta) throw errPlanta;
+        const nuevaPlanta = plantasCreadas[0];
 
-        // 3. CONFIRMACIÓN DE UBICACIÓN AUTOMÁTICA
-        const deseaUbicacion = confirm("✅ Planta guardada. ¿Deseas registrar tu ubicación actual automáticamente?");
+        // --- GPS ---
+ const deseaUbicacion = confirm("✅ ¡Planta guardada! ¿Deseas registrar la ubicación GPS ahora?");
         
         if (deseaUbicacion) {
+            btnGuardar.innerText = "Obteniendo GPS... 📍";
+            
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { error: errUbi } = await _supabase.from('ubicaciones').insert([{
                     planta_id: nuevaPlanta.id,
@@ -135,13 +144,13 @@ window.crearPlanta = async function() {
                     distrito: "Punto de Campo"
                 }]);
                 
-                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS.");
-                else alert("¡Planta y ubicación registradas con éxito! 📍");
+                if (errUbi) alert("Planta guardada, pero hubo un error con el GPS: " + errUbi.message);
+                else alert("¡Todo guardado con éxito! 📍");
                 location.reload();
             }, (error) => {
                 alert("No se pudo obtener el GPS: " + error.message);
                 location.reload();
-            }, { enableHighAccuracy: true }); // Para mayor precisión en campo
+            }, { enableHighAccuracy: true, timeout: 10000 });
         } else {
             alert("Planta guardada (sin ubicación).");
             location.reload();
@@ -149,7 +158,9 @@ window.crearPlanta = async function() {
 
     } catch (err) {
         alert("❌ ERROR: " + err.message);
-        console.error(err);
+        // Desbloqueamos el botón solo si hubo error para permitir reintentar
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = "Guardar Planta";
     }
 }
 
