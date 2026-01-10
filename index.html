@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App de Plantas</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
@@ -54,8 +54,12 @@
     <input type="text" id="nombre-comun" placeholder="Nombre Común (Obligatorio)">
     <input type="text" id="nombre-cientifico" placeholder="Nombre Científico">
     
-    <label style="display:block; margin-top:10px;">Foto de la planta (Obligatoria):</label>
-    <input type="file" id="foto-planta" accept="image/*" capture="environment" style="border:none; padding:5px;">
+    <label style="display:block; margin-top:10px; font-weight: bold;">Foto de la planta:</label>
+    <input type="file" id="foto-planta" accept="image/*" style="margin-bottom: 10px;">
+    
+    <div id="preview-container" style="width: 100%; text-align: center; margin-bottom: 10px;">
+        <img id="img-preview" src="" style="max-width: 100%; display: none; border-radius: 10px; border: 1px solid #ccc;">
+    </div>
     
     <button onclick="crearPlanta()" class="btn-verde">Guardar Planta y Foto</button>
 </div>
