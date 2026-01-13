@@ -112,26 +112,39 @@ const registrarAvistamiento = (planta) => {
 };
 
   return (
-    <div style={{ padding: '1px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
-      <header style={{ textAlign: 'center', marginBottom: '40px' }}>
-      <h1 style={{ color: colores.bosque, fontSize: '2.5rem', marginBottom: '20px' }}>🌿 Herbario de Ozain</h1>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
+
+       <header style={{ 
+          textAlign: 'center', 
+          marginBottom: '30px', 
+          padding: '0 15px' // Espacio para que no toque los bordes del celular
+        }}>
+      
+       <h1 style={{ 
+            color: colores.bosque, 
+            fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', // Tamaño de fuente flexible
+            marginBottom: '20px' 
+          }}>
+            🌿 Herbario de Ozain
+      </h1>
         
         {/* BUSCADOR INTELIGENTE */}
-         <div style={{ position: 'relative', maxWidth: '600px', margin: '0 auto' }}>
-          <Search 
-          style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: colores.hoja }} 
-          size={20} 
-        />
+         <div style={{ 
+    position: 'relative', 
+    width: '100%', 
+    maxWidth: '500px', // Un poco más pequeño para que se vea mejor
+    margin: '0 auto'   // Esto lo centra perfectamente
+  }}>
           <input 
             type="text"
             placeholder="      Buscar o escribir nueva planta..."
             value={busqueda}
             onChange={manejarEscritura}
             style={{ 
-            width: '100%', 
-            padding: '15px 20px', 
-            borderRadius: '30px', 
-            border: `2px solid ${colores.hoja}`, 
+            width: '95%', 
+            padding: '12px 2px', 
+            borderRadius: '16px', 
+            border: `1px solid ${colores.hoja}`, 
             fontSize: '1.1rem',
             outline: 'none',
             backgroundColor: '#fff'
