@@ -112,7 +112,7 @@ const registrarAvistamiento = (planta) => {
 };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
+    <div style={{ padding: '1px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
       <header style={{ textAlign: 'center', marginBottom: '40px' }}>
       <h1 style={{ color: colores.bosque, fontSize: '2.5rem', marginBottom: '20px' }}>🌿 Herbario de Ozain</h1>
         
