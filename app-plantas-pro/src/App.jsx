@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { Leaf, Search, PlusCircle } from 'lucide-react';
+import DetallePlanta from './DetallePlanta';
 
 const colores = {
   bosque: "#2F4538",
@@ -22,7 +23,7 @@ function App() {
     async function obtenerDatos() {
       try {
         const { data, error } = await supabase.from('plantas').select('*');
-        console.log(data)
+        //console.log(data)
         if (error) throw error;
         
         // El setState se llama solo cuando la promesa de Supabase termina
@@ -136,6 +137,16 @@ const ejecutarRegistro = () => {
   });
 };
 
+if (plantaSeleccionada && !mostrandoConfirmar) {
+    return (
+      <DetallePlanta 
+        planta={plantaSeleccionada} 
+        alVolver={() => setPlantaSeleccionada(null)} 
+      />
+    );
+  }
+
+
   return (
     <div style={{ padding: '10px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
 
@@ -198,7 +209,8 @@ const ejecutarRegistro = () => {
       gap: '18px' 
     }}>
   {plantasFiltradas.map(planta => (
-    <div key={planta.id} style={{ 
+    <div key={planta.id} 
+          style={{ 
           border: `1px solid ${colores.hoja}`, 
           borderRadius: '16px', 
           padding: '18px', 
@@ -210,7 +222,10 @@ const ejecutarRegistro = () => {
         }}>
       
       {/* Espacio para la foto o icono */}
-      <div style={{ height: '380px', width: '100%', background: colores.fondo, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', overflow: 'hidden', position: 'relative', border: `1px solid rgba(0,0,0,0.05)` }}>
+      <div onClick={() => {  
+          setPlantaSeleccionada(planta);
+          }} 
+          style={{ cursor:'pointer', height: '380px', width: '100%', background: colores.fondo, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', overflow: 'hidden', position: 'relative', border: `1px solid rgba(0,0,0,0.05)` }}>
             {planta.foto_perfil ? (
     <img 
       src={planta.foto_perfil.replace('/upload/', '/upload/c_fill,g_auto,w_400,h_400,q_auto,f_auto/')} 
@@ -249,8 +264,8 @@ const ejecutarRegistro = () => {
 
       {/* Botón de ubicación que pondremos pronto */}
       <button 
-            onClick={() => iniciarRegistro(planta)}
-            style={{ 
+              onClick={() => iniciarRegistro(planta)}
+              style={{ 
               marginTop: '15px', 
               width: '100%', 
               padding: '12px', 
