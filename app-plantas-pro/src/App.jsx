@@ -6,12 +6,15 @@ const colores = {
   bosque: "#2F4538",
   hoja: "#ADBC9F",
   retama: "#F4E285",
-  fondo: "#F8F9F5"
+  fondo: "#F1F2ED"
 };
 
 function App() {
   const [plantasTotales, setPlantasTotales] = useState([]); // Toda la data de la nube
   const [busqueda, setBusqueda] = useState("");
+  const [mostrandoConfirmar, setMostrandoConfirmar] = useState(false);
+  const [plantaSeleccionada, setPlantaSeleccionada] = useState(null);
+  const [mensajeEstado, setMensajeEstado] = useState(""); // Para carga y éxito
 
   // 1. CARGA ÚNICA: Solo llamamos a Supabase al abrir la App
   useEffect(() => {
@@ -19,6 +22,7 @@ function App() {
     async function obtenerDatos() {
       try {
         const { data, error } = await supabase.from('plantas').select('*');
+        console.log(data)
         if (error) throw error;
         
         // El setState se llama solo cuando la promesa de Supabase termina
@@ -70,49 +74,70 @@ function App() {
 };
 
 // función GPS
-const registrarAvistamiento = (planta) => {
-  // 1. Verificar si el navegador tiene GPS
+
+const iniciarRegistro = (planta) => {
+  // 1. Verificar soporte (sin alerts molestos)
   if (!navigator.geolocation) {
-    alert("Tu navegador no soporta geolocalización.");
+    setMensajeEstado("❌ Tu dispositivo no soporta GPS");
+    setTimeout(() => setMensajeEstado(""), 3000);
     return;
   }
+  // 2. Abrir nuestra propia ventana de confirmación
+  setPlantaSeleccionada(planta);
+  setMostrandoConfirmar(true);
+};
 
+const ejecutarRegistro = () => {
+  setMostrandoConfirmar(false);
+  
   // 2. Solicitar la ubicación actual
   navigator.geolocation.getCurrentPosition(async (posicion) => {
     const { latitude, longitude } = posicion.coords;
 
-    // 3. Confirmación visual para la demo
-    const confirmar = window.confirm(
-      `¿Registrar ubicación para "${planta.nombre_comun}"?\n\nLatitud: ${latitude}\nLongitud: ${longitude}`
-    );
+    const widget = window.cloudinary.createUploadWidget({
+      cloudName: 'dk9faaztd',
+        uploadPreset: 'plantas_preset',
+        sources: ['camera', 'local'], 
+        multiple: false,
+        showAdvancedOptions: false,
+        language: "es",
+        singleUploadAutoClose: true,
+    }, async (error, result) => {
+      // Cuando la subida es exitosa
+      if (!error && result && result.event === "success") {
+      	const urlFoto = result.info.secure_url;
+        // 3. Guardar en la tabla 'ubicaciones' de Supabase con la URL real    
+        const { error: dbError } = await supabase.from('ubicaciones').insert([
+          {
+            planta_id: plantaSeleccionada.id,
+            latitud: latitude,
+            longitud: longitude,
+            foto_contexto: urlFoto // Aquí guardamos la URL de Cloudinary
+          }
+        ]);
 
-    if (confirmar) {
-      // 4. Guardar en la tabla 'ubicaciones' de Supabase
-      const { error } = await supabase.from('ubicaciones').insert([
-        {
-          planta_id: planta.id,
-          latitud: latitude,
-          longitud: longitude,
-          // Dejamos la foto como texto por ahora para no complicar la demo
-          foto_contexto: "Imagen capturada en campo" 
+        if (!dbError) {
+          // 4. Mensaje de éxito final
+          setMensajeEstado("✅ ¡Ubicación y Foto guardadas!");
+          setTimeout(() => {
+            setMensajeEstado("");
+            setPlantaSeleccionada(null); // Limpiamos la planta actual
+          }, 5000);
+        } else {
+          setMensajeEstado("❌ Error al conectar con la base de datos");
         }
-      ]);
-
-      if (error) {
-        console.error("Error al guardar:", error.message);
-        alert("Hubo un error al guardar la ubicación.");
-      } else {
-        alert(`✅ ¡Éxito! Ubicación registrada para ${planta.nombre_comun}.`);
       }
-    }
-  }, (error) => {
-    // Manejo de errores (ej: si el usuario niega el permiso)
-    alert("Error al obtener ubicación: " + error.message);
+    });
+
+    widget.open(); // Abre la cámara/galería
+  }, (err) => {
+    setMensajeEstado("❌ Error de GPS");
+    setTimeout(() => setMensajeEstado(""), 5000);
   });
 };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
+    <div style={{ padding: '10px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: colores.fondo, minHeight: '100vh' }}>
 
        <header style={{ 
           textAlign: 'center', 
@@ -123,7 +148,7 @@ const registrarAvistamiento = (planta) => {
        <h1 style={{ 
             color: colores.bosque, 
             fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', // Tamaño de fuente flexible
-            marginBottom: '20px' 
+            margin: '0 0 15px 0'
           }}>
             🌿 Herbario de Ozain
       </h1>
@@ -132,7 +157,7 @@ const registrarAvistamiento = (planta) => {
          <div style={{ 
     position: 'relative', 
     width: '100%', 
-    maxWidth: '500px', // Un poco más pequeño para que se vea mejor
+    maxWidth: '600px', // Un poco más pequeño para que se vea mejor
     margin: '0 auto'   // Esto lo centra perfectamente
   }}>
           <input 
@@ -142,7 +167,7 @@ const registrarAvistamiento = (planta) => {
             onChange={manejarEscritura}
             style={{ 
             width: '95%', 
-            padding: '12px 2px', 
+            padding: '12px 0px', 
             borderRadius: '16px', 
             border: `1px solid ${colores.hoja}`, 
             fontSize: '1.1rem',
@@ -152,8 +177,6 @@ const registrarAvistamiento = (planta) => {
           />
         </div>
       </header>
-
-      
 
       {/* BOTÓN DINÁMICO: Solo aparece si no hay coincidencias y el usuario escribió algo */}
       {busqueda.length > 2 && plantasFiltradas.length === 0 && (
@@ -171,14 +194,14 @@ const registrarAvistamiento = (planta) => {
       {/* GRILLA DE RESULTADOS */}
       <div style={{ 
       display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-      gap: '25px' 
+      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+      gap: '18px' 
     }}>
   {plantasFiltradas.map(planta => (
     <div key={planta.id} style={{ 
           border: `1px solid ${colores.hoja}`, 
           borderRadius: '16px', 
-          padding: '20px', 
+          padding: '18px', 
           backgroundColor: '#fff',
           display: 'flex', 
           flexDirection: 'column', // Organiza contenido en vertical
@@ -187,9 +210,23 @@ const registrarAvistamiento = (planta) => {
         }}>
       
       {/* Espacio para la foto o icono */}
-      <div style={{ height: '300px', background: colores.fondo, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-            <Leaf color={colores.bosque} size={40} />
-          </div>
+      <div style={{ height: '380px', width: '100%', background: colores.fondo, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', overflow: 'hidden', position: 'relative', border: `1px solid rgba(0,0,0,0.05)` }}>
+            {planta.foto_perfil ? (
+    <img 
+      src={planta.foto_perfil.replace('/upload/', '/upload/c_fill,g_auto,w_400,h_400,q_auto,f_auto/')} 
+      alt={planta.nombre_comun}
+      loading='lazy'
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover', // Mantiene la proporción y rellena el espacio
+        display: 'block'
+      }}
+    />
+    ) : (
+      <Leaf color={colores.bosque} size={40} opacity={0.5} />
+    )}
+    </div>
 
       {/* Nombre Principal */}
       <div style={{ flexGrow: 1 }}>
@@ -203,7 +240,7 @@ const registrarAvistamiento = (planta) => {
 
             {/* Sección de Nombres Secundarios (Espacio para ~5 nombres) */}
             <div style={{ borderTop: `1px solid ${colores.fondo}`, paddingTop: '5px' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: colores.hoja }}>OTROS NOMBRES:</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: colores.bosque }}>Otros nombres:</span>
               <p style={{ fontSize: '0.8rem', color: '#555', marginTop: '5px', lineHeight: '1.4' }}>
                 {planta.nombres_secundarios || "Sin alias registrados"}
               </p>
@@ -212,14 +249,14 @@ const registrarAvistamiento = (planta) => {
 
       {/* Botón de ubicación que pondremos pronto */}
       <button 
-            onClick={() => registrarAvistamiento(planta)}
+            onClick={() => iniciarRegistro(planta)}
             style={{ 
               marginTop: '15px', 
               width: '100%', 
               padding: '12px', 
               background: colores.retama, 
               color: colores.bosque, 
-              border: `2px solid ${colores.bosque}`, 
+              border: `1px solid ${colores.hoja}`, 
               borderRadius: '12px', 
               cursor: 'pointer',
               fontWeight: 'bold',
@@ -233,6 +270,40 @@ const registrarAvistamiento = (planta) => {
           </button>
     </div>
   ))}
+  {mostrandoConfirmar && (
+  <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+    <div style={{ backgroundColor: 'white', padding: '2px 15px 25px 15px', borderRadius: '15px', width: '85%', maxWidth: '300px', textAlign: 'center' }}>
+      <p style={{ fontWeight: 'bold', marginBottom: '20px' }}>¿Registrar ubicación para {plantaSeleccionada?.nombre_comun}?</p>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button onClick={() => setMostrandoConfirmar(false)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#eee' }}>Cancelar</button>
+        <button onClick={ejecutarRegistro} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: colores.bosque, color: 'white' }}>Confirmar</button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Mensaje Flotante de Estado (Cargando/Éxito) */}
+{mensajeEstado && (
+  <div style={{ 
+    position: 'fixed', 
+    bottom: '50px', // Un poco más arriba para que se vea bien sobre el pulgar
+    left: '50%', 
+    transform: 'translateX(-50%)', 
+    backgroundColor: colores.bosque, // Un color oscuro sólido
+    color: '#FFFFFF', 
+    padding: '15px 30px', 
+    borderRadius: '10px', 
+    zIndex: 9999, // EL MÁS ALTO PARA QUE NADA LO TAPE
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  }}>
+    {mensajeEstado}
+  </div>
+)}
 </div>
     </div>
   );
