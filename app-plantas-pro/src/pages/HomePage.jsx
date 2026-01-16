@@ -25,22 +25,13 @@ export const HomePage = () => {
     p.nombre_comun.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const crearPlanta = async () => {
-    const nombre = prompt("Nombre de la nueva planta:");
-    if (nombre) {
-      const { data, error } = await supabase
-        .from("plantas")
-        .insert([{ nombre_comun: nombre }])
-        .select();
-      if (!error) obtenerPlantas(); // Recarga rápida
-    }
-  };
+  
 
   return (
     <div style={estilos.pagina}>
       <header style={estilos.header}>
         <div style={estilos.logoSeccion}>
-          <Leaf color={colores.bosque} size={32} fill={colores.retama} />
+          <Leaf color={colores.frondoso} size={32} fill={colores.fondo} />
           <h1 style={estilos.titulo}>Herbario</h1>
         </div>
 
@@ -71,13 +62,13 @@ export const HomePage = () => {
           plantasFiltradas.length === 0 && (
             <div style={estilos.contenedorNuevo}>
               <p>
-                La planta "<strong>{busqueda}</strong>" no está en el registro.
+                La planta "<strong>{busqueda}</strong>" no se encuentra en la galeria.
               </p>
               <BotonRegistrar
                 texto={`Registrar planta`}
                 // Pasamos solo el nombre porque es una planta NUEVA
                 onClick={() =>
-                  navigate("/nuevo-registro", {
+                  navigate("/registro", {
                     state: { nombreComun: busqueda },
                   })
                 }

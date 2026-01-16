@@ -7,7 +7,8 @@ export const colores = {
   fondo: "#F1F2ED",
   blanco: "#FFFFFF",
   grisTexto: "#666666",
-  grisSuave: "#F0F0F0"
+  grisSuave: "#F0F0F0",
+  frondoso: "#2D8B57",
 };
 
 export const sombras = {

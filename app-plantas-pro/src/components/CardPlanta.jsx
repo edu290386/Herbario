@@ -9,10 +9,23 @@ import { Leaf } from "lucide-react";
 export const CardPlanta = ({ planta }) => {
   const navigate = useNavigate();
 
+  const manejarRegistro = (e) => {
+    e.stopPropagation(); // ¡Importante! Evita que el clic "atraviese" el botón
+    navigate("/registro", {
+      state: {
+        plantaId: planta.id,
+        nombreComun: planta.nombre_comun,
+      },
+    });
+  };
+
   return (
-    <div style={estilos.card} onClick={() => navigate(`/planta/${planta.id}`)}>
+    <div style={estilos.card}>
       {/* 1. Contenedor de Imagen con tamaño fijo */}
-      <div style={estilos.contenedorImagen}>
+      <div
+        style={estilos.contenedorImagen}
+        onClick={() => navigate(`/planta/${planta.nombre_comun}`)}
+      >
         {planta.foto_perfil ? (
           <img
             src={transformarImagen(planta.foto_perfil)}
@@ -46,10 +59,10 @@ export const CardPlanta = ({ planta }) => {
 
         {/* 3. Botón siempre al fondo */}
         <BotonRegistrar
-          texto="AGREGAR UBICACIÓN"
+          texto="Agregar Ubicación"
           // Pasamos el ID y el nombre (el nombre solo para mostrarlo en el formulario)
           onClick={() =>
-            navigate("/nuevo-registro", {
+            navigate("/registro", {
               state: {
                 plantaId: planta.id,
                 nombreComun: planta.nombre_comun,
@@ -68,7 +81,6 @@ const estilos = {
     borderRadius: "20px",
     overflow: "hidden",
     boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-    cursor: "pointer",
     width: "100%",
     maxWidth: "340px", // El ancho grande que pediste
     height: "620px", // El alto grande que pediste
@@ -82,6 +94,7 @@ const estilos = {
     width: "100%",
     flexShrink: 0,
     backgroundColor: "#f9f9f9",
+    cursor: 'pointer',
   },
   img: {
     width: "100%",

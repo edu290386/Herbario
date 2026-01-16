@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { DetallePage } from './pages/DetallePage';
-import { FormularioRegistro } from "./components/FormularioRegistro";
+import { Registro } from './pages/Registro'
 
 function App() {
   return (
@@ -11,10 +11,10 @@ function App() {
         <Route path="/" element={<HomePage />} />
 
         {/* Ruta para ver el detalle de una planta (carrusel, info, etc.) */}
-        <Route path="/planta/:id" element={<DetallePage />} />
+        <Route path="/planta/:nombre" element={<DetallePage />} />
 
         {/* NUEVA RUTA: El formulario inteligente que acabamos de crear */}
-        <Route path="/nuevo-registro" element={<FormularioRegistro />} />
+        <Route path="/registro" element={<Registro />} />
       </Routes>
     </BrowserRouter>
   );

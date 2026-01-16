@@ -1,122 +1,208 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { ArrowLeft, Camera } from 'lucide-react';
-import { FormularioRegistro } from '../components/FormularioRegistro';
-import { transformarImagen } from '../helpers/cloudinaryHelper';
-import { BotonRegistrar } from '../components/BotonRegistrar';
-import { colores } from '../constants/tema';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { colores } from "../constants/tema";
+import { Leaf, MapPin, ArrowLeft, Calendar } from "lucide-react";
+import { BotonRegistrar } from "../components/BotonRegistrar";
 
 
 export const DetallePage = () => {
-  const { id } = useParams();
+  const { nombre } = useParams();
   const navigate = useNavigate();
   const [planta, setPlanta] = useState(null);
-  const [ubicaciones, setUbicaciones] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [mostrandoForm, setMostrandoForm] = useState(false);
 
   useEffect(() => {
-    cargarDatos();
-  }, [id]);
+    const obtenerDetalle = async () => {
+      try {
 
-  const cargarDatos = async () => {
-    const [resPlanta, resUbis] = await Promise.all([
-      supabase.from('plantas').select('*').eq('id', id).single(),
-      supabase.from('ubicaciones').select('*').eq('planta_id', id).order('created_at', { ascending: false })
-    ]);
-    setPlanta(resPlanta.data);
-    setUbicaciones(resUbis.data || []);
-    setCargando(false);
-  };
+        const nombreBusqueda = nombre.replace(/-/g, " ");
 
-  if (cargando) return <div style={estilos.sinDatos}>Cargando herbario...</div>;
+        const { data, error } = await supabase
+          .from("plantas")
+          .select(
+            `
+            *,
+            ubicaciones (*)
+          `
+          )
+          .ilike("nombre_comun", nombreBusqueda)
+          .single();
 
-  const fotosBotanicas = [
-    { label: 'General', url: planta.foto_perfil },
-    { label: 'Tallo', url: planta.foto_tallo },
-    { label: 'Hoja', url: planta.foto_hoja },
-    { label: 'Fruto', url: planta.foto_fruto },
-    { label: 'Raíz', url: planta.foto_raiz }
-  ].filter(f => f.url);
+        if (error) throw error;
+        setPlanta(data);
+      } catch (error) {
+        console.error("Error cargando detalle:", error.message);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    obtenerDetalle();
+  }, [nombre]);
+
+  if (cargando) return <div style={estilos.loading}>Cargando Información de planta...</div>;
+  if (!planta) return <div style={estilos.loading}>Planta no encontrada.</div>;
 
   return (
     <div style={estilos.pagina}>
-      <header style={estilos.header}>
-        <button onClick={() => navigate('/')} style={estilos.btnVolver}>
-          <ArrowLeft color={colores.bosque} />
-        </button>
-        <div style={{ flex: 1 }}>
-          <h1 style={estilos.titulo}>{planta.nombre_comun}</h1>
-          <p style={estilos.cientifico}>{planta.nombre_cientifico || "Especie no identificada"}</p>
-        </div>
-      </header>
+      {/* Botón Volver */}
+      <button onClick={() => navigate(-1)} style={estilos.btnVolver}>
+        <ArrowLeft size={20} /> Volver
+      </button>
 
-      <section style={estilos.seccion}>
-        <h3 style={estilos.h3}>Detalle Botánico</h3>
-        <div style={estilos.carrusel}>
-          {fotosBotanicas.map((foto, i) => (
-            <div key={i} style={estilos.cardBotanica}>
-              <img src={foto.url} style={estilos.img} alt={foto.label} />
-              <div style={estilos.badge}>{foto.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={estilos.seccion}>
-        <div style={estilos.headerRutas}>
-          <h3 style={estilos.h3}>Guía de Ubicación ({ubicaciones.length})</h3>
-          <BotonRegistrar 
-            texto="Agregar Punto"
-            estiloAdicional={{ width: 'auto', padding: '10px 25px' }} 
-            onClick={() => setMostrandoForm(true)} 
+      {/* Cabecera con Imagen */}
+      <div style={estilos.header}>
+        {planta.foto_perfil ? (
+          <img
+            src={planta.foto_perfil}
+            alt={planta.nombre_comun}
+            style={estilos.fotoPrincipal}
           />
+        ) : (
+          <div style={estilos.fallback}>
+            <Leaf size={80} color={colores.retama} strokeWidth={1} />
+          </div>
+        )}
+      </div>
+
+      {/* Información Principal */}
+      <div style={estilos.contenido}>
+        <h1 style={estilos.nombre}>{planta.nombre_comun?.toUpperCase()}</h1>
+        <p style={estilos.cientifico}>
+          <i>
+            {!planta.nombre_cientifico ||
+            planta.nombre_cientifico === null
+              ? "Nombre científico pendiente"
+              : planta.nombre_cientifico}
+          </i>
+        </p>
+
+        <div style={estilos.divisor} />
+
+        {/* Sección de Ubicaciones */}
+        <h3 style={estilos.subtitulo}>AVISTAMIENTOS REGISTRADOS</h3>
+        <div style={estilos.listaUbicaciones}>
+          {planta.ubicaciones?.length > 0 ? (
+            planta.ubicaciones.map((loc) => (
+              <div key={loc.id} style={estilos.itemUbicacion}>
+                <MapPin size={18} color={colores.bosque} />
+                <div style={estilos.locInfo}>
+                  <p style={estilos.fecha}>
+                    <Calendar size={14} />{" "}
+                    {new Date(loc.created_at).toLocaleDateString()}
+                  </p>
+                  <p style={estilos.coords}>
+                    {loc.latitud.toFixed(4)}, {loc.longitud.toFixed(4)}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={estilos.vacio}>No hay ubicaciones registradas aún.</p>
+          )}
         </div>
 
-        {ubicaciones.map((punto) => (
-          <div key={punto.id} style={estilos.tarjetaRuta}>
-            <div style={estilos.gridFotos}>
-              <div style={estilos.marco}><img src={transformarImagen(punto.foto_contexto)} style={estilos.img} /></div>
-              <div style={estilos.marco}>
-                <img src={`https://maps.googleapis.com/maps/api/staticmap?center=${punto.latitud},${punto.longitud}&zoom=17&size=300x300&markers=${punto.latitud},${punto.longitud}&key=TU_API_KEY`} style={estilos.img} />
-              </div>
-            </div>
-            <p style={estilos.descripcionPunto}>{punto.descripcion}</p>
-          </div>
-        ))}
-      </section>
-
-      {mostrandoForm && (
-        <FormularioUbicacion 
-          plantaId={id} 
-          onExito={() => { setMostrandoForm(false); cargarDatos(); }}
-          onCancelar={() => setMostrandoForm(false)}
+        <BotonRegistrar
+          texto="AÑADIR NUEVA UBICACIÓN"
+          onClick={() =>
+            navigate("/registro", {
+              state: { plantaId: planta.id, nombreComun: planta.nombre_comun },
+            })
+          }
         />
-      )}
+      </div>
     </div>
   );
 };
 
-// --- EL OBJETO QUE TE FALTABA ---
 const estilos = {
-  pagina: { padding: '15px', maxWidth: '800px', margin: '0 auto', backgroundColor: colores.fondo, minHeight: '100vh' },
-  header: { display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' },
-  btnVolver: { background: 'white', border: 'none', borderRadius: '50%', padding: '10px', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' },
-  titulo: { margin: 0, color: colores.bosque, fontSize: '1.6rem' },
-  cientifico: { margin: 0, color: '#666', fontStyle: 'italic' },
-  seccion: { marginBottom: '30px' },
-  h3: { color: colores.bosque, fontSize: '0.9rem', textTransform: 'uppercase', marginBottom: '15px' },
-  carrusel: { display: 'flex', overflowX: 'auto', gap: '10px', paddingBottom: '10px' },
-  cardBotanica: { minWidth: '200px', height: '250px', position: 'relative', borderRadius: '15px', overflow: 'hidden' },
-  img: { width: '100%', height: '100%', objectFit: 'cover' },
-  badge: { position: 'absolute', bottom: '10px', left: '10px', background: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem' },
-  headerRutas: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' },
-  btnAgregar: { backgroundColor: colores.bosque, color: 'white', border: 'none', padding: '10px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' },
-  tarjetaRuta: { backgroundColor: 'white', borderRadius: '15px', padding: '12px', marginBottom: '15px', border: `1px solid ${colores.hoja}` },
-  gridFotos: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
-  marco: { height: '150px', borderRadius: '10px', overflow: 'hidden' },
-  descripcionPunto: { marginTop: '10px', fontSize: '0.9rem', color: '#444' },
-  sinDatos: { textAlign: 'center', padding: '50px', color: colores.hoja }
+  pagina: { minHeight: "100vh", backgroundColor: "#f9fbf9" },
+  loading: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#1A3C34",
+    fontWeight: "bold",
+  },
+  btnVolver: {
+    position: "absolute",
+    top: "20px",
+    left: "20px",
+    zIndex: 10,
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    padding: "8px 15px",
+    borderRadius: "20px",
+    border: "none",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    cursor: "pointer",
+    fontWeight: "bold",
+    color: "#1A3C34",
+  },
+  header: {
+    width: "100%",
+    height: "40vh",
+    position: "relative",
+    overflow: "hidden",
+  },
+  fotoPrincipal: { width: "100%", height: "100%", objectFit: "cover" },
+  fallback: {
+    width: "100%",
+    height: "100%",
+    background: "linear-gradient(180deg, #1A3C34 0%, #0d1e1a 100%)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  contenido: {
+    padding: "30px",
+    backgroundColor: "white",
+    marginTop: "-30px",
+    borderTopLeftRadius: "30px",
+    borderTopRightRadius: "30px",
+    position: "relative",
+    minHeight: "60vh",
+  },
+  nombre: {
+    margin: "0",
+    fontSize: "1.8rem",
+    color: "#1A3C34",
+    fontWeight: "800",
+  },
+  cientifico: { color: "#666", marginBottom: "20px" },
+  divisor: { height: "1px", backgroundColor: "#eee", margin: "20px 0" },
+  subtitulo: {
+    fontSize: "0.9rem",
+    letterSpacing: "1px",
+    color: "#1A3C34",
+    opacity: 0.7,
+    marginBottom: "15px",
+  },
+  listaUbicaciones: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    marginBottom: "30px",
+  },
+  itemUbicacion: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    padding: "15px",
+    borderRadius: "15px",
+    backgroundColor: "#f0f4f1",
+  },
+  fecha: {
+    margin: 0,
+    fontSize: "0.8rem",
+    color: "#555",
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+  },
+  coords: { margin: 0, fontWeight: "bold", color: "#1A3C34" },
+  vacio: { fontStyle: "italic", color: "#999" },
 };
-
