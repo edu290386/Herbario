@@ -11,21 +11,27 @@ export const HomePage = () => {
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
+  // 1. Usamos 'function' para que JavaScript la reconozca en todo el archivo (Hoisting)
+  async function obtenerPlantas() {
+    try {
+      const { data, error } = await supabase.from("plantas").select("*");
+
+      if (error) throw error;
+      setPlantas(data || []);
+    } catch (error) {
+      console.error("Error al obtener plantas:", error.message);
+    }
+  }
+
+  // 2. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
     obtenerPlantas();
-  }, []);
+  }, []); // Array vacío = Solo se ejecuta una vez
 
-  const obtenerPlantas = async () => {
-    const { data } = await supabase.from("plantas").select("*");
-    setPlantas(data || []);
-    console.log(data);
-  };
-
-  const plantasFiltradas = plantas.filter((p) =>
+  // 3. Lógica de filtrado para la búsqueda
+    const plantasFiltradas = plantas.filter((p) =>
     p.nombre_comun.toLowerCase().includes(busqueda.toLowerCase())
   );
-
-  
 
   return (
     <div style={estilos.pagina}>
@@ -62,7 +68,8 @@ export const HomePage = () => {
           plantasFiltradas.length === 0 && (
             <div style={estilos.contenedorNuevo}>
               <p>
-                La planta "<strong>{busqueda}</strong>" no se encuentra en la galeria.
+                La planta "<strong>{busqueda}</strong>" no se encuentra en la
+                galeria.
               </p>
               <BotonRegistrar
                 texto={`Registrar planta`}

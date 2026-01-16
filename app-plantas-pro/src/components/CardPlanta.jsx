@@ -24,7 +24,7 @@ export const CardPlanta = ({ planta }) => {
       {/* 1. Contenedor de Imagen con tamaño fijo */}
       <div
         style={estilos.contenedorImagen}
-        onClick={() => navigate(`/planta/${planta.nombre_comun}`)}
+        onClick={() => navigate(`/planta/${planta.nombre_comun}`,{state:{planta}})}
       >
         {planta.foto_perfil ? (
           <img

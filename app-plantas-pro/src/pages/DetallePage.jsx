@@ -1,208 +1,173 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import { colores } from "../constants/tema";
-import { Leaf, MapPin, ArrowLeft, Calendar } from "lucide-react";
-import { BotonRegistrar } from "../components/BotonRegistrar";
-import { transformarImagen } from "../helpers/cloudinaryHelper";
-
+import { useEffect, useState } from 'react';
+import { useParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
+import { transformarImagen } from '../helpers/cloudinaryHelper';
+import { BotonVolver } from '../components/BotonVolver';
 
 export const DetallePage = () => {
-  const { nombre } = useParams();
-  const navigate = useNavigate();
-  const [planta, setPlanta] = useState(null);
-  const [cargando, setCargando] = useState(true);
+    const { id: nombreUrl } = useParams();
+    console.log(nombreUrl)
+    const location = useLocation();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const obtenerDetalle = async () => {
-      try {
+    const planta = location.state?.planta;
+    const [ubicaciones, setUbicaciones] = useState([]);
+    const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
 
-        const nombreBusqueda = nombre.replace(/-/g, " ");
+    useEffect(() => {
+        if (planta) {
+            fetchUbicaciones(planta.id);
+        }
+    }, [planta]);
 
-        const { data, error } = await supabase
-          .from("plantas")
-          .select(
-            `
-            *,
-            ubicaciones (*)
-          `
-          )
-          .ilike("nombre_comun", nombreBusqueda)
-          .single();
-
-        if (error) throw error;
-        setPlanta(data);
-      } catch (error) {
-        console.error("Error cargando detalle:", error.message);
-      } finally {
-        setCargando(false);
-      }
+    const fetchUbicaciones = async (plantaId) => {
+        try {
+            const { data, error } = await supabase
+                .from('ubicaciones')
+                .select('*')
+                .eq('planta_id', plantaId);
+            
+            if (error) throw error;
+            setUbicaciones(data || []);
+        } catch (error) {
+            console.error("Error:", error.message);
+        } finally {
+            setCargandoUbicaciones(false);
+        }
     };
 
-    obtenerDetalle();
-  }, [nombre]);
+    if (!planta) return <Navigate to="/" />;
 
-  if (cargando) return <div style={estilos.loading}>Cargando Información de planta...</div>;
-  if (!planta) return <div style={estilos.loading}>Planta no encontrada.</div>;
-
-  return (
-    <div style={estilos.pagina}>
-      {/* Botón Volver */}
-      <button onClick={() => navigate(-1)} style={estilos.btnVolver}>
-        <ArrowLeft size={20} /> Volver
-      </button>
-
-      {/* Cabecera con Imagen */}
-      <div style={estilos.header}>
-        {planta.foto_perfil ? (
+    return (
+      <div style={styles.wrapper}>
+        {/* SECCIÓN VISUAL (9:16) */}
+        <div style={styles.header}>
+          <BotonVolver />
           <img
             src={transformarImagen(planta.foto_perfil, "detalle")}
             alt={planta.nombre_comun}
-            style={estilos.fotoPrincipal}
+            style={styles.imgHero}
           />
-        ) : (
-          <div style={estilos.fallback}>
-            <Leaf size={80} color={colores.retama} strokeWidth={1} />
-          </div>
-        )}
-      </div>
-
-      {/* Información Principal */}
-      <div style={estilos.contenido}>
-        <h1 style={estilos.nombre}>{planta.nombre_comun?.toUpperCase()}</h1>
-        <p style={estilos.cientifico}>
-          <i>
-            {!planta.nombre_cientifico || planta.nombre_cientifico === null
-              ? ""
-              : planta.nombre_cientifico}
-          </i>
-        </p>
-
-        <div style={estilos.divisor} />
-
-        {/* Sección de Ubicaciones */}
-        <h3 style={estilos.subtitulo}>AVISTAMIENTOS REGISTRADOS</h3>
-        <div style={estilos.listaUbicaciones}>
-          {planta.ubicaciones?.length > 0 ? (
-            planta.ubicaciones.map((loc) => (
-              <div key={loc.id} style={estilos.itemUbicacion}>
-                <MapPin size={18} color={colores.bosque} />
-                <div style={estilos.locInfo}>
-                  <p style={estilos.fecha}>
-                    <Calendar size={14} />{" "}
-                    {new Date(loc.created_at).toLocaleDateString()}
-                  </p>
-                  <p style={estilos.coords}>
-                    {loc.latitud.toFixed(4)}, {loc.longitud.toFixed(4)}
-                  </p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={estilos.vacio}>No hay ubicaciones registradas aún.</p>
-          )}
         </div>
 
-        <BotonRegistrar
-          texto="AÑADIR NUEVA UBICACIÓN"
-          onClick={() =>
-            navigate("/registro", {
-              state: { plantaId: planta.id, nombreComun: planta.nombre_comun },
-            })
-          }
-        />
+        {/* SECCIÓN INFORMACIÓN */}
+        <div style={styles.content}>
+          <h1 style={styles.title}>{planta.nombre_comun}</h1>
+          <p style={styles.scientificName}>{planta.nombre_cientifico}</p>
+
+          <div style={styles.section}>
+            <h3 style={styles.subTitle}>Propiedades Medicinales</h3>
+            <p style={styles.text}>{planta.descripcion_medicinal}</p>
+          </div>
+
+          <div style={styles.section}>
+            <h3 style={styles.subTitle}>Ubicaciones Registradas</h3>
+            {cargandoUbicaciones ? (
+              <p style={styles.text}>Buscando coordenadas...</p>
+            ) : (
+              <div style={styles.list}>
+                {ubicaciones.map((u) => (
+                  <div key={u.id} style={styles.locationItem}>
+                    📍 Lat: {u.latitud} | Lon: {u.longitud}
+                  </div>
+                ))}
+                {ubicaciones.length === 0 && (
+                  <p style={styles.text}>Sin registros aún.</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button style={styles.btnGPS}>REGISTRAR MI UBICACIÓN</button>
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
-const estilos = {
-  pagina: { minHeight: "100vh", backgroundColor: "#f9fbf9" },
-  loading: {
-    height: "100vh",
+// --- CONSTANTES DE ESTILO (Estética de la App) ---
+const styles = {
+  wrapper: {
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    color: "#1A3C34",
-    fontWeight: "bold",
+    flexDirection: "column",
+    minHeight: "100vh",
+    backgroundColor: "#fff",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   },
-  btnVolver: {
+  header: {
+    height: "60vh",
+    position: "relative",
+    backgroundColor: "#f0f0f0",
+  },
+  imgHero: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+  btnBack: {
     position: "absolute",
     top: "20px",
     left: "20px",
-    zIndex: 10,
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-    padding: "8px 15px",
-    borderRadius: "20px",
+    padding: "10px 18px",
+    backgroundColor: "#F4E285",
+    color: "#2F4538",
     border: "none",
-    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: "25px",
     cursor: "pointer",
     fontWeight: "bold",
-    color: "#1A3C34",
   },
-  header: {
-    width: "100%",
-    height: "40vh",
-    position: "relative",
-    overflow: "hidden",
+  content: {
+    padding: "30px 25px",
+    marginTop: "-35px",
+    backgroundColor: "#fff",
+    borderRadius: "35px 35px 0 0",
+    boxShadow: "0 -10px 20px rgba(0,0,0,0.05)",
   },
-  fotoPrincipal: { width: "100%", height: "100%", objectFit: "cover" },
-  fallback: {
-    width: "100%",
-    height: "100%",
-    background: "linear-gradient(180deg, #1A3C34 0%, #0d1e1a 100%)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+  title: {
+    fontSize: "2rem",
+    margin: "0 0 5px 0",
+    color: "#1a1a1a",
   },
-  contenido: {
-    padding: "30px",
-    backgroundColor: "white",
-    marginTop: "-30px",
-    borderTopLeftRadius: "30px",
-    borderTopRightRadius: "30px",
-    position: "relative",
-    minHeight: "60vh",
+  scientificName: {
+    fontSize: "1.1rem",
+    fontStyle: "italic",
+    color: "#2D5A27", // Verde institucional
+    marginBottom: "25px",
   },
-  nombre: {
-    margin: "0",
-    fontSize: "1.8rem",
-    color: "#1A3C34",
-    fontWeight: "800",
+  section: {
+    marginBottom: "20px",
   },
-  cientifico: { color: "#666", marginBottom: "20px" },
-  divisor: { height: "1px", backgroundColor: "#eee", margin: "20px 0" },
-  subtitulo: {
-    fontSize: "0.9rem",
-    letterSpacing: "1px",
-    color: "#1A3C34",
-    opacity: 0.7,
-    marginBottom: "15px",
+  subTitle: {
+    fontSize: "1.2rem",
+    borderBottom: "2px solid #f0f4f0",
+    paddingBottom: "8px",
+    marginBottom: "10px",
+    color: "#333",
   },
-  listaUbicaciones: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-    marginBottom: "30px",
-  },
-  itemUbicacion: {
-    display: "flex",
-    alignItems: "center",
-    gap: "15px",
-    padding: "15px",
-    borderRadius: "15px",
-    backgroundColor: "#f0f4f1",
-  },
-  fecha: {
-    margin: 0,
-    fontSize: "0.8rem",
+  text: {
+    lineHeight: "1.6",
     color: "#555",
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
+    fontSize: "0.95rem",
   },
-  coords: { margin: 0, fontWeight: "bold", color: "#1A3C34" },
-  vacio: { fontStyle: "italic", color: "#999" },
+  locationItem: {
+    backgroundColor: "#f9f9f9",
+    padding: "12px",
+    borderRadius: "10px",
+    marginBottom: "8px",
+    fontSize: "0.85rem",
+    border: "1px solid #eee",
+    color: "#666",
+  },
+  btnGPS: {
+    width: "100%",
+    padding: "18px",
+    backgroundColor: "#2D5A27", // Mismo verde del nombre científico
+    color: "#fff",
+    border: "none",
+    borderRadius: "15px",
+    fontWeight: "bold",
+    fontSize: "1rem",
+    marginTop: "20px",
+    cursor: "pointer",
+    boxShadow: "0 4px 15px rgba(45, 90, 39, 0.2)",
+  },
 };
