@@ -2,9 +2,12 @@ import React from "react";
 import { MapPin } from "lucide-react";
 import { colores } from "../constants/tema";
 
-export const BotonRegistrar = ({ onClick, texto = "Registrar nueva planta" }) => {
+export const BotonRegistrar = ({ onClick, disabled, texto = "Registrar nueva planta" }) => {
   return (
-    <button onClick={onClick} style={estilos.btn}>
+    <button 
+      onClick={onClick}
+      disabled={disabled} 
+      style={estilos.btn}>
       <MapPin size={18} />
       <span>{texto}</span>
     </button>

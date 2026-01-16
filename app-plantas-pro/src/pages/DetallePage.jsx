@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { colores } from "../constants/tema";
 import { Leaf, MapPin, ArrowLeft, Calendar } from "lucide-react";
 import { BotonRegistrar } from "../components/BotonRegistrar";
+import { transformarImagen } from "../helpers/cloudinaryHelper";
 
 
 export const DetallePage = () => {
@@ -55,7 +56,7 @@ export const DetallePage = () => {
       <div style={estilos.header}>
         {planta.foto_perfil ? (
           <img
-            src={planta.foto_perfil}
+            src={transformarImagen(planta.foto_perfil, "detalle")}
             alt={planta.nombre_comun}
             style={estilos.fotoPrincipal}
           />
@@ -71,9 +72,8 @@ export const DetallePage = () => {
         <h1 style={estilos.nombre}>{planta.nombre_comun?.toUpperCase()}</h1>
         <p style={estilos.cientifico}>
           <i>
-            {!planta.nombre_cientifico ||
-            planta.nombre_cientifico === null
-              ? "Nombre científico pendiente"
+            {!planta.nombre_cientifico || planta.nombre_cientifico === null
+              ? ""
               : planta.nombre_cientifico}
           </i>
         </p>

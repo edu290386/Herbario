@@ -32,11 +32,20 @@ export const uploadImage = async (file) => {
 };
 
 
-export const transformarImagen = (url) => {
-  if (!url) return null;
-  // Reemplaza la extensión .heic por .jpg y añade optimización automática
-  return url.replace(
-    "/upload/",
-    "/upload/f_auto,q_auto,w_600,h_600,c_fill,g_auto/"
-  );
+export const transformarImagen = (url, modo = 'card') => {
+    if (!url) return "";
+
+    if (modo === 'detalle') {
+      // MODO DETALLE OPTIMIZADO:
+      // w_2000: Limita el ancho a 2000px (suficiente para zoom de alta calidad)
+      // f_auto: Convierte HEIC a formato web compatible
+      // q_auto:best: Aplica la mejor compresión posible sin pérdida visual notable
+      return url.replace(
+        "/upload/",
+        "/upload/w_2000,c_limit,f_auto,q_auto:best/"
+      );
+    }
+
+    // MODO CARD (por defecto): Optimizado, pequeño y rápido para la lista
+    return url.replace("/upload/", "/upload/w_400,h_400,c_fill,f_auto,q_auto/");
 };

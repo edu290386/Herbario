@@ -36,7 +36,7 @@ export const CardPlanta = ({ planta }) => {
           <div style={estilos.fallbackBosque}>
             <Leaf
               size={60}
-              color={colores.bosque}
+              color={colores.frondoso}
               strokeWidth={1}
               style={estilos.hojaIcono}
             />
@@ -61,14 +61,7 @@ export const CardPlanta = ({ planta }) => {
         <BotonRegistrar
           texto="Agregar Ubicación"
           // Pasamos el ID y el nombre (el nombre solo para mostrarlo en el formulario)
-          onClick={() =>
-            navigate("/registro", {
-              state: {
-                plantaId: planta.id,
-                nombreComun: planta.nombre_comun,
-              },
-            })
-          }
+          onClick={manejarRegistro}
         />
       </div>
     </div>
