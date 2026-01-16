@@ -3,7 +3,7 @@ import { colores } from '../constants/tema';
 
 export const OtrosNombres = ({ lista }) => {
   // 1. Log para depurar: Mira tu consola del navegador (F12) para ver qué llega
-  console.log("Dato en OtrosNombres:", lista);
+  //console.log("Dato en OtrosNombres:", lista);
 
   // 2. Si es nulo o vacío, no mostramos nada
   if (!lista) return null;
@@ -37,6 +37,6 @@ export const OtrosNombres = ({ lista }) => {
 
 const estilos = {
   contenedor: { margin: '8px 0', lineHeight: '1.4' },
-  label: { fontWeight: '800', fontSize: '1rem', color: colores.bosque, letterSpacing: '0.5px' },
-  texto: { fontSize: '1rem', color: '#666' }
+  label: { fontWeight: '700', fontSize: '1rem', color: colores.bosque, letterSpacing: '0.4px' },
+  texto: { fontSize: '0.95rem', color: '#666' }
 };

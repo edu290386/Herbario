@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ArrowLeft, Camera } from 'lucide-react';
-import { FormularioUbicacion } from '../components/FormularioUbicacion';
+import { FormularioRegistro } from '../components/FormularioRegistro';
 import { transformarImagen } from '../helpers/cloudinaryHelper';
 import { BotonRegistrar } from '../components/BotonRegistrar';
 import { colores } from '../constants/tema';
@@ -119,3 +119,4 @@ const estilos = {
   descripcionPunto: { marginTop: '10px', fontSize: '0.9rem', color: '#444' },
   sinDatos: { textAlign: 'center', padding: '50px', color: colores.hoja }
 };
+
