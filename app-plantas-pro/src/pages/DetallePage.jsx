@@ -1,173 +1,275 @@
-import { useEffect, useState } from 'react';
-import { useParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { transformarImagen } from '../helpers/cloudinaryHelper';
-import { BotonVolver } from '../components/BotonVolver';
+import { useEffect, useState } from "react";
+import { useLocation, Navigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { BotonVolver } from "../components/BotonVolver";
+import { BotonRegistrar } from "../components/BotonRegistrar";
+import { CarruselDetalle } from "../components/CarruselDetalle";
+import { IoMdLocate, IoMdRemove } from "react-icons/io";
+import { OtrosNombres } from "../components/OtrosNombres";
+import { AcordeonInformacion } from "../components/AcordeonInformacion"
 
 export const DetallePage = () => {
-    const { id: nombreUrl } = useParams();
-    console.log(nombreUrl)
-    const location = useLocation();
-    const navigate = useNavigate();
+  const { state } = useLocation();
+  const planta = state?.planta;
 
-    const planta = location.state?.planta;
-    const [ubicaciones, setUbicaciones] = useState([]);
-    const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [acordeonAbierto, setAcordeonAbierto] = useState(false);
 
-    useEffect(() => {
-        if (planta) {
-            fetchUbicaciones(planta.id);
-        }
-    }, [planta]);
+  // SOLUCIÓN AL SCROLL: Sube al inicio apenas carga el componente
+  useEffect(() => {
+    // 1. Desactivamos la restauración del navegador
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    // 2. Forzamos el scroll al inicio con un pequeño retraso
+    // Esto asegura que incluso si las imágenes tardan en cargar, el scroll suba
+    const timer = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "instant",
+      });
+    }, 100); // 100ms es imperceptible para el ojo pero suficiente para el navegador
+    return () => clearTimeout(timer); // Limpieza
+  }, [planta]);
 
-    const fetchUbicaciones = async (plantaId) => {
+  // Listener para actualizar el diseño si cambian el tamaño de la ventana
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // CARGA DE DATOS DESDE SUPABASE
+  useEffect(() => {
+    if (planta) {
+      const fetchUbicaciones = async () => {
         try {
-            const { data, error } = await supabase
-                .from('ubicaciones')
-                .select('*')
-                .eq('planta_id', plantaId);
-            
-            if (error) throw error;
-            setUbicaciones(data || []);
+          const { data, error } = await supabase
+            .from("ubicaciones")
+            .select("*")
+            .eq("planta_id", planta.id);
+          if (error) throw error;
+          setUbicaciones(data || []);
         } catch (error) {
-            console.error("Error:", error.message);
+          console.error("Error:", error.message);
         } finally {
-            setCargandoUbicaciones(false);
+          setCargandoUbicaciones(false);
         }
-    };
+      };
+      fetchUbicaciones();
+    }
+  }, [planta]);
 
-    if (!planta) return <Navigate to="/" />;
+  if (!planta) return <Navigate to="/" />;
 
-    return (
-      <div style={styles.wrapper}>
-        {/* SECCIÓN VISUAL (9:16) */}
-        <div style={styles.header}>
-          <BotonVolver />
-          <img
-            src={transformarImagen(planta.foto_perfil, "detalle")}
-            alt={planta.nombre_comun}
-            style={styles.imgHero}
-          />
+  const fotosPlanta = [
+    planta.foto_perfil,
+    planta.foto_tallo,
+    planta.foto_hoja,
+    planta.foto_fruto,
+    planta.foto_raiz,
+    planta.foto_flor,
+    planta.foto_semilla,
+  ].filter(Boolean);
+
+  return (
+    <div style={styles.wrapper}>
+      <BotonVolver />
+      {/* BLOQUE 1: VISTA PRINCIPAL (100vh) */}
+      <div
+        style={{
+          ...styles.mainContainer,
+          flexDirection: isMobile ? "column" : "row",
+          height: isMobile ? "auto" : "100vh",
+          minHeight: isMobile ? "100vh" : "auto",
+        }}
+      >
+        {/* LADO IZQUIERDO: Carrusel */}
+        <div
+          style={{
+            ...styles.carruselSection,
+            height: isMobile ? "60vh" : "100%",
+            padding: isMobile ? "0" : "30px",
+          }}
+        >
+          <CarruselDetalle imagenes={fotosPlanta} isMobile={isMobile} />
         </div>
-
-        {/* SECCIÓN INFORMACIÓN */}
-        <div style={styles.content}>
+        {/* LADO DERECHO: Info Principal */}
+        <div
+          style={{
+            ...styles.infoSection,
+            justifyContent: "flex-start",
+            minHeight: isMobile ? "auto" : "100%",
+          }}
+        >
+          {/* 1. Nombre Común */}
           <h1 style={styles.title}>{planta.nombre_comun}</h1>
+
+          {/* 2. Nombre Científico */}
           <p style={styles.scientificName}>{planta.nombre_cientifico}</p>
 
-          <div style={styles.section}>
-            <h3 style={styles.subTitle}>Propiedades Medicinales</h3>
-            <p style={styles.text}>{planta.descripcion_medicinal}</p>
-          </div>
+          {/* 3. REUTILIZACIÓN: Componente OtrosNombres */}
+          {/* Pasamos los datos de la planta como prop según lo tengas definido */}
+          <OtrosNombres planta={planta} />
 
-          <div style={styles.section}>
-            <h3 style={styles.subTitle}>Ubicaciones Registradas</h3>
-            {cargandoUbicaciones ? (
-              <p style={styles.text}>Buscando coordenadas...</p>
-            ) : (
-              <div style={styles.list}>
-                {ubicaciones.map((u) => (
-                  <div key={u.id} style={styles.locationItem}>
-                    📍 Lat: {u.latitud} | Lon: {u.longitud}
-                  </div>
-                ))}
-                {ubicaciones.length === 0 && (
-                  <p style={styles.text}>Sin registros aún.</p>
-                )}
+          {/* 4. Acordeón de Usos (Lógica local para el despliegue) */}
+          <div style={styles.accordionContainer}>
+            <div
+              style={styles.accordionHeader}
+              onClick={() => setAcordeonAbierto(!acordeonAbierto)}
+            >
+              <h3
+                style={{
+                  ...styles.subTitle,
+                  marginBottom: 0,
+                  borderBottom: "none",
+                }}
+              >
+                Usos y Propiedades
+              </h3>
+              <span style={styles.arrowIcon}>
+                {acordeonAbierto ? "▲" : "▼"}
+              </span>
+            </div>
+
+            {acordeonAbierto && (
+              <div style={styles.accordionContent}>
+                <p style={styles.text}>{planta.usos}</p>
               </div>
             )}
           </div>
 
-          <button style={styles.btnGPS}>REGISTRAR MI UBICACIÓN</button>
+          {/* 5. REUTILIZACIÓN: Componente BotonRegistrar */}
+          {/* El texto "REGISTRAR NUEVA UBICACIÓN" se gestiona dentro del componente o vía props */}
+          <BotonRegistrar />
         </div>
       </div>
-    );
-};
 
-// --- CONSTANTES DE ESTILO (Estética de la App) ---
+      {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
+      <div style={styles.scrollSection}>
+        {isMobile && (
+          <div style={styles.mobileDescription}>
+            <h3 style={styles.subTitle}>Propiedades Medicinales</h3>
+            <p style={styles.text}>{planta.descripcion_medicinal}</p>
+            <BotonRegistrar />
+          </div>
+        )}
+
+        <div style={styles.ubicacionesContainer}>
+          <h3 style={styles.subTitle}>Ubicaciones Registradas</h3>
+          {cargandoUbicaciones ? (
+            <p style={styles.text}>Cargando coordenadas...</p>
+          ) : (
+            <div style={styles.list}>
+              {ubicaciones.map((u) => (
+                <div key={u.id} style={styles.locationItem}>
+                  <div style={styles.locationMain}>
+                    <IoMdLocate size={20} color="#2D5A27" />
+                    <span style={styles.coordText}>
+                      Lat: {u.latitud.toFixed(4)}
+                    </span>
+                    <IoMdRemove color="#ccc" />
+                    <span style={styles.coordText}>
+                      Lon: {u.longitud.toFixed(4)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {ubicaciones.length === 0 && (
+                <p style={styles.text}>Sin registros aún.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};;;
+
 const styles = {
   wrapper: {
-    display: "flex",
-    flexDirection: "column",
-    minHeight: "100vh",
     backgroundColor: "#fff",
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    minHeight: "100vh",
   },
-  header: {
-    height: "60vh",
-    position: "relative",
-    backgroundColor: "#f0f0f0",
-  },
-  imgHero: {
+  mainContainer: {
+    display: "flex",
     width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    minHeight: "100vh",
   },
-  btnBack: {
-    position: "absolute",
-    top: "20px",
-    left: "20px",
-    padding: "10px 18px",
-    backgroundColor: "#F4E285",
-    color: "#2F4538",
-    border: "none",
-    borderRadius: "25px",
-    cursor: "pointer",
-    fontWeight: "bold",
+  carruselSection: {
+    flex: 1.2,
+    backgroundColor: "#f9f9f9",
+    display: "flex",
+    flexDirection: "column", // Para que miniaturas y principal se alineen bien
+    alignItems: "center",
+    justifyContent: "center",
   },
-  content: {
-    padding: "30px 25px",
-    marginTop: "-35px",
+  infoSection: {
+    flex: 1,
+    padding: "40px",
+    display: "flex",
+    flexDirection: "column",
     backgroundColor: "#fff",
-    borderRadius: "35px 35px 0 0",
-    boxShadow: "0 -10px 20px rgba(0,0,0,0.05)",
   },
   title: {
-    fontSize: "2rem",
-    margin: "0 0 5px 0",
+    fontSize: "2.5rem",
+    margin: "0 0 10px 0",
     color: "#1a1a1a",
   },
   scientificName: {
-    fontSize: "1.1rem",
+    fontSize: "1.3rem",
     fontStyle: "italic",
-    color: "#2D5A27", // Verde institucional
-    marginBottom: "25px",
-  },
-  section: {
+    color: "#2D5A27",
     marginBottom: "20px",
+  },
+  desktopDescription: {
+    marginTop: "20px",
+  },
+  scrollSection: {
+    padding: "40px 25px",
+    backgroundColor: "#fff",
+  },
+  mobileDescription: {
+    marginBottom: "40px",
   },
   subTitle: {
     fontSize: "1.2rem",
     borderBottom: "2px solid #f0f4f0",
     paddingBottom: "8px",
-    marginBottom: "10px",
+    marginBottom: "20px",
     color: "#333",
   },
   text: {
     lineHeight: "1.6",
     color: "#555",
-    fontSize: "0.95rem",
+    fontSize: "1rem",
+    marginBottom: "30px",
+  },
+  ubicacionesContainer: {
+    marginTop: "20px",
   },
   locationItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#f9f9f9",
-    padding: "12px",
-    borderRadius: "10px",
-    marginBottom: "8px",
-    fontSize: "0.85rem",
+    padding: "15px",
+    borderRadius: "12px",
+    marginBottom: "10px",
     border: "1px solid #eee",
-    color: "#666",
   },
-  btnGPS: {
-    width: "100%",
-    padding: "18px",
-    backgroundColor: "#2D5A27", // Mismo verde del nombre científico
-    color: "#fff",
-    border: "none",
-    borderRadius: "15px",
-    fontWeight: "bold",
-    fontSize: "1rem",
-    marginTop: "20px",
-    cursor: "pointer",
-    boxShadow: "0 4px 15px rgba(45, 90, 39, 0.2)",
+  locationMain: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  coordText: {
+    fontSize: "0.9rem",
+    color: "#666",
+    fontWeight: "500",
   },
 };

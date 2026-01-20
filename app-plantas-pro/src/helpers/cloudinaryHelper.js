@@ -32,20 +32,23 @@ export const uploadImage = async (file) => {
 };
 
 
-export const transformarImagen = (url, modo = 'card') => {
-    if (!url) return "";
+export const transformarImagen = (url, modo = "card") => {
+  if (!url) return "";
 
-    if (modo === 'detalle') {
-      // MODO DETALLE OPTIMIZADO:
-      // w_2000: Limita el ancho a 2000px (suficiente para zoom de alta calidad)
-      // f_auto: Convierte HEIC a formato web compatible
-      // q_auto:best: Aplica la mejor compresión posible sin pérdida visual notable
-      return url.replace(
-        "/upload/",
-        "/upload/w_2000,c_limit,f_auto,q_auto:best/"
-      );
-    }
+  // CONFIGURACIÓN PARA DETALLE (CARRUSEL)
+  if (modo === "detalle") {
+    return url.replace(
+      "/upload/",
+      // w_1080, h_1350 -> Relación 4:5 (universal para móvil/laptop)
+      // c_fill -> Llena el espacio sin deformar
+      // g_auto -> Inteligencia Artificial para no cortar la flor/fruto
+      "/upload/ar_3:4,c_fill,g_auto,w_1600,f_auto,q_auto/",
+    );
+  }
 
-    // MODO CARD (por defecto): Optimizado, pequeño y rápido para la lista
-    return url.replace("/upload/", "/upload/w_400,h_400,c_fill,f_auto,q_auto/");
+  // CONFIGURACIÓN PARA HOME (LISTADO)
+  return url.replace(
+    "/upload/",
+    "/upload/w_500,h_500,c_fill,g_auto,f_auto,q_auto/",
+  );
 };
