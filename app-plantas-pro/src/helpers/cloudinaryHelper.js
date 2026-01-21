@@ -6,12 +6,13 @@ const UPLOAD_PRESET = "plantas_preset"; // Reemplaza con tu Upload Preset (debe 
  * @param {File} file - El archivo de imagen capturado por la cámara o galería
  * @returns {Promise<string>} - La URL de la imagen subida
  */
-export const uploadImage = async (file) => {
+export const uploadImage = async (file, path) => {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
+  formData.append("folder", path); // Aquí Cloudinary crea o usa la carpeta
 
   try {
     const response = await fetch(url, {
@@ -20,7 +21,9 @@ export const uploadImage = async (file) => {
     });
 
     if (!response.ok) {
-      throw new Error("Error al subir imagen a Cloudinary");
+      const errorData = await response.json();
+      console.error("Error Cloudinary:", errorData);
+      return null;
     }
 
     const data = await response.json();

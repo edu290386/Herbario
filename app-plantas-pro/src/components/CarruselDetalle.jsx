@@ -65,6 +65,7 @@ export const CarruselDetalle = ({ imagenes, isMobile }) => {
                   src={transformarImagen(img, "card")}
                   style={styles.thumbImg}
                   alt={`Miniatura ${i}`}
+                  loading="lazy"
                 />
               </div>
             );

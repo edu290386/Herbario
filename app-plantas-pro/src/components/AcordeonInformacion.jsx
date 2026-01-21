@@ -1,4 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { colores } from "../constants/tema";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 export const AcordeonInformacion = ({ titulo, contenido }) => {
   const [abierto, setAbierto] = useState(false);
@@ -6,8 +8,16 @@ export const AcordeonInformacion = ({ titulo, contenido }) => {
   return (
     <div style={styles.accordionContainer}>
       <div style={styles.accordionHeader} onClick={() => setAbierto(!abierto)}>
-        <h3 style={styles.subTitle}>{titulo}</h3>
-        <span style={styles.arrowIcon}>{abierto ? "▲" : "▼"}</span>
+        <span style={styles.subTitle}>{titulo}</span>
+
+        {/* Usamos los iconos de React Icons */}
+        <div style={styles.iconWrapper}>
+          {abierto ? (
+            <IoIosArrowUp size={20} color={colores.bosque}/>
+          ) : (
+            <IoIosArrowDown size={20} color={colores.bosque} />
+          )}
+        </div>
       </div>
 
       {abierto && <div style={styles.accordionContent}>{contenido}</div>}
@@ -17,28 +27,40 @@ export const AcordeonInformacion = ({ titulo, contenido }) => {
 
 const styles = {
   accordionContainer: {
-    borderTop: "1px solid #f0f4f0",
     borderBottom: "1px solid #f0f4f0",
-    margin: "10px 0",
   },
   accordionHeader: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "space-between", // Mantiene el título a la izquierda y flecha a la derecha
     alignItems: "center",
     cursor: "pointer",
-    padding: "15px 0",
+    padding: "20px 0",
   },
   subTitle: {
-    fontSize: "1.1rem",
+    fontSize: "0.90rem",
     fontWeight: "600",
-    color: "#333",
+    color: colores.bosque,
     textTransform: "uppercase",
+    letterSpacing: "0.5px",
   },
-  arrowIcon: {
-    color: "#2D5A27",
-    fontWeight: "bold",
+  iconWrapper: {
+    display: "flex",
+    alignItems: "center",
+    transition: "transform 0.3s ease",
+    padding: "5px 0px 0px 0px",
   },
   accordionContent: {
-    paddingBottom: "20px",
+    paddingTop: "0px",
+    paddingBottom: "15px",
+    lineHeight: "1.4",
+    color: colores.bosque,
+    fontSize: "0.95rem",
+    animation: "fadeIn 0.3s ease",
+    textAlign: "justify",
+  },
+  textoInterno: {
+    fontSize: "0.88rem", 
+    color: "#666",
+    margin: 0,
   },
 };

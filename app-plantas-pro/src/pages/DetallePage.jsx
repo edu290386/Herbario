@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, Navigate } from "react-router-dom";
+import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { BotonVolver } from "../components/BotonVolver";
 import { BotonRegistrar } from "../components/BotonRegistrar";
@@ -11,11 +11,11 @@ import { AcordeonInformacion } from "../components/AcordeonInformacion"
 export const DetallePage = () => {
   const { state } = useLocation();
   const planta = state?.planta;
+  const navigate = useNavigate();
 
   const [ubicaciones, setUbicaciones] = useState([]);
   const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [acordeonAbierto, setAcordeonAbierto] = useState(false);
 
   // SOLUCIÓN AL SCROLL: Sube al inicio apenas carga el componente
   useEffect(() => {
@@ -44,7 +44,7 @@ export const DetallePage = () => {
 
   // CARGA DE DATOS DESDE SUPABASE
   useEffect(() => {
-    if (planta) {
+    if (planta?.id) {
       const fetchUbicaciones = async () => {
         try {
           const { data, error } = await supabase
@@ -107,44 +107,35 @@ export const DetallePage = () => {
         >
           {/* 1. Nombre Común */}
           <h1 style={styles.title}>{planta.nombre_comun}</h1>
-
           {/* 2. Nombre Científico */}
           <p style={styles.scientificName}>{planta.nombre_cientifico}</p>
-
-          {/* 3. REUTILIZACIÓN: Componente OtrosNombres */}
-          {/* Pasamos los datos de la planta como prop según lo tengas definido */}
-          <OtrosNombres planta={planta} />
-
+          {/* 3. Pasamos los datos de la planta como prop según lo tengas definido */}
+          <OtrosNombres lista={planta?.nombres_secundarios} />
           {/* 4. Acordeón de Usos (Lógica local para el despliegue) */}
-          <div style={styles.accordionContainer}>
-            <div
-              style={styles.accordionHeader}
-              onClick={() => setAcordeonAbierto(!acordeonAbierto)}
-            >
-              <h3
-                style={{
-                  ...styles.subTitle,
-                  marginBottom: 0,
-                  borderBottom: "none",
-                }}
-              >
-                Usos y Propiedades
-              </h3>
-              <span style={styles.arrowIcon}>
-                {acordeonAbierto ? "▲" : "▼"}
-              </span>
-            </div>
+          {/* Acordeón 1: Usando el campo 'contenido1' */}
 
-            {acordeonAbierto && (
-              <div style={styles.accordionContent}>
-                <p style={styles.text}>{planta.usos}</p>
-              </div>
-            )}
-          </div>
+          <AcordeonInformacion
+            titulo="Propiedades Medicinales"
+            contenido={<p style={styles.textInterno}>{planta.acordeon1}</p>}
+          />
 
-          {/* 5. REUTILIZACIÓN: Componente BotonRegistrar */}
-          {/* El texto "REGISTRAR NUEVA UBICACIÓN" se gestiona dentro del componente o vía props */}
-          <BotonRegistrar />
+          <AcordeonInformacion
+            titulo="Usos"
+            contenido={<p style={styles.textInterno}>{planta.acordeon2}</p>}
+          />
+          <BotonRegistrar
+            texto="AGREGAR UBICACIÓN"
+            onClick={() =>
+              navigate("/registro", {
+                state: {
+                  plantaId: planta.id, // El ID para la base de datos
+                  nombreComun: planta.nombre_comun, // Para mostrarlo en el título
+                  vieneDeDetalle: true, // Para distinguir si es planta nueva o ya creada
+                  nombresSecundarios: planta.nombres_secundarios,
+                },
+              })
+            }
+          />
         </div>
       </div>
 
@@ -152,9 +143,7 @@ export const DetallePage = () => {
       <div style={styles.scrollSection}>
         {isMobile && (
           <div style={styles.mobileDescription}>
-            <h3 style={styles.subTitle}>Propiedades Medicinales</h3>
             <p style={styles.text}>{planta.descripcion_medicinal}</p>
-            <BotonRegistrar />
           </div>
         )}
 

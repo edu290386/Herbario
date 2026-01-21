@@ -9,28 +9,19 @@ import { Leaf } from "lucide-react";
 export const CardPlanta = ({ planta }) => {
   const navigate = useNavigate();
 
-  const manejarRegistro = (e) => {
-    e.stopPropagation(); // ¡Importante! Evita que el clic "atraviese" el botón
-    navigate("/registro", {
-      state: {
-        plantaId: planta.id,
-        nombreComun: planta.nombre_comun,
-      },
-    });
-  };
-
   return (
     <div style={estilos.card}>
       {/* 1. Contenedor de Imagen con tamaño fijo */}
       <div
         style={estilos.contenedorImagen}
-        onClick={() => navigate(`/planta/${planta.nombre_comun}`,{state:{planta}})}
+        onClick={() => navigate(`/planta/${planta.id}`, { state: { planta } })}
       >
         {planta.foto_perfil ? (
           <img
             src={transformarImagen(planta.foto_perfil)}
             alt={planta.nombre_comun}
             style={estilos.img}
+            loading='lazy'
           />
         ) : (
           <div style={estilos.fallbackBosque}>
@@ -59,9 +50,18 @@ export const CardPlanta = ({ planta }) => {
 
         {/* 3. Botón siempre al fondo */}
         <BotonRegistrar
-          texto="Agregar Ubicación"
-          // Pasamos el ID y el nombre (el nombre solo para mostrarlo en el formulario)
-          onClick={manejarRegistro}
+          texto="AGREGAR UBICACIÓN"
+          onClick={(e) => {
+            e.stopPropagation(); // ⬅️ IMPORTANTE: Evita que se dispare el click de la Card
+            navigate("/registro", {
+              state: {
+                plantaId: planta.id, // Para vincular la ubicación en Supabase
+                nombreComun: planta.nombre_comun, // Para el título del formulario
+                vieneDeDetalle: true, // Para que el input de nombre salga bloqueado
+                nombresSecundarios: planta.nombres_secundarios,
+              },
+            });
+          }}
         />
       </div>
     </div>

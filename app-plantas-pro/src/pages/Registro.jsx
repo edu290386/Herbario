@@ -1,163 +1,326 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Leaf, Camera, MapPin, CheckCircle } from "lucide-react"; // Iconos consistentes
+import { Leaf, Camera, MapPin, CheckCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../helpers/cloudinaryHelper";
-import { BotonRegistrar } from "../components/BotonRegistrar"; // Tu componente reutilizable
+import { BotonRegistrar } from "../components/BotonRegistrar";
 import { colores } from "../constants/tema";
+import { BotonCancelar } from "../components/BotonCancelar";
+import { formatearParaDB } from "../helpers/textHelper";
+import { OtrosNombres } from "../components/OtrosNombres";
+import {
+  IoMdCheckmarkCircle,
+  IoMdCloseCircle,
+  IoMdLocate,
+} from "react-icons/io";
 
 export const Registro = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const plantaId = state?.plantaId;
-  const nombreRecibido = state?.nombreComun || "Nueva Planta";
 
+  // Detectamos si es una planta existente o nueva
+
+  const plantaId = state?.plantaId;
+  const esSoloUbicacion = state?.vieneDeDetalle; // La bandera que creamos
+
+  const [nombreLocal, setNombreLocal] = useState(state?.nombreComun || "");
+  const nombresSecundarios = state?.nombresSecundarios || "";
   const [cargando, setCargando] = useState(false);
+  const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [foto, setFoto] = useState(null);
   const [coords, setCoords] = useState({ lat: null, lng: null });
+  
+  
 
-
-  useEffect(() => {
+  // Captura de GPS al montar
+useEffect(() => {
+  const obtenerGPS = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) =>
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => alert("Activa el GPS para registrar la ubicación")
+      (err) => console.warn("GPS no disponible:", err.message),
+      { enableHighAccuracy: true },
     );
-  }, []);
+  };
+  obtenerGPS();
+}, []);
 
-  const manejarEnvio = async () => {
-    if (!foto || !coords.lat) return alert("Captura la foto y la ubicación");
+  const manejarEnvio = async (e) => {
+    // Evita recargas accidentales
+    if (e) e.preventDefault();
+    // Si falta algo, no hacemos nada (el botón ya estará visualmente avisando)
+    if (!foto || !coords.lat || (!nombreLocal && !esSoloUbicacion)) return;
+
     setCargando(true);
     try {
-      const urlFoto = await uploadImage(foto);
-      let idFinal = plantaId;
+      // 1. Subir imagen a Cloudinary
+      // Creación de subcarpetas cloudinary
+      const nombreCarpetaBase = formatearParaDB(nombreLocal);
+      const rutaCloudinary = `${nombreCarpetaBase}/ubicaciones`;
 
-      if (!idFinal) {
-        const { data: nuevaP, error: errP } = await supabase
-          .from("plantas")
-          .insert([{ nombre_comun: nombreRecibido }])
-          .select()
-          .single();
-        if (errP) throw errP;
-        idFinal = nuevaP.id;
+      const urlFoto = await uploadImage(foto, rutaCloudinary);
+
+      // 2 SEGURIDAD: Si por algo Cloudinary no devolvió URL, detenemos todo aquí
+      if (!urlFoto) {
+        throw new Error("La imagen no pudo procesarse. Verifica tu conexión.");
       }
 
+      let idFinal = plantaId;
+
+      // 3. Lógica de Planta (Si es nueva)
+      if (!idFinal) {
+        const nombreLimpio = formatearParaDB(nombreLocal);
+
+        // Verificamos si ya existe para no duplicar
+        const { data: existente } = await supabase
+          .from("plantas")
+          .select("id")
+          .eq("nombre_comun", nombreLimpio)
+          .single();
+
+        if (existente) {
+          idFinal = existente.id;
+        } else {
+          const { data: nuevaP, error: errP } = await supabase
+            .from("plantas")
+            .insert([{ nombre_comun: nombreLimpio }])
+            .select()
+            .single();
+          if (errP) throw errP;
+          idFinal = nuevaP.id;
+        }
+      }
+
+      // 4. Insertar Ubicación (Aquí es donde daba el error)
       const { error: errU } = await supabase.from("ubicaciones").insert([
         {
           planta_id: idFinal,
-          foto_contexto: urlFoto,
+          foto_contexto: urlFoto, // Ahora garantizamos que urlFoto existe
           latitud: coords.lat,
           longitud: coords.lng,
         },
       ]);
 
       if (errU) throw errU;
-      navigate("/");
-    } catch (e) {
-      alert(e.message);
+
+      // ÉXITO: Feedback visual en el botón
+      setGuardadoExitoso(true);
+      setTimeout(() => {
+        navigate(`/planta/${idFinal}`, {
+          state: { planta: { id: idFinal } }, 
+          replace: true,
+        });
+      }, 1800);
+    } catch (error) {
+      alert("Error al guardar: " + error.message);
     } finally {
       setCargando(false);
     }
   };
 
-  return (
-    <div style={estilos.pagina}>
-      <header style={estilos.header}>
-        {/* Usamos el color desde temas.js */}
-        <Leaf size={40} color={colores.frondoso} />
-        <h1 style={{...estilos.titulo, color: colores.bosque}}>REGISTRO DE CAMPO</h1>
-      </header>
+ return (
+   <div style={estilos.pagina}>
+     <header style={estilos.header}>
+       <Leaf size={40} color={colores.frondoso} style={estilos.iconoHeader} />
+       <h1 style={{ ...estilos.titulo, color: colores.bosque }}>
+         {esSoloUbicacion ? "AÑADIR UBICACIÓN" : "REGISTRAR PLANTA"}
+       </h1>
+     </header>
 
-      <main style={estilos.cardForm}>
-        <div style={estilos.infoSeccion}>
-          <span style={estilos.label}>Planta seleccionada:</span>
-          <h2 style={{...estilos.nombrePlanta, color: colores.frondoso}}>
-            {(state?.nombreComun || "Nueva Planta").toUpperCase()}
-          </h2>
-        </div>
+     {/* Cambiamos <main> por <form> para mejor control del envío */}
+     <form onSubmit={manejarEnvio} style={estilos.cardForm}>
+       <div style={estilos.infoSeccion}>
+         {esSoloUbicacion ? (
+           <div style={estilos.contenedorTexto}>
+             <span style={estilos.label}>PLANTA SELECCIONADA:</span>
+             <h2 style={estilos.nombreFijo}>{nombreLocal.toUpperCase()}</h2>
+             <OtrosNombres lista={nombresSecundarios} />
+           </div>
+         ) : (
+           <div style={estilos.contenedorInput}>
+             <label style={estilos.label}>NOMBRE DE LA PLANTA</label>
+             <input
+               type="text"
+               value={nombreLocal}
+               onChange={(e) => setNombreLocal(e.target.value)}
+               style={estilos.inputGrande}
+               required
+             />
+           </div>
+         )}
+       </div>
 
-        {/* Zona de Cámara con borde del color del bosque */}
-        <label style={{...estilos.zonaCamara, borderColor: colores.bosque}}>
-          {foto ? (
-            <div style={{color: colores.bosque}}>
-              <CheckCircle size={50} color={colores.frondoso} />
-              <p>FOTO CAPTURADA</p>
-            </div>
-          ) : (
-            <div style={{color: colores.bosque}}>
-              <Camera size={50} color={colores.bosque} />
-              <p>TOCAR PARA TOMAR FOTO</p>
-            </div>
-          )}
-          <input 
-            type="file" accept="image/*" capture="environment" 
-            onChange={(e) => setFoto(e.target.files[0])} 
-            style={{ display: 'none' }} 
-          />
-        </label>
+       <label
+         style={{
+           ...estilos.zonaCamara,
+           borderColor: foto ? colores.frondoso : colores.bosque,
+         }}
+       >
+         {foto ? (
+           <div style={{ color: colores.frondoso, textAlign: "center" }}>
+             <CheckCircle size={50} color={colores.frondoso} />
+             <p style={{ fontWeight: "bold" }}>FOTO CAPTURADA</p>
+           </div>
+         ) : (
+           <div style={{ color: colores.bosque, textAlign: "center" }}>
+             <Camera size={50} color={colores.bosque} />
+             <p>TOCAR PARA TOMAR FOTO</p>
+           </div>
+         )}
+         <input
+           type="file"
+           accept="image/*"
+           capture="environment"
+           onChange={(e) => setFoto(e.target.files[0])}
+           style={{ display: "none" }}
+         />
+       </label>
 
-        {/* Indicador GPS */}
-        <div style={estilos.statusGps}>
-          <MapPin size={20} color={coords.lat ? "#4CAF50" : "#F44336"} />
-          <span style={{color: '#555'}}>
-            {coords.lat ? "Ubicación de GPS capturada" : "Buscando satélites..."}
-          </span>
-        </div>
+       {/* VALIDACIONES VISUALES CON REACT-ICONS */}
+       <div style={estilos.contenedorValidacion}>
+         {/* Fila Imagen */}
+         <div style={estilos.filaValidacion}>
+           <div style={estilos.iconoContenedor}>
+             {foto ? (
+               <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
+             ) : (
+               <IoMdCloseCircle size={22} color="#F44336" />
+             )}
+           </div>
+           <span style={{ color: foto ? "#333" : "#888" }}>
+             Captura de imagen
+           </span>
+         </div>
 
-        <BotonRegistrar 
-          texto={cargando ? "GUARDANDO..." : "FINALIZAR REGISTRO"} 
-          onClick={manejarEnvio}
-          disabled={cargando || !coords.lat || !foto}
-        />
-      </main>
-    </div>
-  );
+         {/* Fila GPS */}
+         <div style={estilos.filaValidacion}>
+           <div style={estilos.iconoContenedor}>
+             {coords.lat ? (
+               <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
+             ) : (
+               <IoMdCloseCircle size={22} color="#F44336" />
+             )}
+           </div>
+           <span style={{ color: coords.lat ? "#333" : "#888" }}>
+             Señal GPS establecida
+           </span>
+         </div>
+       </div>
+
+       <BotonRegistrar
+         type="submit" // ⬅️ IMPORTANTE para el formulario
+         texto={
+           guardadoExitoso
+             ? "REGISTRO EXITOSO"
+             : cargando
+               ? "GUARDANDO..."
+               : "FINALIZAR REGISTRO"
+         }
+         disabled={
+           cargando ||
+           guardadoExitoso ||
+           !coords.lat ||
+           !foto ||
+           (!nombreLocal && !esSoloUbicacion)
+         }
+       />
+
+       <div style={{ marginTop: "12px" }}>
+         <BotonCancelar />
+       </div>
+     </form>
+   </div>
+ );
 };
 
 const estilos = {
   pagina: {
     minHeight: "100vh",
-    backgroundColor: "#f4f7f4",
+    backgroundColor: colores.fondo,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: "20px",
+    padding: "0px",
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    //justifyContent: "center",
   },
   header: {
     display: "flex",
     alignItems: "center",
     gap: "15px",
-    margin: "30px 0",
-    color: "#1b3d18",
+    margin: "20px 0",
   },
-  titulo: { fontSize: "1.5rem", fontWeight: "800", letterSpacing: "2px" },
+
+  titulo: {
+    fontSize: "1.5rem",
+    fontWeight: "650",
+    letterSpacing: "2px",
+  },
+
   cardForm: {
     backgroundColor: "white",
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "330px",
     borderRadius: "25px",
-    padding: "30px",
+    padding: "25px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
     textAlign: "center",
   },
-  infoSeccion: { marginBottom: "25px" },
-  label: { fontSize: "0.8rem", color: "#888", fontWeight: "bold" },
-  nombrePlanta: { color: "#1b3d18", margin: "5px 0 0 0", fontSize: "1.2rem" },
+
+  label: {
+    fontSize: "0.85rem",
+    color: colores.bosque,
+    fontWeight: "bold",
+    marginLeft: "5px",
+    letterSpacing: "0.5px",
+  },
+
+  inputGrande: {
+    width: "100%",
+    padding: "15px 20px", // Más grande (padding generoso)
+    fontSize: "1.2rem", // Letra más grande
+    fontWeight: "600",
+    color: colores.bosque, // Color de letra solicitado
+    backgroundColor: "#fff",
+    border: `2px solid ${colores.bosque}`, // Borde con el color del tema
+    borderRadius: "15px", // Mucho más redondeado
+    outline: "none",
+    boxSizing: "border-box",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.05)", // Un toque de sombra para profundidad
+  },
+  
+  infoSeccion: {
+    marginBottom: "30px",
+    width: "100%",
+  },
+
+  nombrePlanta: {
+    margin: "5px 0 0 0",
+    fontSize: "1.2rem",
+  },
+
   zonaCamara: {
     width: "100%",
     height: "200px",
-    border: "2px dashed #1b3d18",
+    border: `2px dashed ${colores.frondoso}`,
     borderRadius: "20px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     cursor: "pointer",
-    backgroundColor: "#f9fbf9",
+    backgroundColor: colores.fondo,
     marginBottom: "20px",
     color: "#1b3d18",
     fontWeight: "bold",
   },
+  contenedorInput: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px", // Espacio entre la etiqueta y el input
+    textAlign: "left",
+  },
+
   statusGps: {
     display: "flex",
     alignItems: "center",
@@ -167,5 +330,39 @@ const estilos = {
     fontSize: "0.9rem",
     color: "#555",
   },
+
   previsualizacion: { color: "#1b3d18" },
+
+  nombreFijo: {
+    color: colores.frondoso,
+    fontSize: "1.6rem",
+    fontWeight: "700",
+    margin: "5px 0",
+  },
+
+  contenedorValidacion: {
+    backgroundColor: colores.fondo,
+    padding: "15px 20px",
+    borderRadius: "18px",
+    marginBottom: "25px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    width: "100%", // Ocupa todo el ancho disponible
+    boxSizing: "border-box", // Evita que el padding desborde el ancho
+    textAlign: "left", // ⬅️ CRUCIAL: Fuerza el texto a la izquierda
+  },
+
+  filaValidacion: {
+    display: "flex",
+    alignItems: "center", // Centra verticalmente icono y texto
+    justifyContent: "flex-start", // ⬅️ Alinea el contenido al inicio (izquierda)
+    gap: "10px",
+  },
+  iconoContenedor: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "24px", // Mantiene los iconos alineados en una columna invisible
+  },
 };
