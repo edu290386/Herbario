@@ -12,7 +12,9 @@ export const uploadImage = async (file, path) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
-  formData.append("folder", path); // Aquí Cloudinary crea o usa la carpeta
+  // Si por algún error el path llega vacío, lo mandamos a una carpeta general
+  // para que no se pierda la foto en la raíz de Cloudinary
+  formData.append("folder", path || "otros_registros");
 
   try {
     const response = await fetch(url, {
@@ -32,7 +34,7 @@ export const uploadImage = async (file, path) => {
     console.error("Cloudinary Upload Error:", error);
     return null;
   }
-};
+};;
 
 
 export const transformarImagen = (url, modo = "card") => {
@@ -45,7 +47,7 @@ export const transformarImagen = (url, modo = "card") => {
       // w_1080, h_1350 -> Relación 4:5 (universal para móvil/laptop)
       // c_fill -> Llena el espacio sin deformar
       // g_auto -> Inteligencia Artificial para no cortar la flor/fruto
-      "/upload/ar_3:4,c_fill,g_auto,w_1600,f_auto,q_auto/",
+      "/upload/ar_3:4,c_fill,g_auto,w_1200,f_auto,q_auto/",
     );
   }
 

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { colores } from "../constants/tema";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { transformarImagen } from "../helpers/cloudinaryHelper";
+import { Leaf } from "lucide-react";
 
 export const CarruselDetalle = ({ imagenes, isMobile }) => {
   const [indice, setIndice] = useState(0);
 
-  if (!imagenes || imagenes.length === 0) return null;
+  
 
   return (
     <div style={styles.container}>
@@ -18,12 +19,27 @@ export const CarruselDetalle = ({ imagenes, isMobile }) => {
           height: isMobile ? "500px" : "600px",
         }}
       >
-        <img
-          src={transformarImagen(imagenes[indice], "detalle")}
-          alt="Vista principal"
-          style={styles.mainImg}
-        />
-
+        {imagenes.length === 0 ? (
+          /* Caso 1: No hay fotos (Array vacío) */
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: colores.retama, // Fondo amarillo
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Leaf size={100} color={colores.frondoso} strokeWidth={1} />
+          </div>
+        ) : (
+          <img
+            src={transformarImagen(imagenes[indice], "detalle")}
+            alt="Vista principal"
+            style={styles.mainImg}
+          />
+        )}
         {/* Flechas de navegación */}
         <button
           onClick={() =>
@@ -47,29 +63,44 @@ export const CarruselDetalle = ({ imagenes, isMobile }) => {
       {/* 2. MINIATURAS - Solo se muestran si NO es móvil */}
       {!isMobile && (
         <div style={styles.thumbContainer}>
-          {imagenes.map((img, i) => {
-            const estaSeleccionada = i === indice;
-            return (
-              <div
-                key={i}
-                onClick={() => setIndice(i)}
-                style={{
-                  ...styles.thumbWrapper,
-                  // EFECTO 1: Agrandar (Scale)
-                  transform: estaSeleccionada ? "scale(1.2)" : "scale(1)",
-
-                  zIndex: estaSeleccionada ? 10 : 1,
-                }}
-              >
-                <img
-                  src={transformarImagen(img, "card")}
-                  style={styles.thumbImg}
-                  alt={`Miniatura ${i}`}
-                  loading="lazy"
-                />
-              </div>
-            );
-          })}
+          {imagenes.length === 0 ? (
+            /* CASO: No hay fotos reales, mostramos 1 miniatura de la hojita */
+            <div
+              style={{
+                ...styles.thumbWrapper,
+                backgroundColor: colores.retama, // Fondo amarillo
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                transform: "scale(1.2)", // La dejamos resaltada
+              }}
+            >
+              <Leaf size={30} color={colores.frondoso} strokeWidth={1} />
+            </div>
+          ) : (
+            /* CASO: Sí hay fotos reales, mapeamos normal */
+            imagenes.map((img, i) => {
+              const estaSeleccionada = i === indice;
+              return (
+                <div
+                  key={i}
+                  onClick={() => setIndice(i)}
+                  style={{
+                    ...styles.thumbWrapper,
+                    transform: estaSeleccionada ? "scale(1.2)" : "scale(1)",
+                    zIndex: estaSeleccionada ? 10 : 1,
+                  }}
+                >
+                  <img
+                    src={transformarImagen(img, "card")}
+                    style={styles.thumbImg}
+                    alt={`Miniatura ${i}`}
+                    loading="lazy"
+                  />
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>
@@ -88,10 +119,9 @@ const styles = {
   mainWrapper: {
     position: "relative",
     width: "100%",
-    
     borderRadius: "20px",
     overflow: "hidden",
-    backgroundColor: "#f4f4f4",
+    backgroundColor: colores.retama,
     boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
   },
   mainImg: {

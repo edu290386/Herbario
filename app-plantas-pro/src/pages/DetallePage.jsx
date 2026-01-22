@@ -7,6 +7,7 @@ import { CarruselDetalle } from "../components/CarruselDetalle";
 import { IoMdLocate, IoMdRemove } from "react-icons/io";
 import { OtrosNombres } from "../components/OtrosNombres";
 import { AcordeonInformacion } from "../components/AcordeonInformacion"
+import { BloqueIdentidad } from "../components/BloqueIdentidad";
 
 export const DetallePage = () => {
   const { state } = useLocation();
@@ -105,12 +106,8 @@ export const DetallePage = () => {
             minHeight: isMobile ? "auto" : "100%",
           }}
         >
-          {/* 1. Nombre Común */}
-          <h1 style={styles.title}>{planta.nombre_comun}</h1>
-          {/* 2. Nombre Científico */}
-          <p style={styles.scientificName}>{planta.nombre_cientifico}</p>
-          {/* 3. Pasamos los datos de la planta como prop según lo tengas definido */}
-          <OtrosNombres lista={planta?.nombres_secundarios} />
+          <BloqueIdentidad planta={planta} />
+          
           {/* 4. Acordeón de Usos (Lógica local para el despliegue) */}
           {/* Acordeón 1: Usando el campo 'contenido1' */}
 
