@@ -29,11 +29,11 @@ export const BloqueIdentidad = ({ planta }) => {
 
 const estilos = {
   bloque: {
-    backgroundColor: colores.fondo, // Mantenemos tu color de fondo
+    backgroundColor: "white", // Mantenemos tu color de fondo
     width: "100%", // Ahora ocupa el mismo ancho que los acordeones
     margin: "0 auto 25px auto", // Centrado y con margen inferior
-    padding: "30px",
-    borderRadius: "20px",
+    padding: "20px",
+    borderRadius: "15px",
     boxSizing: "border-box",
     minHeight: "160px",
     display: "flex",

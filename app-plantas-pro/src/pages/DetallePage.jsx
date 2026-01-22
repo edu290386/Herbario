@@ -4,10 +4,12 @@ import { supabase } from "../supabaseClient";
 import { BotonVolver } from "../components/BotonVolver";
 import { BotonRegistrar } from "../components/BotonRegistrar";
 import { CarruselDetalle } from "../components/CarruselDetalle";
-import { IoMdLocate, IoMdRemove } from "react-icons/io";
-import { OtrosNombres } from "../components/OtrosNombres";
 import { AcordeonInformacion } from "../components/AcordeonInformacion"
 import { BloqueIdentidad } from "../components/BloqueIdentidad";
+import { CardUbicacion } from "../components/CardUbicación";
+import { colores } from "../constants/tema";
+import { SeccionInformacion } from "../components/SeccionInformacion";
+
 
 export const DetallePage = () => {
   const { state } = useLocation();
@@ -107,19 +109,11 @@ export const DetallePage = () => {
           }}
         >
           <BloqueIdentidad planta={planta} />
-          
+
           {/* 4. Acordeón de Usos (Lógica local para el despliegue) */}
           {/* Acordeón 1: Usando el campo 'contenido1' */}
 
-          <AcordeonInformacion
-            titulo="Propiedades Medicinales"
-            contenido={<p style={styles.textInterno}>{planta.acordeon1}</p>}
-          />
-
-          <AcordeonInformacion
-            titulo="Usos"
-            contenido={<p style={styles.textInterno}>{planta.acordeon2}</p>}
-          />
+          <SeccionInformacion planta={planta} />
           <BotonRegistrar
             texto="AGREGAR UBICACIÓN"
             onClick={() =>
@@ -137,47 +131,39 @@ export const DetallePage = () => {
       </div>
 
       {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
-      <div style={styles.scrollSection}>
-        {isMobile && (
-          <div style={styles.mobileDescription}>
-            <p style={styles.text}>{planta.descripcion_medicinal}</p>
+      <section style={styles.ListaUbicaciones}>
+        {/* Card de Título y Conteo */}
+        <div style={styles.cardHeaderUbicaciones}>
+          <h2 style={styles.tituloHeader}>
+            Ubicaciones registradas para:{" "}
+            <span style={{ color: colores.bosque }}>{planta.nombre_comun}</span>
+          </h2>
+          <div style={styles.badgeConteo}>
+            {ubicaciones.length}{" "}
+            {ubicaciones.length === 1 ? "registro encontrado" : "registros encontrados"}
           </div>
-        )}
+        </div>
 
-        <div style={styles.ubicacionesContainer}>
-          <h3 style={styles.subTitle}>Ubicaciones Registradas</h3>
-          {cargandoUbicaciones ? (
-            <p style={styles.text}>Cargando coordenadas...</p>
+        {/* Listado de Cards */}
+        <div style={styles.gridUbicaciones}>
+          {ubicaciones.length > 0 ? (
+            ubicaciones.map((item) => (
+              <CardUbicacion key={item.id} data={item} />
+            ))
           ) : (
-            <div style={styles.list}>
-              {ubicaciones.map((u) => (
-                <div key={u.id} style={styles.locationItem}>
-                  <div style={styles.locationMain}>
-                    <IoMdLocate size={20} color="#2D5A27" />
-                    <span style={styles.coordText}>
-                      Lat: {u.latitud.toFixed(4)}
-                    </span>
-                    <IoMdRemove color="#ccc" />
-                    <span style={styles.coordText}>
-                      Lon: {u.longitud.toFixed(4)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {ubicaciones.length === 0 && (
-                <p style={styles.text}>Sin registros aún.</p>
-              )}
+            <div style={styles.cardVacia}>
+              <p>No hay ubicaciones registradas aún.</p>
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
-};;;
+};
 
 const styles = {
   wrapper: {
-    backgroundColor: "#fff",
+    backgroundColor: colores.fondo,
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     minHeight: "100vh",
   },
@@ -188,7 +174,7 @@ const styles = {
   },
   carruselSection: {
     flex: 1.2,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: colores.fondo,
     display: "flex",
     flexDirection: "column", // Para que miniaturas y principal se alineen bien
     alignItems: "center",
@@ -199,7 +185,7 @@ const styles = {
     padding: "40px",
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#fff",
+    backgroundColor: colores.fondo,
   },
   title: {
     fontSize: "2.5rem",
@@ -257,5 +243,68 @@ const styles = {
     fontSize: "0.9rem",
     color: "#666",
     fontWeight: "500",
+  },
+
+  ListaUbicaciones: {
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    maxWidth: "650px", // Alineado al maxWidth de la CardUbicacion
+    margin: "0 auto", // Centra todo el bloque 2
+    padding: "30px 0",
+    overflowY: "visible",
+  },
+
+  cardHeaderUbicaciones: {
+    backgroundColor: "#fff",
+    padding: "25px 20px",
+    borderRadius: "15px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+    marginBottom: "10px",
+    textAlign: "center", // CENTRA EL TEXTO
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center", // CENTRA EL CONTENIDO (H2 y Badge)
+    justifyContent: "center",
+    gap: "12px",
+    border: "1px solid #eee",
+    width: "92%", // IGUAL QUE LA CARD EN MOVIL
+    margin: "0 auto 15px auto", // CENTRA LA CARD Y DA MARGEN ABAJO
+  },
+
+  tituloHeader: {
+    margin: 0,
+    fontSize: "1.2rem",
+    color: "#333",
+    fontWeight: "600",
+    lineHeight: "1.4",
+  },
+
+  badgeConteo: {
+    backgroundColor: colores.bosque || "#2d5a27",
+    color: "#fff",
+    padding: "6px 16px",
+    borderRadius: "20px",
+    fontSize: "0.85rem",
+    fontWeight: "bold",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+
+  gridUbicaciones: {
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    // Las cards ya tienen su margin: "10px auto" y width: "92%"
+  },
+
+  cardVacia: {
+    backgroundColor: "#fff",
+    padding: "30px",
+    borderRadius: "15px",
+    textAlign: "center",
+    color: "#999",
+    border: "1px dashed #ccc",
+    width: "92%",
+    margin: "0 auto",
   },
 };

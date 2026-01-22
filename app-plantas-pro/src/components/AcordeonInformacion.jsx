@@ -1,66 +1,61 @@
 import React, { useState } from "react";
-import { colores } from "../constants/tema";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
+import { colores } from "../constants/tema.js";
 
 export const AcordeonInformacion = ({ titulo, contenido }) => {
-  const [abierto, setAbierto] = useState(false);
+  const [estaAbierto, setEstaAbierto] = useState(false);
+
+  const toggleAcordeon = () => {
+    setEstaAbierto(!estaAbierto);
+  };
 
   return (
-    <div style={styles.accordionContainer}>
-      <div style={styles.accordionHeader} onClick={() => setAbierto(!abierto)}>
-        <span style={styles.subTitle}>{titulo}</span>
-
-        {/* Usamos los iconos de React Icons */}
-        <div style={styles.iconWrapper}>
-          {abierto ? (
-            <IoIosArrowUp size={20} color={colores.bosque}/>
-          ) : (
-            <IoIosArrowDown size={20} color={colores.bosque} />
-          )}
-        </div>
-      </div>
-
-      {abierto && <div style={styles.accordionContent}>{contenido}</div>}
+    <div style={styles.contenedor}>
+      <button onClick={toggleAcordeon} style={styles.boton}>
+        <span style={styles.titulo}>{titulo}</span>
+        <span style={styles.flecha}>{estaAbierto ? "▲" : "▼"}</span>
+      </button>
+      {estaAbierto && contenido && (
+        <div style={styles.contenido}>{contenido}</div>
+      )}
     </div>
   );
 };
 
 const styles = {
-  accordionContainer: {
-    borderBottom: "1px solid #f0f4f0",
+  contenedor: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: "12px",
+    marginBottom: "10px",
+    border: "1px solid #eee",
+    overflow: "hidden",
+    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
   },
-  accordionHeader: {
+  boton: {
+    width: "100%",
+    padding: "15px 20px",
     display: "flex",
-    justifyContent: "space-between", // Mantiene el título a la izquierda y flecha a la derecha
+    justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#fff",
+    border: "none",
     cursor: "pointer",
-    padding: "20px 0",
+    textAlign: "left",
   },
-  subTitle: {
-    fontSize: "0.90rem",
-    fontWeight: "600",
-    color: colores.bosque,
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+  titulo: {
+    color: colores.bosque || "#2d5a27",
+    fontSize: "1rem",
+    fontWeight: "700",
   },
-  iconWrapper: {
-    display: "flex",
-    alignItems: "center",
-    transition: "transform 0.3s ease",
-    padding: "5px 0px 0px 0px",
-  },
-  accordionContent: {
-    paddingTop: "0px",
-    paddingBottom: "15px",
-    lineHeight: "1.4",
-    color: colores.bosque,
-    fontSize: "0.95rem",
-    animation: "fadeIn 0.3s ease",
-    textAlign: "justify",
-  },
-  textoInterno: {
-    fontSize: "0.88rem", 
+  flecha: {
     color: "#666",
-    margin: 0,
+    fontSize: "0.8rem",
+  },
+  contenido: {
+    padding: "0 20px 20px 20px",
+    fontSize: "0.9rem",
+    color: "#444",
+    lineHeight: "1.6",
+    borderTop: "1px solid #f9f9f9",
   },
 };

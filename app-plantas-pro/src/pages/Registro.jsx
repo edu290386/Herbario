@@ -39,7 +39,7 @@ useEffect(() => {
       (pos) =>
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => console.warn("GPS no disponible:", err.message),
-      { enableHighAccuracy: true },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
     );
   };
   obtenerGPS();
@@ -258,7 +258,7 @@ const estilos = {
   },
 
   cardForm: {
-    backgroundColor: "white",
+    backgroundColor: colores.fondo,
     width: "100%",
     maxWidth: "330px",
     borderRadius: "25px",
