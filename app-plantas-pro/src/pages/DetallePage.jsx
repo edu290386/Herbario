@@ -19,6 +19,24 @@ export const DetallePage = () => {
   const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+  const [userCoords, setUserCoords] = useState(null);
+
+  useEffect(() => {
+    // Capturamos el GPS del usuario (solo una vez al cargar la página)
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserCoords({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          });
+        },
+        (error) => console.log("GPS denegado o no disponible"),
+        { enableHighAccuracy: true },
+      );
+    }
+  }, []);
+
   // SOLUCIÓN AL SCROLL: Sube al inicio apenas carga el componente
   useEffect(() => {
     // 1. Desactivamos la restauración del navegador
@@ -134,6 +152,7 @@ export const DetallePage = () => {
         ubicaciones={ubicaciones}
         nombrePlanta={planta.nombre_comun}
         isMobile={isMobile}
+        userCoords={userCoords}
       />
     </div>
   );

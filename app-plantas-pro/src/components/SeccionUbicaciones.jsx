@@ -2,7 +2,18 @@ import React from "react";
 import { CardUbicacion } from "./CardUbicación";
 import { colores } from "../constants/tema";
 
-export const SeccionUbicaciones = ({ ubicaciones, nombrePlanta, isMobile }) => {
+export const SeccionUbicaciones = ({
+  ubicaciones,
+  nombrePlanta,
+  isMobile,
+  userCoords,
+}) => {
+  
+  const ubicacionesLimpias = ubicaciones.filter(
+    (u) => u.latitud !== null && u.longitud !== null,
+  );
+  console.log(ubicacionesLimpias)
+  
   return (
     <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
       <div style={styles.header}>
@@ -18,9 +29,14 @@ export const SeccionUbicaciones = ({ ubicaciones, nombrePlanta, isMobile }) => {
       </div>
 
       <div style={styles.grid}>
-        {ubicaciones.length > 0 ? (
-          ubicaciones.map((ubi) => (
-            <CardUbicacion key={ubi.id} ubicacion={ubi} isMobile={isMobile} />
+        {ubicacionesLimpias.length > 0 ? (
+          ubicacionesLimpias.map((ubi) => (
+            <CardUbicacion
+              key={ubi.id}
+              ubicacion={ubi}
+              userCoords={userCoords}
+              isMobile={isMobile}
+            />
           ))
         ) : (
           <p style={styles.sinDatos}>

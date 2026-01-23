@@ -1,8 +1,9 @@
 import { colores } from "../constants/tema.js";
 import { generarRutas } from "../helpers/linkHelper.js";
 import { SiGooglemaps, SiWaze, SiTiktok, SiWhatsapp, SiYoutube } from "react-icons/si";
+import { UbicacionInfo } from "./UbicacionInfo.jsx";
 
-export const CardUbicacion = ({ ubicacion, isMobile }) => {
+export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
   // Generamos las rutas dinámicas usando el helper
   const { google, waze } = generarRutas(ubicacion.latitud, ubicacion.longitud);
 
@@ -27,20 +28,15 @@ export const CardUbicacion = ({ ubicacion, isMobile }) => {
 
       {/* INFORMACIÓN Y BOTONES */}
       <div style={styles.info}>
-        <div>
-          <p style={styles.distrito}>
-            {ubicacion.distrito || "Distrito no especificado"}
-          </p>
-          <p style={styles.ciudad}>
-            {ubicacion.ciudad || "Ciudad"}
-          </p>
-
-          <div style={styles.colaboradorWrapper}>
-            <span style={styles.colaborador}>
-              Aporte: <strong>{ubicacion.colaborador || "Anónimo"}</strong>
-            </span>
-          </div>
-        </div>
+        <UbicacionInfo
+          idUbicacion={ubicacion.id}
+          lat={ubicacion.latitud}
+          lon={ubicacion.longitud}
+          distritoDB={ubicacion.distrito}
+          ciudadDB={ubicacion.ciudad}
+          colaborador={ubicacion.colaborador || "Admin"} 
+          userCoords={userCoords}
+        />
 
         {/* CONTENEDOR DE ICONOS (Sin bordes, solo el icono) */}
         <div style={styles.contenedorBotones}>
