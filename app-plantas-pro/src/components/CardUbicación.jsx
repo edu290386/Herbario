@@ -6,7 +6,7 @@ import { UbicacionInfo } from "./UbicacionInfo.jsx";
 export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
   // Generamos las rutas dinámicas usando el helper
   const { google, waze } = generarRutas(ubicacion.latitud, ubicacion.longitud);
-
+console.log(ubicacion)
   // Navegación inteligente: Laptop abre pestaña, Móvil abre App
   const manejarNavegacion = (url) => {
     if (!isMobile) {
@@ -30,8 +30,8 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
       <div style={styles.info}>
         <UbicacionInfo
           idUbicacion={ubicacion.id}
-          lat={ubicacion.latitud}
-          lon={ubicacion.longitud}
+          latitud={ubicacion.latitud}
+          longitud={ubicacion.longitud}
           distritoDB={ubicacion.distrito}
           ciudadDB={ubicacion.ciudad}
           colaborador={ubicacion.colaborador || "Admin"} 

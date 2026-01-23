@@ -12,7 +12,7 @@ export const SeccionUbicaciones = ({
   const ubicacionesLimpias = ubicaciones.filter(
     (u) => u.latitud !== null && u.longitud !== null,
   );
-  console.log(ubicacionesLimpias)
+  //console.log(ubicacionesLimpias)
   
   return (
     <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
