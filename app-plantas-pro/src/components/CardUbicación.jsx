@@ -1,4 +1,3 @@
-import React from "react";
 import { colores } from "../constants/tema.js";
 import { generarRutas } from "../helpers/linkHelper.js";
 import { SiGooglemaps, SiWaze, SiTiktok, SiWhatsapp, SiYoutube } from "react-icons/si";
@@ -29,10 +28,12 @@ export const CardUbicacion = ({ ubicacion, isMobile }) => {
       {/* INFORMACIÓN Y BOTONES */}
       <div style={styles.info}>
         <div>
-          <h3 style={styles.titulo}>
+          <p style={styles.distrito}>
             {ubicacion.distrito || "Distrito no especificado"}
-          </h3>
-          <p style={styles.ciudad}>{ubicacion.ciudad || "Ciudad"}</p>
+          </p>
+          <p style={styles.ciudad}>
+            {ubicacion.ciudad || "Ciudad"}
+          </p>
 
           <div style={styles.colaboradorWrapper}>
             <span style={styles.colaborador}>
@@ -58,12 +59,6 @@ export const CardUbicacion = ({ ubicacion, isMobile }) => {
           <button style={styles.btnIcono}>
             <SiWhatsapp size={25} color="#25D366" />
           </button>
-          <button style={styles.btnIcono}>
-            <SiTiktok size={24} color="#000" />
-          </button>
-          <button style={styles.btnIcono}>
-            <SiYoutube size={29} color="#FF0000" />
-          </button>
         </div>
       </div>
     </div>
@@ -74,27 +69,27 @@ const styles = {
   card: {
     backgroundColor: colores.blanco,
     borderRadius: "20px",
-    padding: "15px",
     display: "flex",
-    flexDirection: "row", // Mantenemos fila para que se vea como la imagen de Nano Banana
-    gap: "15px",
+    flexDirection: "row",
+    gap: "0px", // Quitamos gap para que la foto pegue al borde
     border: `1px solid ${colores.hoja}30`,
     boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-    marginBottom: "10px",
-    alignItems: "center",
+    marginBottom: "15px",
+    alignItems: "stretch", // Para que la foto y la info tengan la misma altura
+    overflow: "hidden", // Corta las esquinas de la foto con el radius de la card
+    width: "100%",
+    maxWidth: "850px", // Evita que en laptop se estire demasiado hacia los lados
   },
   fotoLaptop: {
-    width: "150px",
-    height: "100px",
-    borderRadius: "12px",
+    width: "200px",
+    height: "200px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
   },
   fotoMobile: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "12px",
+    width: "160px", // Reducido un poco para dar más espacio al texto en pantallas pequeñas
+    height: "180px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
@@ -103,25 +98,46 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-between",
-    height: "100%",
+    justifyContent: "center",
+    padding: "15px 20px",
+    gap: "4px", // Reducimos el gap para que distrito y ciudad estén más "pegados"
   },
-  titulo: { margin: 0, fontSize: "1.1rem", color: colores.bosque },
-  ciudad: { margin: "2px 0", fontSize: "0.85rem", color: "#888" },
-  colaboradorWrapper: { marginTop: "5px" },
-  colaborador: { fontSize: "0.8rem", color: "#666" },
+  distrito: {
+    margin: 0,
+    fontSize: "0.8rem", // Mismo tamaño que ciudad
+    fontWeight: "400", // Negrita marcada
+    color: colores.bosque,
+    lineHeight: "1.2",
+  },
+  ciudad: {
+    margin: 0,
+    fontSize: "0.9rem", // Mismo tamaño que distrito
+    color: "#666", // Un gris un poco más oscuro para que no se pierda
+    fontWeight: "600", // Peso normal
+  },
+  colaboradorWrapper: {
+    marginTop: "8px",
+    borderTop: `1px solid ${colores.fondo}`,
+    paddingTop: "6px",
+  },
+  colaborador: {
+    fontSize: "0.8rem",
+    color: "#888",
+    fontStyle: "italic", // Un toque sutil para diferenciarlo de los datos geográficos
+  },
   contenedorBotones: {
     display: "flex",
-    gap: "12px",
+    gap: "15px",
     marginTop: "10px",
     alignItems: "center",
   },
   btnIcono: {
     background: "none",
     border: "none",
-    padding: 0,
+    padding: "5px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
+    transition: "transform 0.2s ease", // Feedback visual
   },
 };

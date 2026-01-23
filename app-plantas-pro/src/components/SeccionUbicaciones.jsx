@@ -7,7 +7,7 @@ export const SeccionUbicaciones = ({ ubicaciones, nombrePlanta, isMobile }) => {
     <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
       <div style={styles.header}>
         <h2 style={styles.titulo}>
-          Ubicaciones registradas para {nombrePlanta}
+          Ubicaciones registradas de: {nombrePlanta}
         </h2>
         <span style={styles.badge}>
           {ubicaciones.length}{" "}
@@ -43,11 +43,10 @@ const styles = {
   },
   containerMobile: {
     width: "100%",
-    padding: "20px",
+    padding: "10px",
     backgroundColor: "transparent",
     marginTop: "10px",
-    boxSizing: "border-box", // <--- CRÍTICO
-    overflowX: "hidden",
+    boxSizing: "border-box",
   },
   header: {
     textAlign: "center",
@@ -56,7 +55,7 @@ const styles = {
   titulo: {
     fontSize: "1.4rem",
     color: colores.bosque,
-    marginBottom: "8px",
+    marginBottom: "20px",
   },
   badge: {
     backgroundColor: colores.bosque,
@@ -68,7 +67,7 @@ const styles = {
   grid: {
     display: "flex",
     flexDirection: "column",
-    gap: "20px", // Espacio entre las cards blancas
+    gap: "5px", // Espacio entre las cards blancas
   },
   sinDatos: {
     textAlign: "center",
