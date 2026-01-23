@@ -3,6 +3,7 @@ import { colores } from "../constants/tema";
 import { OtrosNombres } from "./OtrosNombres";
 
 export const BloqueIdentidad = ({ planta }) => {
+
   return (
     <div style={estilos.bloque}>
       {/* Nombre Común */}
@@ -48,9 +49,9 @@ const estilos = {
   },
   nombreComun: {
     margin: 0,
-    fontSize: "1.8rem",
+    fontSize: "2rem",
     color: colores.bosque,
-    fontWeight: "800",
+    fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
   },

@@ -4,43 +4,45 @@ import { colores } from "../constants/tema.js";
 
 export const SeccionInformacion = ({ planta }) => {
   // Si no hay planta, no renderizamos nada
-  if (!planta) return null;
-
+  if (!planta.acordeon1 && !planta.acordeon2) return null;
+  
   return (
-    <section style={styles.contenedorSeccion}>
-      <AcordeonInformacion
-        titulo="Propiedades Medicinales"
-        contenido={<p style={styles.textInterno}>{planta.acordeon1}</p>}
-      />
-
-      <AcordeonInformacion
-        titulo="Preparación y Uso"
-        contenido={<p style={styles.textInterno}>{planta.acordeon2}</p>}
-      />
-
-      <AcordeonInformacion
-        titulo="Links externos"
-        contenido={<p style={styles.textInterno}>{planta.acordeon3}</p>}
-      />
-
-
-    </section>
+    <div style={styles.contenedor}>
+      {/* Solo renderizamos lo que realmente existe en tu BD: contenido1, 2, etc. */}
+      <div style={styles.acordeonesContainer}>
+        {planta.acordeon1 && (
+          <AcordeonInformacion
+            titulo="Propiedades Medicinales"
+            contenido={planta.acordeon1}
+          />
+        )}
+        {planta.acordeon2 && (
+          <AcordeonInformacion
+            titulo="Usos"
+            contenido={planta.acordeon2}
+          />
+        )}
+        <AcordeonInformacion
+          titulo="Links externos"
+          contenido={<p style={styles.textInterno}></p>}
+        />
+      </div>
+    </div>
   );
 };
 
-// ESTILOS AL FINAL
 const styles = {
-  contenedorSeccion: {
+  contenedor: {
     display: "flex",
     flexDirection: "column",
-    gap: "5px", // Espacio mínimo entre acordeones
-    padding: "10px",
-    width: "100%",
+    gap: "15px",
+    marginTop: "10px",
+    marginBottom: "20px",
+    width: "100%"
   },
-  textInterno: {
-    margin: 0,
-    color: "#444",
-    lineHeight: "1.6",
-    textAlign: "justify",
+  acordeonesContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
   },
 };

@@ -12,12 +12,22 @@ export const colores = {
   red: "#FF0000",
 };
 
-export const sombras = {
-  suave: "0 4px 15px rgba(47, 69, 56, 0.1)",
-  tarjeta: "0 10px 25px rgba(0,0,0,0.08)"
-};
+export const ui = {
+  // BORDES
+  borderRadius: {
+    card: "20px",
+    boton: "12px",
+    thumb: "8px",
+    contenedor: "25px",
+  },
 
-export const bordes = {
-  redondeado: "20px",
-  boton: "15px"
+  // SOMBRAS (Las que ya estás usando)
+  sombras: {
+    suave: "0 4px 12px rgba(0,0,0,0.05)",
+    media: "0 8px 20px rgba(0,0,0,0.08)",
+    fuerte: "0 10px 30px rgba(0,0,0,0.12)",
+  },
+
+  // TRANSICIONES
+  transicion: "all 0.3s ease",
 };

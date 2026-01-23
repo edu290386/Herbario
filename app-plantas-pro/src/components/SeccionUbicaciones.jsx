@@ -1,81 +1,75 @@
-import React, { useState } from "react";
-import { CardUbicacion } from "./CardUbicacion";
-import { colores } from "./texthelper.js";
+import React from "react";
+import { CardUbicacion } from "./CardUbicación";
+import { colores } from "../constants/tema";
 
-export const SeccionUbicaciones = ({
-  ubicaciones,
-  usuarioActual,
-  plantaNombre,
-}) => {
-  const [filtro, setFiltro] = useState("grupo"); // Acuerdo: 'grupo' por defecto
-
-  // Filtrar la data según el acuerdo
-  const dataFiltrada = ubicaciones.filter((u) =>
-    filtro === "propias" ? u.usuario_id === usuarioActual.id : true,
-  );
-
+export const SeccionUbicaciones = ({ ubicaciones, nombrePlanta, isMobile }) => {
   return (
-    <div style={styles.contenedor}>
-      {/* Switch de Filtro (Acuerdo: Propias vs Grupo) */}
-      <div style={styles.headerSeccion}>
-        <h2 style={{ color: colores.bosque }}>Ubicaciones de {plantaNombre}</h2>
-        <div style={styles.toggleContainer}>
-          <button
-            onClick={() => setFiltro("grupo")}
-            style={{
-              ...styles.btnFiltro,
-              fontWeight: filtro === "grupo" ? "bold" : "normal",
-            }}
-          >
-            Grupo
-          </button>
-          <button
-            onClick={() => setFiltro("propias")}
-            style={{
-              ...styles.btnFiltro,
-              fontWeight: filtro === "propias" ? "bold" : "normal",
-            }}
-          >
-            Mías
-          </button>
-        </div>
+    <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
+      <div style={styles.header}>
+        <h2 style={styles.titulo}>
+          Ubicaciones registradas para {nombrePlanta}
+        </h2>
+        <span style={styles.badge}>
+          {ubicaciones.length}{" "}
+          {ubicaciones.length === 1
+            ? "registro encontrado"
+            : "registros encontrados"}
+        </span>
       </div>
 
-      {/* Listado de Cards */}
-      {dataFiltrada.length > 0 ? (
-        dataFiltrada.map((ubicacion) => (
-          <CardUbicacion
-            key={ubicacion.id}
-            data={ubicacion}
-            usuarioActual={usuarioActual}
-            alBorrar={(id) => console.log("Borrando...", id)} // Aquí conectas tu función de Supabase
-          />
-        ))
-      ) : (
-        <p style={styles.vacio}>No hay ubicaciones registradas aún.</p>
-      )}
+      <div style={styles.grid}>
+        {ubicaciones.length > 0 ? (
+          ubicaciones.map((ubi) => (
+            <CardUbicacion key={ubi.id} ubicacion={ubi} isMobile={isMobile} />
+          ))
+        ) : (
+          <p style={styles.sinDatos}>
+            Aún no hay ubicaciones para esta planta.
+          </p>
+        )}
+      </div>
     </div>
   );
 };
 
 const styles = {
-  contenedor: { padding: "20px 0" },
-  headerSeccion: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "20px",
+  containerLaptop: {
+    width: "100%",
+    maxWidth: "900px",
+    margin: "40px auto", // Separación clara del bloque superior
+    padding: "20px",
+    backgroundColor: "transparent", // OPCIÓN 1: Deja ver el fondo #F1F2ED
   },
-  toggleContainer: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: "20px",
-    padding: "4px",
+  containerMobile: {
+    width: "100%",
+    padding: "20px",
+    backgroundColor: "transparent",
+    marginTop: "10px",
   },
-  btnFiltro: {
-    border: "none",
-    background: "none",
+  header: {
+    textAlign: "center",
+    marginBottom: "30px",
+  },
+  titulo: {
+    fontSize: "1.4rem",
+    color: colores.bosque,
+    marginBottom: "8px",
+  },
+  badge: {
+    backgroundColor: colores.bosque,
+    color: "#fff",
     padding: "5px 15px",
-    cursor: "pointer",
+    borderRadius: "20px",
+    fontSize: "0.85rem",
   },
-  vacio: { textAlign: "center", color: "#888", fontStyle: "italic" },
+  grid: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px", // Espacio entre las cards blancas
+  },
+  sinDatos: {
+    textAlign: "center",
+    color: "#888",
+    fontStyle: "italic",
+  },
 };

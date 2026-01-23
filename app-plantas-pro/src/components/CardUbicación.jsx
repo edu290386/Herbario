@@ -1,48 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { colores } from "../constants/tema.js";
 import { generarRutas } from "../helpers/linkHelper.js";
-import { SiGooglemaps, SiWaze, SiWhatsapp, SiTiktok, SiYoutube } from "react-icons/si";
+import { SiGooglemaps, SiWaze, SiTiktok, SiWhatsapp, SiYoutube } from "react-icons/si";
 
-export const CardUbicacion = ({ data }) => {
-  const { google, waze } = generarRutas(data.latitud, data.longitud);
-  const [esLaptop, setEsLaptop] = useState(window.innerWidth >= 768);
+export const CardUbicacion = ({ ubicacion, isMobile }) => {
+  // Generamos las rutas dinámicas usando el helper
+  const { google, waze } = generarRutas(ubicacion.latitud, ubicacion.longitud);
 
-  useEffect(() => {
-    const handleResize = () => setEsLaptop(window.innerWidth >= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Función para manejar la redirección inteligente
+  // Navegación inteligente: Laptop abre pestaña, Móvil abre App
   const manejarNavegacion = (url) => {
-    if (esLaptop) {
-      window.open(url, "_blank"); // Pestaña nueva en PC
+    if (!isMobile) {
+      window.open(url, "_blank");
     } else {
-      window.location.href = url; // Abrir app en móvil
+      window.location.href = url;
     }
   };
 
   return (
-    <div style={esLaptop ? styles.cardLaptop : styles.cardMobile}>
-      {/* 1. CORRECCIÓN DE FOTO: Usamos data.foto_contexto directamente */}
+    <div style={styles.card}>
+      {/* IMAGEN DE CONTEXTO */}
       <div
         style={{
-          ...(esLaptop ? styles.fotoLaptop : styles.fotoMobile),
-          backgroundImage: `url(${data.foto_contexto || "https://via.placeholder.com/300"})`,
+          ...(isMobile ? styles.fotoMobile : styles.fotoLaptop),
+          backgroundImage: `url(${ubicacion.foto_contexto || "https://via.placeholder.com/300"})`,
         }}
       />
 
+      {/* INFORMACIÓN Y BOTONES */}
       <div style={styles.info}>
         <div>
-          <h3 style={styles.titulo}>{data.distrito}</h3>
-          <p style={styles.ciudad}>{data.ciudad}</p>
+          <h3 style={styles.titulo}>
+            {ubicacion.distrito || "Distrito no especificado"}
+          </h3>
+          <p style={styles.ciudad}>{ubicacion.ciudad || "Ciudad"}</p>
 
-          {/* Espacio para el colaborador (lo activamos en el siguiente paso) */}
-          <span style={styles.colaborador}>
-            Aporte: {data.colaborador || "Anónimo"}
-          </span>
+          <div style={styles.colaboradorWrapper}>
+            <span style={styles.colaborador}>
+              Aporte: <strong>{ubicacion.colaborador || "Anónimo"}</strong>
+            </span>
+          </div>
         </div>
 
+        {/* CONTENEDOR DE ICONOS (Sin bordes, solo el icono) */}
         <div style={styles.contenedorBotones}>
           <button
             onClick={() => manejarNavegacion(google)}
@@ -50,18 +49,17 @@ export const CardUbicacion = ({ data }) => {
           >
             <SiGooglemaps color="#EA4335" size={26} />
           </button>
-
           <button
             onClick={() => manejarNavegacion(waze)}
             style={styles.btnIcono}
           >
-            <SiWaze color="#00B8F1" size={26} />
+            <SiWaze color="#33CCFF" size={26} />
           </button>
           <button style={styles.btnIcono}>
             <SiWhatsapp size={25} color="#25D366" />
           </button>
           <button style={styles.btnIcono}>
-            <SiTiktok size={24} color="#000000" />
+            <SiTiktok size={24} color="#000" />
           </button>
           <button style={styles.btnIcono}>
             <SiYoutube size={29} color="#FF0000" />
@@ -72,78 +70,58 @@ export const CardUbicacion = ({ data }) => {
   );
 };
 
-// ESTILOS AL FINAL
 const styles = {
-  cardLaptop: {
+  card: {
+    backgroundColor: colores.blanco,
+    borderRadius: "20px",
+    padding: "15px",
     display: "flex",
-    backgroundColor: "#fff",
-    borderRadius: "15px", // Bordes redondeados más pronunciados
-    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-    overflow: "hidden",
-    height: "160px",
-    width: "100%",
-    maxWidth: "650px", // LIMITE PARA LAPTOP
-    margin: "15px auto", // Centrada
-    border: "1px solid #eee",
-  },
-  cardMobile: {
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: "#fff",
-    borderRadius: "15px", // BORDER RADIUS EN MÓVIL
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    overflow: "hidden", // Importante para que la foto no tape las esquinas
-    width: "92%", // NO OCUPA EL 100% (Deja margen)
-    margin: "10px auto", // Centrada con espacio entre cards
-    border: "1px solid #eee",
+    flexDirection: "row", // Mantenemos fila para que se vea como la imagen de Nano Banana
+    gap: "15px",
+    border: `1px solid ${colores.hoja}30`,
+    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    marginBottom: "10px",
+    alignItems: "center",
   },
   fotoLaptop: {
-    width: "220px",
+    width: "150px",
+    height: "100px",
+    borderRadius: "12px",
     backgroundSize: "cover",
     backgroundPosition: "center",
+    flexShrink: 0,
   },
   fotoMobile: {
-    width: "100%",
-    height: "180px",
+    width: "100px",
+    height: "100px",
+    borderRadius: "12px",
     backgroundSize: "cover",
     backgroundPosition: "center",
+    flexShrink: 0,
   },
   info: {
     flex: 1,
-    padding: "15px 20px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
+    height: "100%",
   },
-  titulo: {
-    margin: 0,
-    color: colores.bosque || "#2d5a27",
-    fontSize: "1.15rem",
-    fontWeight: "700",
-  },
-  ciudad: {
-    margin: "2px 0",
-    color: "#666",
-    fontSize: "0.85rem",
-  },
-  colaborador: {
-    fontSize: "0.7rem",
-    color: "#aaa",
-    fontStyle: "italic",
-    marginTop: "5px",
-    display: "block",
-  },
+  titulo: { margin: 0, fontSize: "1.1rem", color: colores.bosque },
+  ciudad: { margin: "2px 0", fontSize: "0.85rem", color: "#888" },
+  colaboradorWrapper: { marginTop: "5px" },
+  colaborador: { fontSize: "0.8rem", color: "#666" },
   contenedorBotones: {
     display: "flex",
-    gap: "25px",
-    alignItems: "center",
+    gap: "12px",
     marginTop: "10px",
+    alignItems: "center",
   },
   btnIcono: {
     background: "none",
     border: "none",
     padding: 0,
     cursor: "pointer",
-    transition: "transform 0.1s ease",
+    display: "flex",
+    alignItems: "center",
   },
 };

@@ -9,6 +9,7 @@ import { BloqueIdentidad } from "../components/BloqueIdentidad";
 import { CardUbicacion } from "../components/CardUbicación";
 import { colores } from "../constants/tema";
 import { SeccionInformacion } from "../components/SeccionInformacion";
+import { SeccionUbicaciones } from "../components/SeccionUbicaciones";
 
 
 export const DetallePage = () => {
@@ -131,32 +132,11 @@ export const DetallePage = () => {
       </div>
 
       {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
-      <section style={styles.ListaUbicaciones}>
-        {/* Card de Título y Conteo */}
-        <div style={styles.cardHeaderUbicaciones}>
-          <h2 style={styles.tituloHeader}>
-            Ubicaciones registradas para:{" "}
-            <span style={{ color: colores.bosque }}>{planta.nombre_comun}</span>
-          </h2>
-          <div style={styles.badgeConteo}>
-            {ubicaciones.length}{" "}
-            {ubicaciones.length === 1 ? "registro encontrado" : "registros encontrados"}
-          </div>
-        </div>
-
-        {/* Listado de Cards */}
-        <div style={styles.gridUbicaciones}>
-          {ubicaciones.length > 0 ? (
-            ubicaciones.map((item) => (
-              <CardUbicacion key={item.id} data={item} />
-            ))
-          ) : (
-            <div style={styles.cardVacia}>
-              <p>No hay ubicaciones registradas aún.</p>
-            </div>
-          )}
-        </div>
-      </section>
+      <SeccionUbicaciones
+        ubicaciones={ubicaciones}
+        nombrePlanta={planta.nombre_comun}
+        isMobile={isMobile}
+      />
     </div>
   );
 };
@@ -170,13 +150,12 @@ const styles = {
   mainContainer: {
     display: "flex",
     width: "100%",
-    minHeight: "100vh",
   },
   carruselSection: {
     flex: 1.2,
     backgroundColor: colores.fondo,
     display: "flex",
-    flexDirection: "column", // Para que miniaturas y principal se alineen bien
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -186,125 +165,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     backgroundColor: colores.fondo,
-  },
-  title: {
-    fontSize: "2.5rem",
-    margin: "0 0 10px 0",
-    color: "#1a1a1a",
-  },
-  scientificName: {
-    fontSize: "1.3rem",
-    fontStyle: "italic",
-    color: "#2D5A27",
-    marginBottom: "20px",
-  },
-  desktopDescription: {
-    marginTop: "20px",
-  },
-  scrollSection: {
-    padding: "40px 25px",
-    backgroundColor: "#fff",
-  },
-  mobileDescription: {
-    marginBottom: "40px",
-  },
-  subTitle: {
-    fontSize: "1.2rem",
-    borderBottom: "2px solid #f0f4f0",
-    paddingBottom: "8px",
-    marginBottom: "20px",
-    color: "#333",
-  },
-  text: {
-    lineHeight: "1.6",
-    color: "#555",
-    fontSize: "1rem",
-    marginBottom: "30px",
-  },
-  ubicacionesContainer: {
-    marginTop: "20px",
-  },
-  locationItem: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f9f9f9",
-    padding: "15px",
-    borderRadius: "12px",
-    marginBottom: "10px",
-    border: "1px solid #eee",
-  },
-  locationMain: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
-  coordText: {
-    fontSize: "0.9rem",
-    color: "#666",
-    fontWeight: "500",
-  },
-
-  ListaUbicaciones: {
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    maxWidth: "650px", // Alineado al maxWidth de la CardUbicacion
-    margin: "0 auto", // Centra todo el bloque 2
-    padding: "30px 0",
-    overflowY: "visible",
-  },
-
-  cardHeaderUbicaciones: {
-    backgroundColor: "#fff",
-    padding: "25px 20px",
-    borderRadius: "15px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-    marginBottom: "10px",
-    textAlign: "center", // CENTRA EL TEXTO
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center", // CENTRA EL CONTENIDO (H2 y Badge)
-    justifyContent: "center",
-    gap: "12px",
-    border: "1px solid #eee",
-    width: "92%", // IGUAL QUE LA CARD EN MOVIL
-    margin: "0 auto 15px auto", // CENTRA LA CARD Y DA MARGEN ABAJO
-  },
-
-  tituloHeader: {
-    margin: 0,
-    fontSize: "1.2rem",
-    color: "#333",
-    fontWeight: "600",
-    lineHeight: "1.4",
-  },
-
-  badgeConteo: {
-    backgroundColor: colores.bosque || "#2d5a27",
-    color: "#fff",
-    padding: "6px 16px",
-    borderRadius: "20px",
-    fontSize: "0.85rem",
-    fontWeight: "bold",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  },
-
-  gridUbicaciones: {
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    // Las cards ya tienen su margin: "10px auto" y width: "92%"
-  },
-
-  cardVacia: {
-    backgroundColor: "#fff",
-    padding: "30px",
-    borderRadius: "15px",
-    textAlign: "center",
-    color: "#999",
-    border: "1px dashed #ccc",
-    width: "92%",
-    margin: "0 auto",
+    boxSizing: "border-box", // CRÍTICO
+    width: "100%", // Forzamos a no exceder el padre
   },
 };
