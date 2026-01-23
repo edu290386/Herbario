@@ -57,5 +57,6 @@ const styles = {
     color: "#444",
     lineHeight: "1.6",
     borderTop: "1px solid #f9f9f9",
+    textAlign: "justify",
   },
 };

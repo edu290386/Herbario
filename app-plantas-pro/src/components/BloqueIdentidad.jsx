@@ -33,7 +33,7 @@ const estilos = {
     backgroundColor: "white", // Mantenemos tu color de fondo
     width: "100%", // Ahora ocupa el mismo ancho que los acordeones
     margin: "0 auto 25px auto", // Centrado y con margen inferior
-    padding: "20px",
+    padding: "15px",
     borderRadius: "15px",
     boxSizing: "border-box",
     minHeight: "160px",
@@ -51,12 +51,12 @@ const estilos = {
     margin: 0,
     fontSize: "2rem",
     color: colores.bosque,
-    fontWeight: "700",
+    fontWeight: "500",
     textTransform: "uppercase",
     letterSpacing: "0.5px",
   },
   nombreCientifico: {
-    margin: "5px 0 15px 0",
+    margin: "5px 0 0px 0",
     fontSize: "1.1rem",
     color: "#666",
   },

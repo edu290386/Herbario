@@ -1,6 +1,4 @@
-import React from "react";
 import { AcordeonInformacion } from "./AcordeonInformacion.jsx";
-import { colores } from "../constants/tema.js";
 
 export const SeccionInformacion = ({ planta }) => {
   // Si no hay planta, no renderizamos nada
@@ -36,13 +34,13 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
-    marginTop: "10px",
-    marginBottom: "20px",
+    marginTop: "5px",
+    marginBottom: "0px",
     width: "100%"
   },
   acordeonesContainer: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
+    gap: "15px",
   },
 };

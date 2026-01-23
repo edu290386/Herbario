@@ -4,9 +4,7 @@ import { supabase } from "../supabaseClient";
 import { BotonVolver } from "../components/BotonVolver";
 import { BotonRegistrar } from "../components/BotonRegistrar";
 import { CarruselDetalle } from "../components/CarruselDetalle";
-import { AcordeonInformacion } from "../components/AcordeonInformacion"
 import { BloqueIdentidad } from "../components/BloqueIdentidad";
-import { CardUbicacion } from "../components/CardUbicación";
 import { colores } from "../constants/tema";
 import { SeccionInformacion } from "../components/SeccionInformacion";
 import { SeccionUbicaciones } from "../components/SeccionUbicaciones";
@@ -161,11 +159,11 @@ const styles = {
   },
   infoSection: {
     flex: 1,
-    padding: "40px",
+    padding: "20px",
     display: "flex",
     flexDirection: "column",
     backgroundColor: colores.fondo,
-    boxSizing: "border-box", // CRÍTICO
-    width: "100%", // Forzamos a no exceder el padre
   },
+
+  
 };

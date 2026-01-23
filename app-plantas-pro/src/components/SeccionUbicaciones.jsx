@@ -39,12 +39,15 @@ const styles = {
     margin: "40px auto", // Separación clara del bloque superior
     padding: "20px",
     backgroundColor: "transparent", // OPCIÓN 1: Deja ver el fondo #F1F2ED
+    boxSizing: "border-box",
   },
   containerMobile: {
     width: "100%",
     padding: "20px",
     backgroundColor: "transparent",
     marginTop: "10px",
+    boxSizing: "border-box", // <--- CRÍTICO
+    overflowX: "hidden",
   },
   header: {
     textAlign: "center",
