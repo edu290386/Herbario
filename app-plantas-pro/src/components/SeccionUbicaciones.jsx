@@ -1,5 +1,5 @@
 import React from "react";
-import { CardUbicacion } from "./CardUbicación";
+import { CardUbicacion } from "./CardUbicacion";
 import { colores } from "../constants/tema";
 
 export const SeccionUbicaciones = ({
@@ -8,34 +8,42 @@ export const SeccionUbicaciones = ({
   isMobile,
   userCoords,
 }) => {
-  
+  // Filtramos las que tienen coordenadas válidas
   const ubicacionesLimpias = ubicaciones.filter(
     (u) => u.latitud !== null && u.longitud !== null,
   );
-  //console.log(ubicacionesLimpias)
-  
+
   return (
     <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
+      {/* HEADER: Título y contador */}
       <div style={styles.header}>
         <h2 style={styles.titulo}>
           Ubicaciones registradas de: {nombrePlanta}
         </h2>
         <span style={styles.badge}>
-          {ubicaciones.length}{" "}
-          {ubicaciones.length === 1
+          {ubicacionesLimpias.length}{" "}
+          {ubicacionesLimpias.length === 1
             ? "registro encontrado"
             : "registros encontrados"}
         </span>
       </div>
 
-      <div style={styles.grid}>
+      {/* GRID DINÁMICO: 1 col en mobile, 2 en laptop */}
+      <div
+        style={{
+          ...styles.grid,
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: isMobile ? "5px" : "20px",
+        }}
+      >
         {ubicacionesLimpias.length > 0 ? (
-          ubicacionesLimpias.map((ubi) => (
+          ubicacionesLimpias.map((ubi, index) => (
             <CardUbicacion
               key={ubi.id}
               ubicacion={ubi}
               userCoords={userCoords}
               isMobile={isMobile}
+              orden={index + 1} // Enviamos el ranking de cercanía
             />
           ))
         ) : (
@@ -51,43 +59,46 @@ export const SeccionUbicaciones = ({
 const styles = {
   containerLaptop: {
     width: "100%",
-    maxWidth: "900px",
-    margin: "40px auto", // Separación clara del bloque superior
+    maxWidth: "1200px", // Aumentado para dar aire a las 2 columnas
+    margin: "0px auto",
     padding: "20px",
-    backgroundColor: "transparent", // OPCIÓN 1: Deja ver el fondo #F1F2ED
+    backgroundColor: "transparent",
     boxSizing: "border-box",
   },
   containerMobile: {
     width: "100%",
     padding: "10px",
     backgroundColor: "transparent",
-    marginTop: "10px",
     boxSizing: "border-box",
   },
   header: {
     textAlign: "center",
-    marginBottom: "30px",
+    marginBottom: "40px",
   },
   titulo: {
     fontSize: "1.4rem",
     color: colores.bosque,
-    marginBottom: "20px",
+    marginBottom: "30px",
+    fontWeight: "500",
   },
   badge: {
     backgroundColor: colores.bosque,
     color: "#fff",
-    padding: "5px 15px",
-    borderRadius: "20px",
+    padding: "10px 15px",
+    borderRadius: "15px",
     fontSize: "0.85rem",
+    fontWeight: "400",
   },
   grid: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px", // Espacio entre las cards blancas
+    display: "grid",
+    width: "100%",
+    
   },
   sinDatos: {
+    gridColumn: "1 / -1", // Hace que el mensaje ocupe todo el ancho del grid
     textAlign: "center",
     color: "#888",
+    padding: "40px",
     fontStyle: "italic",
   },
 };

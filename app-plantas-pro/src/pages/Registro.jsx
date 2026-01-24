@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Leaf, Camera, MapPin, CheckCircle } from "lucide-react";
+import { Leaf, Camera, CheckCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../helpers/cloudinaryHelper";
 import { BotonRegistrar } from "../components/BotonRegistrar";
@@ -13,6 +13,7 @@ import {
   IoMdCloseCircle,
   IoMdLocate,
 } from "react-icons/io";
+import { obtenerDireccion } from "../helpers/../helpers/geoHelper";
 
 export const Registro = () => {
   const { state } = useLocation();
@@ -21,7 +22,7 @@ export const Registro = () => {
   // Detectamos si es una planta existente o nueva
 
   const plantaId = state?.plantaId;
-  const esSoloUbicacion = state?.vieneDeDetalle; // La bandera que creamos
+  const esSoloUbicacion = state?.vieneDeDetalle; // La planta que creamos
 
   const [nombreLocal, setNombreLocal] = useState(state?.nombreComun || "");
   const nombresSecundarios = state?.nombresSecundarios || "";
@@ -65,9 +66,18 @@ useEffect(() => {
         throw new Error("La imagen no pudo procesarse. Verifica tu conexión.");
       }
 
+      // 3. OBTENER LUGAR AUTOMÁTICAMENTE
+      let datosLugar = { distrito: null, ciudad: null };
+      try {
+        const res = await obtenerDireccion(coords.lat, coords.lng);
+        if (res) datosLugar = res;
+      } catch (error) {
+        console.warn(error);
+      }
+
       let idFinal = plantaId;
 
-      // 3. Lógica de Planta (Si es nueva)
+      // 4. Lógica de Planta (Si es nueva)
       if (!idFinal) {
         const nombreLimpio = formatearParaDB(nombreLocal);
 
@@ -91,13 +101,16 @@ useEffect(() => {
         }
       }
 
-      // 4. Insertar Ubicación (Aquí es donde daba el error)
+      // 4. Insertar Ubicación con datos del lugar
       const { error: errU } = await supabase.from("ubicaciones").insert([
         {
           planta_id: idFinal,
           foto_contexto: urlFoto, // Ahora garantizamos que urlFoto existe
           latitud: coords.lat,
           longitud: coords.lng,
+          distrito: datosLugar.distrito,
+          ciudad: datosLugar.ciudad,
+          colaborador: "Admin",
         },
       ]);
 
@@ -107,7 +120,7 @@ useEffect(() => {
       setGuardadoExitoso(true);
       setTimeout(() => {
         navigate(`/planta/${idFinal}`, {
-          state: { planta: { id: idFinal } }, 
+          state: { planta: { id: idFinal } },
           replace: true,
         });
       }, 1800);

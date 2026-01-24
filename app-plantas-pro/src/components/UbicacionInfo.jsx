@@ -1,129 +1,189 @@
-import React, { useState, useEffect, useRef } from "react";
-import { colores } from "../constants/tema.js";
-import { supabase } from "../supabaseClient";
-import { obtenerDireccion } from "../helpers/geoHelper.js";
+import React from "react";
+import { colores } from "../constants/tema";
+import {
+  FaRegCalendarCheck,
+  FaUserPlus,
+  FaCar,
+  FaMapMarkerAlt,
+  FaMapMarker,
+} from "react-icons/fa";
+import { TiDelete } from "react-icons/ti";
+import { FaHouse, FaCity } from "react-icons/fa6";
+import { SiGooglemaps, SiWaze, SiWhatsapp } from "react-icons/si";
+import { generarRutas } from "../helpers/linkHelper";
+import { BiMapPin } from "react-icons/bi";
 
 export const UbicacionInfo = ({
-  idUbicacion,
-  latitud,
-  longitud,
   distrito,
   ciudad,
+  latitud,
+  longitud,
+  distancia,
   colaborador,
-  userCoords,
+  fecha,
+  isMobile,
 }) => {
-  // 1. Estado inicial: Mostramos lo que ya existe en la DB o un indicador de carga
-  const [lugar, setLugar] = useState({
-    distrito: distrito || (latitud ? "Buscando..." : "Ubicación"),
-    ciudad: ciudad || "",
-  });
+  const { google, waze } = generarRutas(latitud, longitud);
 
-  // 2. Candado de seguridad para evitar múltiples llamadas a la API
-  const apiLlamadaRef = useRef(false);
+  // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
+  const sizes = {
+    iconosFila: isMobile ? 17 : 20, // Casa, Ciudad, User, Calendario
+    iconosAccion: isMobile ? 24 : 28, // Maps, Waze, WS
+    iconoDelete: isMobile ? 30 : 40, // Tacho
+    fuenteTitulo: isMobile ? "0.8rem" : "1.1rem",
+    fuenteTexto: isMobile ? "0.8rem" : "0.95rem",
+  };
 
-  useEffect(() => {
-    // CASO A: Los datos ya existen en la Base de Datos
-    if (distrito && ciudad) {
-      setLugar({ distrito, ciudad });
-      return;
+  const manejarNavegacion = (url) => {
+    if (!isMobile) {
+      window.open(url, "_blank");
+    } else {
+      window.location.href = url;
     }
-
-    // CASO B: No hay datos, pero tampoco hay coordenadas válidas aún (esperamos)
-    if (!latitud || !longitud || latitud === "undefined") return;
-
-    // CASO C: Tenemos coordenadas y los campos en la DB están vacíos
-    if (!apiLlamadaRef.current) {
-      apiLlamadaRef.current = true; // Cerramos el candado
-
-      const completarUbicacion = async () => {
-        try {
-          // Añadimos un pequeño retraso aleatorio (entre 100ms y 1000ms)
-          // para que las cards no disparen la API todas al mismo tiempo
-          const delay = Math.floor(Math.random() * 900) + 100;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-
-          const res = await obtenerDireccion(latitud, longitud);
-
-          if (res) {
-            setLugar(res);
-            await supabase
-              .from("ubicaciones")
-              .update({ distrito: res.distrito, ciudad: res.ciudad })
-              .eq("id", idUbicacion);
-          } else {
-            setLugar({ distrito: "Ubicación", ciudad: "Ver en mapa" });
-          }
-        } catch (err) {
-          console.error("Error en flujo de UbicacionInfo:", err);
-        }
-      };
-
-      completarUbicacion();
-    }
-  }, [idUbicacion, latitud, longitud, distrito, ciudad]);
+  };
 
   return (
-    <div style={styles.container}>
-      <h3 style={styles.distrito}>{lugar.distrito}</h3>
-
-      <p style={styles.ciudad}>{lugar.ciudad}</p>
-
-      <div style={styles.acreditacion}>
-        <span style={styles.checkIcon}>✓</span>
-        Ubicación verificada
+    <div style={styles.contenedor}>
+      {/* 1. DISTRITO */}
+      <div style={styles.filaSimple}>
+        <FaHouse size={sizes.iconosFila} color={colores.bosque} />
+        <h4 style={{ ...styles.distrito, fontSize: sizes.fuenteTitulo }}>
+          {distrito || "Distrito no especificado"}
+        </h4>
       </div>
 
-      <div style={styles.colaboradorWrapper}>
-        <span style={styles.colaborador}>
-          Aporte: <strong>{colaborador || "Admin"}</strong>
+      {/* 2. CIUDAD */}
+      <div style={styles.filaSimple}>
+        <FaCity size={sizes.iconosFila} color={colores.bosque} />
+        <span style={{ ...styles.ciudadTexto, fontSize: sizes.fuenteTexto }}>
+          {ciudad || "Lima, Perú"}
         </span>
+      </div>
+
+      {/* 3. DISTANCIA */}
+      {distancia && (
+        <div style={styles.badgeDistancia}>
+          <div style={styles.textoDistancia}>
+            <FaCar size={isMobile ? 17 : 18} color="#000000" />
+            <span style={{ fontSize: sizes.fuenteTexto }}>{distancia} Km</span>
+          </div>
+        </div>
+      )}
+
+      {/* 4. COLABORADOR */}
+      <div style={styles.filaSimple}>
+        <FaUserPlus size={sizes.iconosFila} color="#000000" />
+        <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
+          <b>{colaborador || "Admin"}</b>
+        </span>
+      </div>
+
+      {/* 5. FECHA */}
+      <div style={styles.filaSimple}>
+        <FaRegCalendarCheck size={sizes.iconosFila} color="#000" />
+        <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
+          {fecha || "S/N"}
+        </span>
+      </div>
+
+      {/* 6. ACCIONES */}
+      <div style={styles.acciones}>
+        <div style={styles.contenedorNavegacion}>
+          <button
+            onClick={() => manejarNavegacion(google)}
+            style={styles.btnIcono}
+          >
+            <BiMapPin color="#B6452C" size={sizes.iconosAccion} />
+          </button>
+          <button
+            onClick={() => manejarNavegacion(waze)}
+            style={styles.btnIcono}
+          >
+            <SiWaze color="#2A9DF4" size={sizes.iconosAccion} />
+          </button>
+          <button style={{ ...styles.btnIcono, marginLeft: "4px" }}>
+            <SiWhatsapp size={sizes.iconosAccion} color="#25D366" />
+          </button>
+        </div>
+
+        <div style={styles.contenedorEliminar}>
+          <button
+            style={styles.btnIcono}
+            onClick={() => console.log("Eliminar ubicación")}
+            title="Eliminar ubicación"
+          >
+            <TiDelete size={sizes.iconoDelete} color="#D32F2F" />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 const styles = {
-  container: {
-    flex: 1,
+  contenedor: {
     display: "flex",
     flexDirection: "column",
-    gap: "2px",
-    justifyContent: "center",
+    gap: "8px",
+    flex: 1,
+    padding: "0px",
+    minWidth: 0,
   },
-  distrito: {
-    margin: 0,
-    fontSize: "0.95rem",
-    fontWeight: "700",
-    color: colores.bosque,
-    lineHeight: "1.2",
-  },
-  ciudad: {
-    margin: 0,
-    fontSize: "0.95rem",
-    color: "#666",
-    fontWeight: "400",
-  },
-  acreditacion: {
+  filaSimple: {
     display: "flex",
     alignItems: "center",
-    gap: "5px",
-    fontSize: "0.72rem",
-    color: colores.frondoso,
-    marginTop: "4px",
-    fontWeight: "500",
+    gap: "10px",
   },
-  checkIcon: {
-    fontWeight: "bold",
-    fontSize: "0.8rem",
+  distrito: {
+    fontWeight: "700",
+    color: colores.bosque,
+    margin: 0,
   },
-  colaboradorWrapper: {
-    marginTop: "8px",
-    borderTop: `1px solid #f0f0f0`,
-    paddingTop: "6px",
+  ciudadTexto: {
+    color: colores.bosque,
+    fontWeight: "600",
   },
-  colaborador: {
-    fontSize: "0.8rem",
-    color: "#888",
+  badgeDistancia: {
+    alignSelf: "flex-start",
+  },
+  textoDistancia: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    color: "#000",
+    fontWeight: "800",
+  },
+  infoSecundaria: {
+    color: "#333",
+    fontWeight: "330",
     fontStyle: "italic",
+  },
+  fechaTexto: {
+    color: "#777",
+    fontStyle: "italic",
+  },
+  acciones: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: "4px",
+    borderTop: "1px solid #eee",
+  },
+  contenedorNavegacion: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+  },
+  contenedorEliminar: {
+    display: "flex",
+    alignItems: "center",
+  },
+  btnIcono: {
+    background: "none",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
   },
 };

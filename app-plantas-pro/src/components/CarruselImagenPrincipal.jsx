@@ -4,13 +4,17 @@ import { colores } from "../constants/tema";
 import { Leaf } from "lucide-react";
 
 export const CarruselImagenPrincipal = ({ url, isMobile }) => {
+  
+  const borderRadiusEfectivo = isMobile ? "0px 0px 25px 25px" : "25px";
+  const alturaEfectiva = isMobile ? "500px" : "600px";
   // Caso 1: No hay foto (Fondo retama + Icono Leaf)
   if (!url) {
     return (
       <div
         style={{
           ...styles.frame,
-          height: isMobile ? "500px" : "600px",
+          height: alturaEfectiva,
+          borderRadius: borderRadiusEfectivo,
           backgroundColor: colores.retama,
           display: "flex",
           justifyContent: "center",

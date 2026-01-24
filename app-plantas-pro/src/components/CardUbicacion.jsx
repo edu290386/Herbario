@@ -1,20 +1,32 @@
 import { colores } from "../constants/tema.js";
-import { generarRutas } from "../helpers/linkHelper.js";
-import { SiGooglemaps, SiWaze, SiTiktok, SiWhatsapp, SiYoutube } from "react-icons/si";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
+import { calcularDistanciaPitagorica } from "../helpers/geoHelper.js";
 
 export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
   // Generamos las rutas dinámicas usando el helper
-  const { google, waze } = generarRutas(ubicacion.latitud, ubicacion.longitud);
-console.log(ubicacion)
-  // Navegación inteligente: Laptop abre pestaña, Móvil abre App
-  const manejarNavegacion = (url) => {
-    if (!isMobile) {
-      window.open(url, "_blank");
-    } else {
-      window.location.href = url;
-    }
-  };
+  
+
+  // 1. Extraemos los valores basándonos en tu console.log real
+  const lat1 = parseFloat(userCoords?.lat);
+  const lon1 = parseFloat(userCoords?.lon); // ⬅️ Cambiado de lng a lon
+
+  const lat2 = parseFloat(ubicacion?.latitud || ubicacion?.lat);
+  const lon2 = parseFloat(
+    ubicacion?.longitud || ubicacion?.lon || ubicacion?.lng,
+  );
+
+  // 2. Validación y Cálculo
+  const km =
+    !isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)
+      ? calcularDistanciaPitagorica(lat1, lon1, lat2, lon2)
+      : null;
+
+
+ 
+
+  const fechaFormateada = ubicacion.created_at
+    ? new Date(ubicacion.created_at).toLocaleDateString()
+    : "Fecha no disponible";
 
   return (
     <div style={styles.card}>
@@ -29,37 +41,21 @@ console.log(ubicacion)
       {/* INFORMACIÓN Y BOTONES */}
       <div style={styles.info}>
         <UbicacionInfo
-          idUbicacion={ubicacion.id}
+          distrito={ubicacion.distrito}
+          ciudad={ubicacion.ciudad}
           latitud={ubicacion.latitud}
           longitud={ubicacion.longitud}
-          distritoDB={ubicacion.distrito}
-          ciudadDB={ubicacion.ciudad}
-          colaborador={ubicacion.colaborador || "Admin"} 
-          userCoords={userCoords}
+          distancia={km}
+          colaborador={ubicacion.colaborador}
+          fecha={fechaFormateada}
+          isMobile={isMobile}
         />
 
-        {/* CONTENEDOR DE ICONOS (Sin bordes, solo el icono) */}
-        <div style={styles.contenedorBotones}>
-          <button
-            onClick={() => manejarNavegacion(google)}
-            style={styles.btnIcono}
-          >
-            <SiGooglemaps color="#EA4335" size={26} />
-          </button>
-          <button
-            onClick={() => manejarNavegacion(waze)}
-            style={styles.btnIcono}
-          >
-            <SiWaze color="#33CCFF" size={26} />
-          </button>
-          <button style={styles.btnIcono}>
-            <SiWhatsapp size={25} color="#25D366" />
-          </button>
-        </div>
+        
       </div>
     </div>
   );
-};
+};;;
 
 const styles = {
   card: {
@@ -95,21 +91,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    padding: "15px 20px",
+    padding: "10px 10px",
     gap: "4px", // Reducimos el gap para que distrito y ciudad estén más "pegados"
-  },
-  distrito: {
-    margin: 0,
-    fontSize: "0.8rem", // Mismo tamaño que ciudad
-    fontWeight: "400", // Negrita marcada
-    color: colores.bosque,
-    lineHeight: "1.2",
-  },
-  ciudad: {
-    margin: 0,
-    fontSize: "0.9rem", // Mismo tamaño que distrito
-    color: "#666", // Un gris un poco más oscuro para que no se pierda
-    fontWeight: "600", // Peso normal
   },
   colaboradorWrapper: {
     marginTop: "8px",
@@ -121,19 +104,6 @@ const styles = {
     color: "#888",
     fontStyle: "italic", // Un toque sutil para diferenciarlo de los datos geográficos
   },
-  contenedorBotones: {
-    display: "flex",
-    gap: "15px",
-    marginTop: "10px",
-    alignItems: "center",
-  },
-  btnIcono: {
-    background: "none",
-    border: "none",
-    padding: "5px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    transition: "transform 0.2s ease", // Feedback visual
-  },
+
+  
 };

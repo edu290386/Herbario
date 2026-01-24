@@ -21,7 +21,7 @@ export const CarruselDetalle = ({ imagenes, isMobile }) => {
         )}
       </div>
 
-      {!isMobile && imagenes.length > 1 && (
+      {!isMobile && (
         <CarruselMiniaturas
           imagenes={imagenes}
           indiceActivo={indice}

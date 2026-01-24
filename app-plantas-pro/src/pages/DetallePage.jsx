@@ -31,7 +31,7 @@ export const DetallePage = () => {
             lon: position.coords.longitude,
           });
         },
-        (error) => console.log("GPS denegado o no disponible"),
+        (error) => console.log(error),
         { enableHighAccuracy: true },
       );
     }
@@ -85,7 +85,7 @@ export const DetallePage = () => {
 
   if (!planta) return <Navigate to="/" />;
 
-  const fotosPlanta = [
+  const fotosExistentes = [
     planta.foto_perfil,
     planta.foto_tallo,
     planta.foto_hoja,
@@ -95,6 +95,8 @@ export const DetallePage = () => {
     planta.foto_semilla,
   ].filter(Boolean);
 
+  const fotosPlanta = fotosExistentes.length > 0 ? fotosExistentes : [null];
+  
   return (
     <div style={styles.wrapper}>
       <BotonVolver />
