@@ -29,7 +29,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
     : "Fecha no disponible";
 
   return (
-    <div style={styles.card}>
+    <div style={{ ...styles.card, minHeight: isMobile ? "140px" : "200px" }}>
       {/* IMAGEN DE CONTEXTO */}
       <div
         style={{
@@ -50,8 +50,6 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
           fecha={fechaFormateada}
           isMobile={isMobile}
         />
-
-        
       </div>
     </div>
   );
@@ -59,22 +57,21 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
 
 const styles = {
   card: {
-    backgroundColor: colores.blanco,
-    borderRadius: "20px",
     display: "flex",
     flexDirection: "row",
-    gap: "0px", // Quitamos gap para que la foto pegue al borde
-    border: `1px solid ${colores.hoja}30`,
-    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-    marginBottom: "15px",
-    alignItems: "stretch", // Para que la foto y la info tengan la misma altura
-    overflow: "hidden", // Corta las esquinas de la foto con el radius de la card
-    width: "100%",
-    maxWidth: "850px", // Evita que en laptop se estire demasiado hacia los lados
+    alignItems: "stretch",
+    width: "100%", // Obliga al card a llenar su columna del grid
+    margin: "1px 0px", // Centra el card dentro de su celda de la grilla
+    padding: "0",
+    overflow: "hidden",
+    boxSizing: "border-box", // <--- Esto evita la asimetría
+    boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
+    borderRadius: "20px",
+    backgroundColor: colores.blanco,
   },
   fotoLaptop: {
-    width: "200px",
-    height: "200px",
+    width: "180px",
+    height: "240px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
@@ -104,6 +101,5 @@ const styles = {
     color: "#888",
     fontStyle: "italic", // Un toque sutil para diferenciarlo de los datos geográficos
   },
-
   
 };

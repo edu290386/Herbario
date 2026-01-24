@@ -67,13 +67,15 @@ const styles = {
   },
   containerMobile: {
     width: "100%",
-    padding: "10px",
-    backgroundColor: "transparent",
+    padding: "0px", // 0 a los lados para que el grid controle el margen real
+    margin: "0px",
     boxSizing: "border-box",
+    overflowX: "hidden",
   },
   header: {
     textAlign: "center",
-    marginBottom: "40px",
+    marginBottom: "25px",
+    padding: "0 15px", // Mantiene el texto del título lejos de los bordes
   },
   titulo: {
     fontSize: "1.4rem",
@@ -92,6 +94,11 @@ const styles = {
   grid: {
     display: "grid",
     width: "100%",
+    margin: "0px auto", // Centrado matemático
+    padding: "10px 6px 0px 5px", // Este es el único margen lateral que debe existir
+    boxSizing: "border-box",
+    // justifyItems: "stretch" asegura que el card intente ocupar todo el ancho
+    justifyItems: "stretch",
     
   },
   sinDatos: {
