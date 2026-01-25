@@ -47,7 +47,13 @@ export const UbicacionInfo = ({
       {/* 1. DISTRITO */}
       <div style={styles.filaSimple}>
         <FaHouse size={sizes.iconosFila} color={colores.bosque} />
-        <h4 style={{ ...styles.distrito, fontSize: sizes.fuenteTitulo }}>
+        <h4
+          style={{
+            ...styles.distrito,
+            fontSize: sizes.fuenteTitulo,
+            letterSpacing: isMobile ? "-1.6px" : "normal",
+          }}
+        >
           {distrito || "Distrito no especificado"}
         </h4>
       </div>
@@ -122,22 +128,31 @@ export const UbicacionInfo = ({
 
 const styles = {
   contenedor: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
-    flex: 1,
-    padding: "0px",
     minWidth: 0,
+    overflow: "hidden",
+    gap: "8px",
+    padding: "0px",
   },
   filaSimple: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
+    width: "100%",
+    minWidth: 0,
+    overflow: "hidden",
   },
   distrito: {
     fontWeight: "700",
     color: colores.bosque,
     margin: 0,
+    whiteSpace: "nowrap", // Prohíbe el salto de línea
+    overflow: "hidden", // Esconde lo que sobra
+    textOverflow: "ellipsis", // Agrega los "..."
+    flex: 1,
+    minWidth: 0,
   },
   ciudadTexto: {
     color: colores.bosque,

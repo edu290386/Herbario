@@ -58,13 +58,11 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
 const styles = {
   card: {
     display: "flex",
-    flexDirection: "row",
-    alignItems: "stretch",
-    width: "100%", // Obliga al card a llenar su columna del grid
-    margin: "1px 0px", // Centra el card dentro de su celda de la grilla
-    padding: "0",
+    flexFlow: "row nowrap",
+    width: "100%",
+    maxWidth: "550px",
     overflow: "hidden",
-    boxSizing: "border-box", // <--- Esto evita la asimetría
+    boxSizing: "border-box",
     boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
     borderRadius: "20px",
     backgroundColor: colores.blanco,
@@ -78,7 +76,7 @@ const styles = {
   },
   fotoMobile: {
     width: "160px", // Reducido un poco para dar más espacio al texto en pantallas pequeñas
-    height: "180px",
+    height: "auto",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
@@ -89,7 +87,9 @@ const styles = {
     flexDirection: "column",
     justifyContent: "center",
     padding: "10px 10px",
-    gap: "4px", // Reducimos el gap para que distrito y ciudad estén más "pegados"
+    gap: "4px",
+    minWidth: 0,
+    overflow: "hidden",
   },
   colaboradorWrapper: {
     marginTop: "8px",
@@ -101,5 +101,4 @@ const styles = {
     color: "#888",
     fontStyle: "italic", // Un toque sutil para diferenciarlo de los datos geográficos
   },
-  
 };
