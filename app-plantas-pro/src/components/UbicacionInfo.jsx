@@ -46,7 +46,11 @@ export const UbicacionInfo = ({
     <div style={styles.contenedor}>
       {/* 1. DISTRITO */}
       <div style={styles.filaSimple}>
-        <FaHouse size={sizes.iconosFila} color={colores.bosque} />
+        <FaHouse
+          className="info-icon"
+          size={sizes.iconosFila}
+          color={colores.bosque}
+        />
         <h4
           style={{
             ...styles.distrito,
@@ -60,7 +64,11 @@ export const UbicacionInfo = ({
 
       {/* 2. CIUDAD */}
       <div style={styles.filaSimple}>
-        <FaCity size={sizes.iconosFila} color={colores.bosque} />
+        <FaCity
+          className="info-icon"
+          size={sizes.iconosFila}
+          color={colores.bosque}
+        />
         <span style={{ ...styles.ciudadTexto, fontSize: sizes.fuenteTexto }}>
           {ciudad || "Lima, Perú"}
         </span>
@@ -70,7 +78,11 @@ export const UbicacionInfo = ({
       {distancia && (
         <div style={styles.badgeDistancia}>
           <div style={styles.textoDistancia}>
-            <FaCar size={isMobile ? 17 : 18} color="#000000" />
+            <FaCar
+              className="info-icon"
+              size={isMobile ? 17 : 18}
+              color="#000000"
+            />
             <span style={{ fontSize: sizes.fuenteTexto }}>{distancia} Km</span>
           </div>
         </div>
@@ -78,7 +90,11 @@ export const UbicacionInfo = ({
 
       {/* 4. COLABORADOR */}
       <div style={styles.filaSimple}>
-        <FaUserPlus size={sizes.iconosFila} color="#000000" />
+        <FaUserPlus
+          className="info-icon"
+          size={sizes.iconosFila}
+          color="#000000"
+        />
         <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
           <b>{colaborador || "Admin"}</b>
         </span>
@@ -86,7 +102,11 @@ export const UbicacionInfo = ({
 
       {/* 5. FECHA */}
       <div style={styles.filaSimple}>
-        <FaRegCalendarCheck size={sizes.iconosFila} color="#000" />
+        <FaRegCalendarCheck
+          className="info-icon"
+          size={sizes.iconosFila}
+          color="#000"
+        />
         <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
           {fecha || "S/N"}
         </span>
@@ -99,16 +119,28 @@ export const UbicacionInfo = ({
             onClick={() => manejarNavegacion(google)}
             style={styles.btnIcono}
           >
-            <BiMapPin color="#B6452C" size={sizes.iconosAccion} />
+            <BiMapPin
+              className="action-icon"
+              color="#B6452C"
+              size={sizes.iconosAccion}
+            />
           </button>
           <button
             onClick={() => manejarNavegacion(waze)}
             style={styles.btnIcono}
           >
-            <SiWaze color="#2A9DF4" size={sizes.iconosAccion} />
+            <SiWaze
+              className="action-icon"
+              color="#2A9DF4"
+              size={sizes.iconosAccion}
+            />
           </button>
           <button style={{ ...styles.btnIcono, marginLeft: "4px" }}>
-            <SiWhatsapp size={sizes.iconosAccion} color="#25D366" />
+            <SiWhatsapp
+              className="action-icon"
+              size={sizes.iconosAccion}
+              color="#25D366"
+            />
           </button>
         </div>
 
@@ -118,7 +150,11 @@ export const UbicacionInfo = ({
             onClick={() => console.log("Eliminar ubicación")}
             title="Eliminar ubicación"
           >
-            <TiDelete size={sizes.iconoDelete} color="#D32F2F" />
+            <TiDelete
+              className="delete-icon"
+              size={sizes.iconoDelete}
+              color="#D32F2F"
+            />
           </button>
         </div>
       </div>
@@ -183,6 +219,7 @@ const styles = {
     alignItems: "center",
     paddingTop: "4px",
     borderTop: "1px solid #eee",
+    marginTop: "auto",
   },
   contenedorNavegacion: {
     display: "flex",

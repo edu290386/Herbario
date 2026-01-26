@@ -21,37 +21,82 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
       ? calcularDistanciaPitagorica(lat1, lon1, lat2, lon2)
       : null;
 
-
- 
-
   const fechaFormateada = ubicacion.created_at
     ? new Date(ubicacion.created_at).toLocaleDateString()
     : "Fecha no disponible";
 
-  return (
-    <div style={{ ...styles.card, minHeight: isMobile ? "140px" : "200px" }}>
-      {/* IMAGEN DE CONTEXTO */}
-      <div
-        style={{
-          ...(isMobile ? styles.fotoMobile : styles.fotoLaptop),
-          backgroundImage: `url(${ubicacion.foto_contexto || "https://via.placeholder.com/300"})`,
-        }}
-      />
+  const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
 
-      {/* INFORMACIÓN Y BOTONES */}
-      <div style={styles.info}>
-        <UbicacionInfo
-          distrito={ubicacion.distrito}
-          ciudad={ubicacion.ciudad}
-          latitud={ubicacion.latitud}
-          longitud={ubicacion.longitud}
-          distancia={km}
-          colaborador={ubicacion.colaborador}
-          fecha={fechaFormateada}
-          isMobile={isMobile}
+  return (
+    <>
+      <style>
+        {`
+          @media (orientation: landscape) and (max-width: 900px) {
+            .${cardClassName} { 
+              height: 280px !important; 
+              max-width: 600px !important; 
+            }
+            .${cardClassName} .foto-contexto { 
+              width: 210px !important; 
+              height: 280px !important; 
+            }
+            /* TEXTOS: Igualamos a Desktop */
+            .${cardClassName} h4 { font-size: 1.1rem !important; }
+            .${cardClassName} span { font-size: 0.95rem !important; }
+            .${cardClassName} b { font-size: 0.95rem !important; }
+
+             /* ICONOS DE FILA (Casa, Ciudad, etc): Desktop usa 20px */
+            .${cardClassName} .info-icon { 
+              width: 20px !important; 
+              height: 20px !important; 
+             }
+
+            /* ICONOS DE ACCIÓN (Maps, Waze, WS): Desktop usa 28px */
+            .${cardClassName} .action-icon { 
+              width: 28px !important; 
+              height: 28px !important; 
+            }
+
+            /* ICONO ELIMINAR: Desktop usa 40px */
+            .${cardClassName} .delete-icon { 
+              width: 40px !important; 
+              height: 40px !important; 
+            }
+          }
+        `}
+      </style>
+      <div
+        className={cardClassName}
+        style={{
+          ...styles.card,
+          minHeight: isMobile ? "200px" : "200px",
+          maxWidth: isMobile ? "650px" : "550px",
+        }}
+      >
+        {/* IMAGEN DE CONTEXTO */}
+        <div
+          className="foto-contexto"
+          style={{
+            ...(isMobile ? styles.fotoMobile : styles.fotoLaptop),
+            backgroundImage: `url(${ubicacion.foto_contexto || "https://via.placeholder.com/300"})`,
+          }}
         />
+
+        {/* INFORMACIÓN Y BOTONES */}
+        <div style={styles.info}>
+          <UbicacionInfo
+            distrito={ubicacion.distrito}
+            ciudad={ubicacion.ciudad}
+            latitud={ubicacion.latitud}
+            longitud={ubicacion.longitud}
+            distancia={km}
+            colaborador={ubicacion.colaborador}
+            fecha={fechaFormateada}
+            isMobile={isMobile}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };;;
 
@@ -60,12 +105,13 @@ const styles = {
     display: "flex",
     flexFlow: "row nowrap",
     width: "100%",
-    maxWidth: "550px",
     overflow: "hidden",
     boxSizing: "border-box",
     boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
     borderRadius: "20px",
     backgroundColor: colores.blanco,
+    margin: "10px auto",
+    transition: "all 0.3s ease",
   },
   fotoLaptop: {
     width: "180px",
@@ -76,7 +122,7 @@ const styles = {
   },
   fotoMobile: {
     width: "160px", // Reducido un poco para dar más espacio al texto en pantallas pequeñas
-    height: "auto",
+    height: "200px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
@@ -90,11 +136,6 @@ const styles = {
     gap: "4px",
     minWidth: 0,
     overflow: "hidden",
-  },
-  colaboradorWrapper: {
-    marginTop: "8px",
-    borderTop: `1px solid ${colores.fondo}`,
-    paddingTop: "6px",
   },
   colaborador: {
     fontSize: "0.8rem",
