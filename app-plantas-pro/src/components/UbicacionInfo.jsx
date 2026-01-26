@@ -1,15 +1,13 @@
-import React from "react";
+
 import { colores } from "../constants/tema";
 import {
   FaRegCalendarCheck,
   FaUserPlus,
   FaCar,
-  FaMapMarkerAlt,
-  FaMapMarker,
 } from "react-icons/fa";
 import { TiDelete } from "react-icons/ti";
 import { FaHouse, FaCity } from "react-icons/fa6";
-import { SiGooglemaps, SiWaze, SiWhatsapp } from "react-icons/si";
+import { SiWaze, SiWhatsapp } from "react-icons/si";
 import { generarRutas } from "../helpers/linkHelper";
 import { BiMapPin } from "react-icons/bi";
 
