@@ -1,5 +1,4 @@
-import React from 'react';
-import { colores } from '../constants/tema';
+import { colores } from '../../constants/tema';
 
 export const OtrosNombres = ({ lista }) => {
   // 1. Log para depurar: Mira tu consola del navegador (F12) para ver qué llega

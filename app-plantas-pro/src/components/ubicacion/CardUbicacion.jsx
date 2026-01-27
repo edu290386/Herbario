@@ -1,6 +1,6 @@
-import { colores } from "../constants/tema.js";
+import { colores } from "../../constants/tema.js";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
-import { calcularDistanciaPitagorica } from "../helpers/geoHelper.js";
+import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
 
 export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
   // Generamos las rutas dinámicas usando el helper
@@ -69,7 +69,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
         className={cardClassName}
         style={{
           ...styles.card,
-          minHeight: isMobile ? "200px" : "200px",
+          minHeight: "200px",
           maxWidth: isMobile ? "650px" : "550px",
         }}
       >
@@ -131,7 +131,7 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center",
+    justifyContent: "space-between",
     padding: "10px 10px",
     gap: "4px",
     minWidth: 0,

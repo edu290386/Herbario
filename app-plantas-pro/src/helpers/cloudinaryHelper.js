@@ -54,6 +54,6 @@ export const transformarImagen = (url, modo = "card") => {
   // CONFIGURACIÓN PARA HOME (LISTADO)
   return url.replace(
     "/upload/",
-    "/upload/w_500,h_500,c_fill,g_auto,f_auto,q_auto/",
+    "/upload/w_500,h_700,c_fill,g_auto,f_auto,q_auto/",
   );
 };

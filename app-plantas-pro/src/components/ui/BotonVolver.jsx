@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const BotonVolver = () => {
   const navigate = useNavigate();

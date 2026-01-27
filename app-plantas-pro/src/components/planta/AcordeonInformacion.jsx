@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { colores } from "../constants/tema.js";
+import { colores } from "../../constants/tema.js";
 
 export const AcordeonInformacion = ({ titulo, contenido }) => {
   const [estaAbierto, setEstaAbierto] = useState(false);

@@ -1,5 +1,5 @@
 
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 import {
   FaRegCalendarCheck,
   FaUserPlus,
@@ -8,7 +8,7 @@ import {
 import { TiDelete } from "react-icons/ti";
 import { FaHouse, FaCity } from "react-icons/fa6";
 import { SiWaze, SiWhatsapp } from "react-icons/si";
-import { generarRutas } from "../helpers/linkHelper";
+import { generarRutas } from "../../helpers/linkHelper";
 import { BiMapPin } from "react-icons/bi";
 
 export const UbicacionInfo = ({

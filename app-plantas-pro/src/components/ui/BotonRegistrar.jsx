@@ -1,6 +1,6 @@
-import React from "react";
+
 import { MapPin } from "lucide-react";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const BotonRegistrar = ({ onClick, disabled, texto = "Registrar nueva planta" }) => {
   return (

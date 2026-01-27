@@ -1,5 +1,5 @@
 import React from "react";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 import { OtrosNombres } from "./OtrosNombres";
 
 export const BloqueIdentidad = ({ planta }) => {

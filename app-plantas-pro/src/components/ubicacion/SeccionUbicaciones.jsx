@@ -1,6 +1,5 @@
-import React from "react";
 import { CardUbicacion } from "./CardUbicacion";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const SeccionUbicaciones = ({
   ubicaciones,

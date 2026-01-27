@@ -3,19 +3,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Leaf, Camera, CheckCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../helpers/cloudinaryHelper";
-import { BotonRegistrar } from "../components/BotonRegistrar";
+import { BotonRegistrar } from "../components/ui/BotonRegistrar";
 import { colores } from "../constants/tema";
-import { BotonCancelar } from "../components/BotonCancelar";
+import { BotonCancelar } from "../components/ui/BotonCancelar";
 import { formatearParaDB } from "../helpers/textHelper";
-import { OtrosNombres } from "../components/OtrosNombres";
+import { OtrosNombres } from "../components/planta/OtrosNombres";
 import {
   IoMdCheckmarkCircle,
   IoMdCloseCircle,
-  IoMdLocate,
 } from "react-icons/io";
-import { obtenerDireccion } from "../helpers/../helpers/geoHelper";
+import { obtenerDireccion } from "../helpers/geoHelper";
 
-export const Registro = () => {
+export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
 
@@ -30,21 +29,19 @@ export const Registro = () => {
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [foto, setFoto] = useState(null);
   const [coords, setCoords] = useState({ lat: null, lng: null });
-  
-  
 
   // Captura de GPS al montar
-useEffect(() => {
-  const obtenerGPS = () => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => console.warn("GPS no disponible:", err.message),
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
-    );
-  };
-  obtenerGPS();
-}, []);
+  useEffect(() => {
+    const obtenerGPS = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) =>
+          setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.warn("GPS no disponible:", err.message),
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+      );
+    };
+    obtenerGPS();
+  }, []);
 
   const manejarEnvio = async (e) => {
     // Evita recargas accidentales
@@ -131,119 +128,119 @@ useEffect(() => {
     }
   };
 
- return (
-   <div style={estilos.pagina}>
-     <header style={estilos.header}>
-       <Leaf size={40} color={colores.frondoso} style={estilos.iconoHeader} />
-       <h1 style={{ ...estilos.titulo, color: colores.bosque }}>
-         {esSoloUbicacion ? "AÑADIR UBICACIÓN" : "REGISTRAR PLANTA"}
-       </h1>
-     </header>
+  return (
+    <div style={estilos.pagina}>
+      <header style={estilos.header}>
+        <Leaf size={40} color={colores.frondoso} style={estilos.iconoHeader} />
+        <h1 style={{ ...estilos.titulo, color: colores.bosque }}>
+          {esSoloUbicacion ? "AÑADIR UBICACIÓN" : "REGISTRAR PLANTA"}
+        </h1>
+      </header>
 
-     {/* Cambiamos <main> por <form> para mejor control del envío */}
-     <form onSubmit={manejarEnvio} style={estilos.cardForm}>
-       <div style={estilos.infoSeccion}>
-         {esSoloUbicacion ? (
-           <div style={estilos.contenedorTexto}>
-             <span style={estilos.label}>PLANTA SELECCIONADA:</span>
-             <h2 style={estilos.nombreFijo}>{nombreLocal.toUpperCase()}</h2>
-             <OtrosNombres lista={nombresSecundarios} />
-           </div>
-         ) : (
-           <div style={estilos.contenedorInput}>
-             <label style={estilos.label}>NOMBRE DE LA PLANTA</label>
-             <input
-               type="text"
-               value={nombreLocal}
-               onChange={(e) => setNombreLocal(e.target.value)}
-               style={estilos.inputGrande}
-               required
-             />
-           </div>
-         )}
-       </div>
+      {/* Cambiamos <main> por <form> para mejor control del envío */}
+      <form onSubmit={manejarEnvio} style={estilos.cardForm}>
+        <div style={estilos.infoSeccion}>
+          {esSoloUbicacion ? (
+            <div style={estilos.contenedorTexto}>
+              <span style={estilos.label}>PLANTA SELECCIONADA:</span>
+              <h2 style={estilos.nombreFijo}>{nombreLocal.toUpperCase()}</h2>
+              <OtrosNombres lista={nombresSecundarios} />
+            </div>
+          ) : (
+            <div style={estilos.contenedorInput}>
+              <label style={estilos.label}>NOMBRE DE LA PLANTA</label>
+              <input
+                type="text"
+                value={nombreLocal}
+                onChange={(e) => setNombreLocal(e.target.value)}
+                style={estilos.inputGrande}
+                required
+              />
+            </div>
+          )}
+        </div>
 
-       <label
-         style={{
-           ...estilos.zonaCamara,
-           borderColor: foto ? colores.frondoso : colores.bosque,
-         }}
-       >
-         {foto ? (
-           <div style={{ color: colores.frondoso, textAlign: "center" }}>
-             <CheckCircle size={50} color={colores.frondoso} />
-             <p style={{ fontWeight: "bold" }}>FOTO CAPTURADA</p>
-           </div>
-         ) : (
-           <div style={{ color: colores.bosque, textAlign: "center" }}>
-             <Camera size={50} color={colores.bosque} />
-             <p>TOCAR PARA TOMAR FOTO</p>
-           </div>
-         )}
-         <input
-           type="file"
-           accept="image/*"
-           capture="environment"
-           onChange={(e) => setFoto(e.target.files[0])}
-           style={{ display: "none" }}
-         />
-       </label>
+        <label
+          style={{
+            ...estilos.zonaCamara,
+            borderColor: foto ? colores.frondoso : colores.bosque,
+          }}
+        >
+          {foto ? (
+            <div style={{ color: colores.frondoso, textAlign: "center" }}>
+              <CheckCircle size={50} color={colores.frondoso} />
+              <p style={{ fontWeight: "bold" }}>FOTO CAPTURADA</p>
+            </div>
+          ) : (
+            <div style={{ color: colores.bosque, textAlign: "center" }}>
+              <Camera size={50} color={colores.bosque} />
+              <p>TOCAR PARA TOMAR FOTO</p>
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => setFoto(e.target.files[0])}
+            style={{ display: "none" }}
+          />
+        </label>
 
-       {/* VALIDACIONES VISUALES CON REACT-ICONS */}
-       <div style={estilos.contenedorValidacion}>
-         {/* Fila Imagen */}
-         <div style={estilos.filaValidacion}>
-           <div style={estilos.iconoContenedor}>
-             {foto ? (
-               <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
-             ) : (
-               <IoMdCloseCircle size={22} color="#F44336" />
-             )}
-           </div>
-           <span style={{ color: foto ? "#333" : "#888" }}>
-             Captura de imagen
-           </span>
-         </div>
+        {/* VALIDACIONES VISUALES CON REACT-ICONS */}
+        <div style={estilos.contenedorValidacion}>
+          {/* Fila Imagen */}
+          <div style={estilos.filaValidacion}>
+            <div style={estilos.iconoContenedor}>
+              {foto ? (
+                <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
+              ) : (
+                <IoMdCloseCircle size={22} color="#F44336" />
+              )}
+            </div>
+            <span style={{ color: foto ? "#333" : "#888" }}>
+              Captura de imagen
+            </span>
+          </div>
 
-         {/* Fila GPS */}
-         <div style={estilos.filaValidacion}>
-           <div style={estilos.iconoContenedor}>
-             {coords.lat ? (
-               <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
-             ) : (
-               <IoMdCloseCircle size={22} color="#F44336" />
-             )}
-           </div>
-           <span style={{ color: coords.lat ? "#333" : "#888" }}>
-             Señal GPS establecida
-           </span>
-         </div>
-       </div>
+          {/* Fila GPS */}
+          <div style={estilos.filaValidacion}>
+            <div style={estilos.iconoContenedor}>
+              {coords.lat ? (
+                <IoMdCheckmarkCircle size={22} color={colores.frondoso} />
+              ) : (
+                <IoMdCloseCircle size={22} color="#F44336" />
+              )}
+            </div>
+            <span style={{ color: coords.lat ? "#333" : "#888" }}>
+              Señal GPS establecida
+            </span>
+          </div>
+        </div>
 
-       <BotonRegistrar
-         type="submit" // ⬅️ IMPORTANTE para el formulario
-         texto={
-           guardadoExitoso
-             ? "REGISTRO EXITOSO"
-             : cargando
-               ? "GUARDANDO..."
-               : "FINALIZAR REGISTRO"
-         }
-         disabled={
-           cargando ||
-           guardadoExitoso ||
-           !coords.lat ||
-           !foto ||
-           (!nombreLocal && !esSoloUbicacion)
-         }
-       />
+        <BotonRegistrar
+          type="submit" // ⬅️ IMPORTANTE para el formulario
+          texto={
+            guardadoExitoso
+              ? "REGISTRO EXITOSO"
+              : cargando
+                ? "GUARDANDO..."
+                : "FINALIZAR REGISTRO"
+          }
+          disabled={
+            cargando ||
+            guardadoExitoso ||
+            !coords.lat ||
+            !foto ||
+            (!nombreLocal && !esSoloUbicacion)
+          }
+        />
 
-       <div style={{ marginTop: "12px" }}>
-         <BotonCancelar />
-       </div>
-     </form>
-   </div>
- );
+        <div style={{ marginTop: "12px" }}>
+          <BotonCancelar />
+        </div>
+      </form>
+    </div>
+  );
 };
 
 const estilos = {

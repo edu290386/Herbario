@@ -1,6 +1,5 @@
-import React from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const CarruselControles = ({ onNext, onPrev }) => {
   return (

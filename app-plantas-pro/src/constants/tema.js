@@ -10,6 +10,8 @@ export const colores = {
   grisSuave: "#F0F0F0",
   frondoso: "#2D8B57",
   red: "#FF0000",
+  white: "#FFFFFF",
+  encendido: "#34D399",
 };
 
 export const ui = {

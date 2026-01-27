@@ -1,6 +1,6 @@
 import React from "react";
-import { transformarImagen } from "../helpers/cloudinaryHelper"; // Ajusta la ruta según tu proyecto
-import { colores } from "../constants/tema";
+import { transformarImagen } from "../../helpers/cloudinaryHelper"; // Ajusta la ruta según tu proyecto
+import { colores } from "../../constants/tema";
 import { Leaf } from "lucide-react";
 
 export const CarruselImagenPrincipal = ({ url, isMobile }) => {

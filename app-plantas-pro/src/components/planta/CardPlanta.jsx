@@ -1,9 +1,8 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OtrosNombres } from './OtrosNombres'; // El que creamos antes
-import { colores } from '../constants/tema';
-import { transformarImagen } from '../helpers/cloudinaryHelper';
-import { BotonRegistrar } from './BotonRegistrar';
+import { OtrosNombres } from '../../components/planta/OtrosNombres';
+import { colores } from '../../constants/tema';
+import { transformarImagen } from '../../helpers/cloudinaryHelper';
+import { BotonRegistrar } from '../ui/BotonRegistrar';
 import { Leaf } from "lucide-react";
 
 export const CardPlanta = ({ planta }) => {

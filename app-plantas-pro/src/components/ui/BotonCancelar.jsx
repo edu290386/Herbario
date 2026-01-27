@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const BotonCancelar = ({ texto = "CANCELAR" }) => {
   const navigate = useNavigate();

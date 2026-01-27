@@ -1,7 +1,7 @@
 import React from "react";
-import { transformarImagen } from "../helpers/cloudinaryHelper";
+import { transformarImagen } from "../../helpers/cloudinaryHelper";
 import { Leaf, Minimize } from "lucide-react";
-import { colores } from "../constants/tema";
+import { colores } from "../../constants/tema";
 
 export const CarruselMiniaturas = ({
   imagenes,

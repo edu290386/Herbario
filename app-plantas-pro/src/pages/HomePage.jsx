@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { Leaf, Search, PlusCircle, MapPin } from "lucide-react";
-import { BotonRegistrar } from "../components/BotonRegistrar";
+import { BotonRegistrar } from "../components/ui/BotonRegistrar";
 import { colores } from "../constants/tema";
-import { CardPlanta } from "../components/CardPlanta";
+import { CardPlanta } from "../components/planta/CardPlanta";
 import { normalizarParaBusqueda } from "../helpers/textHelper";
 
 export const HomePage = () => {

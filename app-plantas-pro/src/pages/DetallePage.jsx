@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { BotonVolver } from "../components/BotonVolver";
-import { BotonRegistrar } from "../components/BotonRegistrar";
-import { CarruselDetalle } from "../components/CarruselDetalle";
-import { BloqueIdentidad } from "../components/BloqueIdentidad";
+import {
+  BotonVolver,
+  BotonRegistrar,
+  SeccionInformacion,
+  BloqueIdentidad,
+  CarruselDetalle,
+  SeccionUbicaciones
+} from "../components";
 import { colores } from "../constants/tema";
-import { SeccionInformacion } from "../components/SeccionInformacion";
-import { SeccionUbicaciones } from "../components/SeccionUbicaciones";
-
 
 export const DetallePage = () => {
   const { state } = useLocation();
