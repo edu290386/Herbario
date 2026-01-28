@@ -10,6 +10,8 @@ import { FaHouse, FaCity } from "react-icons/fa6";
 import { SiWaze, SiWhatsapp } from "react-icons/si";
 import { generarRutas } from "../../helpers/linkHelper";
 import { BiMapPin } from "react-icons/bi";
+import { EtiquetaReciente } from "../ui/EtiquetaReciente";
+import { formatearFechaLocal } from "../../helpers/timeHelper";
 
 export const UbicacionInfo = ({
   distrito,
@@ -22,6 +24,7 @@ export const UbicacionInfo = ({
   isMobile,
 }) => {
   const { google, waze } = generarRutas(latitud, longitud);
+  console.log(fecha)
 
   // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
   const sizes = {
@@ -106,8 +109,10 @@ export const UbicacionInfo = ({
           color="#000"
         />
         <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
-          {fecha || "S/N"}
+          {formatearFechaLocal(fecha)}
+          <EtiquetaReciente fechaISO={fecha}/>
         </span>
+       
       </div>
 
       {/* 6. ACCIONES */}

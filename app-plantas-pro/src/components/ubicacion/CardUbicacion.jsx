@@ -21,10 +21,6 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
       ? calcularDistanciaPitagorica(lat1, lon1, lat2, lon2)
       : null;
 
-  const fechaFormateada = ubicacion.created_at
-    ? new Date(ubicacion.created_at).toLocaleDateString()
-    : "Fecha no disponible";
-
   const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
 
   return (
@@ -91,7 +87,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
             longitud={ubicacion.longitud}
             distancia={km}
             colaborador={ubicacion.colaborador}
-            fecha={fechaFormateada}
+            fecha={ubicacion.created_at}
             isMobile={isMobile}
           />
         </div>

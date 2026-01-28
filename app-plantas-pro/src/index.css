@@ -12,3 +12,15 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.blink_me {
+  color: #34D399;
+  animation: blinker 1.7s step-start infinite;
+  -webkit-animation: blinker 1.7s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
