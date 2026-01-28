@@ -1,6 +1,6 @@
 // --- Carpeta UI (Botones, inputs, etc.) ---
 export * from "./ui/BotonVolver";
-export * from "./ui/BotonRegistrar";
+export * from "./ui/BotonPrincipal";
 export * from "./ui/BotonCancelar";
 
 // --- Carpeta Planta (Lógica de la base de datos de plantas) ---

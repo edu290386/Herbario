@@ -1,5 +1,14 @@
 body {
   margin: 0px;
   padding: 0px;
-  background-color: #F1F2ED; /* El mismo color de fondo */
+  background-color: #f4f7f6; /* El mismo color de fondo */
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

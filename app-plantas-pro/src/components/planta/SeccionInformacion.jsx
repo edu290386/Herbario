@@ -34,8 +34,8 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
-    marginTop: "5px",
-    marginBottom: "0px",
+    marginTop: "0px",
+    marginBottom: "15px",
     width: "100%"
   },
   acordeonesContainer: {

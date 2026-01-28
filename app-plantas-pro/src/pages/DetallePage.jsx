@@ -1,25 +1,28 @@
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate, Navigate } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
   BotonVolver,
-  BotonRegistrar,
+  BotonPrincipal,
   SeccionInformacion,
   BloqueIdentidad,
   CarruselDetalle,
-  SeccionUbicaciones
+  SeccionUbicaciones,
 } from "../components";
 import { colores } from "../constants/tema";
+import { FaSpinner } from "react-icons/fa6";
+import { AuthContext } from "../context/AuthContext";
+
 
 export const DetallePage = () => {
-  const { state } = useLocation();
-  const planta = state?.planta;
+  const { id } = useParams();
+  const { user } = useContext(AuthContext);
+  console.log(user);
   const navigate = useNavigate();
 
-  const [ubicaciones, setUbicaciones] = useState([]);
-  const [cargandoUbicaciones, setCargandoUbicaciones] = useState(true);
+  const [planta, setPlanta] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
   const [userCoords, setUserCoords] = useState(null);
 
   useEffect(() => {
@@ -65,28 +68,63 @@ export const DetallePage = () => {
 
   // CARGA DE DATOS DESDE SUPABASE
   useEffect(() => {
-    if (planta?.id) {
-      const fetchUbicaciones = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("ubicaciones")
-            .select("*")
-            .eq("planta_id", planta.id);
-          if (error) throw error;
-          setUbicaciones(data || []);
-        } catch (error) {
-          console.error("Error:", error.message);
-        } finally {
-          setCargandoUbicaciones(false);
-        }
-      };
-      fetchUbicaciones();
-    }
-  }, [planta]);
+    const fetchDatosCompletos = async () => {
+      try {
+        setLoading(true);
 
-  if (!planta) return <Navigate to="/" />;
+        // ⏳ Definimos un tiempo mínimo de 2 segundos para el spinner
+        const tiempoMinimo = new Promise((resolve) =>
+          setTimeout(resolve, 2000),
+        );
 
-  const fotosExistentes = [
+        // 🔍 Consulta a la base de datos con las relaciones explícitas que definimos
+        const consultaSupabase = supabase
+          .from("plantas")
+          .select(
+            `
+            *,
+            ubicaciones!fk_ubicacion_planta (
+              *,
+              usuarios!ubicaciones_usuario_id_fkey (
+                nombre_completo
+              )
+            )
+          `,
+          )
+          .eq("id", id)
+          .single();
+
+        // Esperamos a que ambas promesas terminen
+        const [_, result] = await Promise.all([tiempoMinimo, consultaSupabase]);
+
+        if (result.error) throw result.error;
+        setPlanta(result.data);
+      } catch (error) {
+        console.error("Error cargando planta:", error.message);
+        // Si hay error (ej. planta no existe), volvemos al inicio
+        // navigate("/");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDatosCompletos();
+  }, [id]);
+
+  // --- RENDERIZADO DE CARGA ---
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <FaSpinner style={styles.spinner} />
+      </div>
+    );
+  }
+
+  // Si no hay planta después de cargar, no renderizamos nada (o un error)
+  if (!planta) return null;
+
+  // PREPARACIÓN DE FOTOS PARA EL CARRUSEL
+  const fotosPlanta = [
     planta.foto_perfil,
     planta.foto_tallo,
     planta.foto_hoja,
@@ -96,8 +134,8 @@ export const DetallePage = () => {
     planta.foto_semilla,
   ].filter(Boolean);
 
-  const fotosPlanta = fotosExistentes.length > 0 ? fotosExistentes : [null];
-  
+  const imagenesCarrusel = fotosPlanta.length > 0 ? fotosPlanta : [null];
+
   return (
     <div style={styles.wrapper}>
       <BotonVolver />
@@ -118,7 +156,7 @@ export const DetallePage = () => {
             padding: isMobile ? "0" : "30px",
           }}
         >
-          <CarruselDetalle imagenes={fotosPlanta} isMobile={isMobile} />
+          <CarruselDetalle imagenes={imagenesCarrusel} isMobile={isMobile} />
         </div>
         {/* LADO DERECHO: Info Principal */}
         <div
@@ -134,15 +172,18 @@ export const DetallePage = () => {
           {/* Acordeón 1: Usando el campo 'contenido1' */}
 
           <SeccionInformacion planta={planta} />
-          <BotonRegistrar
+          <BotonPrincipal
+           
             texto="AGREGAR UBICACIÓN"
             onClick={() =>
               navigate("/registro", {
                 state: {
-                  plantaId: planta.id, // El ID para la base de datos
-                  nombreComun: planta.nombre_comun, // Para mostrarlo en el título
-                  vieneDeDetalle: true, // Para distinguir si es planta nueva o ya creada
+                  plantaId: planta.id,
+                  nombreComun: planta.nombre_comun,
+                  nombreCientifico: planta.nombre_cientifico,
                   nombresSecundarios: planta.nombres_secundarios,
+                  fotosPrevia: imagenesCarrusel,
+                  vieneDeDetalle: true,
                 },
               })
             }
@@ -152,7 +193,7 @@ export const DetallePage = () => {
 
       {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
       <SeccionUbicaciones
-        ubicaciones={ubicaciones}
+        ubicaciones={planta.ubicaciones}
         nombrePlanta={planta.nombre_comun}
         isMobile={isMobile}
         userCoords={userCoords}
@@ -186,6 +227,33 @@ const styles = {
     flexDirection: "column",
     backgroundColor: colores.fondo,
   },
-
-  
+  loadingContainer: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    width: "100vw",
+    backgroundColor: colores.fondo, // colores.fondo
+    position: "fixed",
+    top: 0,
+    left: 0,
+    zIndex: 9999,
+  },
+  spinner: {
+    fontSize: "4rem",
+    animation: "spin 2s linear infinite",
+    color: colores.frondoso,
+  },
 };
+
+const styleSheet = document.styleSheets[0];
+styleSheet.insertRule(
+  `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`,
+  styleSheet.cssRules.length,
+);

@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { Leaf, Search, PlusCircle, MapPin } from "lucide-react";
-import { BotonRegistrar } from "../components/ui/BotonRegistrar";
+import { Search } from "lucide-react";
 import { colores } from "../constants/tema";
 import { CardPlanta } from "../components/planta/CardPlanta";
 import { normalizarParaBusqueda } from "../helpers/textHelper";
+import { AuthContext } from "../context/AuthContext";
+import { BotonPrincipal } from "../components/ui/BotonPrincipal";
+import { MdGroups } from "react-icons/md";
+import { ImExit, ImUserCheck } from "react-icons/im";
 
 export const HomePage = () => {
+
+  const {user, logout} = useContext(AuthContext);
   const [plantas, setPlantas] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
+ 
   // 1. Usamos 'function' para que JavaScript la reconozca en todo el archivo (Hoisting)
   async function obtenerPlantas() {
     try {
@@ -42,10 +48,28 @@ export const HomePage = () => {
 
   return (
     <div style={estilos.pagina}>
+      <div style={estilos.userBarContainer}>
+        {/* Izquierda: Info del User */}
+        <div style={estilos.infoIzquierda}>
+          <div style={estilos.userName}>
+            <ImUserCheck size={18} color={colores.bosque} />
+            <span>{user?.nombre_completo.split(" ")[0]}</span>
+          </div>
+          <div style={estilos.userName}>
+            <MdGroups size={18} color={colores.bosque} />
+            <span>Admin</span>
+          </div>
+        </div>
+
+        {/* Derecha: Botón Salir */}
+        <button onClick={logout} style={estilos.logoutSimple}>
+          <ImExit size={30} color={colores.frondoso} />
+          <span style={estilos.textoSalir}></span>
+        </button>
+      </div>
       <header style={estilos.header}>
         <div style={estilos.logoSeccion}>
-          <Leaf color={colores.frondoso} size={32} fill={colores.fondo} />
-          <h1 style={estilos.titulo}>Herbario</h1>
+          <h1 style={estilos.titulo}>GALERIA</h1>
         </div>
 
         <div style={estilos.buscadorWrapper}>
@@ -70,17 +94,17 @@ export const HomePage = () => {
           <div style={estilos.contenedorNuevo}>
             <p style={estilos.textoAviso}>
               ¿No encuentras{" "}
-              <mark style={estilos.resaltado}>"{busqueda.toUpperCase()}"</mark>?
-              Regístrala tú mismo.
+              <mark style={estilos.resaltado}>{busqueda.toUpperCase()}</mark>?
+              Regístrala primero.
             </p>
             <div style={estilos.wrapperBotonRegistro}>
-              <BotonRegistrar
+              <BotonPrincipal
                 texto={`REGISTRAR NUEVA PLANTA`}
                 onClick={() =>
                   navigate("/registro", {
                     state: {
                       nombreComun: busqueda.trim(),
-                      vieneDeDetalle: false,
+                      usuarioId: user.id,
                     },
                   })
                 }
@@ -110,13 +134,14 @@ export const HomePage = () => {
       </main>
     </div>
   );
-};;
+};
 
 const estilos = {
   pagina: {
+    position: "relative",
     backgroundColor: colores.fondo,
     minHeight: "100vh",
-    padding: "0px",
+    paddingTop: "5px",
     fontFamily: '"Segoe UI", sans-serif',
   },
 
@@ -136,9 +161,9 @@ const estilos = {
   },
 
   titulo: {
-    color: colores.bosque,
+    color: colores.frondoso,
     fontSize: "2.2rem",
-    fontWeight: "800",
+    fontWeight: "700",
     margin: 0,
   },
 
@@ -156,7 +181,7 @@ const estilos = {
     width: "100%",
     padding: "15px 15px 15px 50px",
     borderRadius: "25px",
-    border: `2px solid ${colores.hoja}`,
+    border: `2px solid ${colores.frondoso}`,
     outline: "none",
     fontSize: "1rem",
   },
@@ -204,5 +229,39 @@ const estilos = {
     width: "100%",
     maxWidth: "350px",
     margin: "0 auto",
+  },
+  userBarContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: "0 15px",
+    width: "100%",
+    boxSizing: "border-box",
+    position: "absolute", // Lo sacamos del flujo para que no empuje el header hacia abajo
+    top: "10px",
+    left: 0,
+    zIndex: 10,
+  },
+  infoIzquierda: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "4px",
+  },
+  userName: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    color: colores.bosque,
+    fontWeight: "bold",
+    fontSize: "0.9rem",
+  },
+  logoutSimple: {
+    display: "flex",
+    flexDirection: "column", // Icono arriba, texto abajo (ahorra ancho)
+    alignItems: "center",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: "5px",
   },
 };

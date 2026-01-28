@@ -16,7 +16,6 @@ const estilos = {
   boton: {
     backgroundColor: colores.retama,
     color: colores.bosque,
-    border: `2px solid ${colores.bosque}`,
     padding: "15px",
     borderRadius: "15px",
     fontWeight: "bold",

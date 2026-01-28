@@ -1,12 +1,15 @@
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 import { OtrosNombres } from '../../components/planta/OtrosNombres';
 import { colores } from '../../constants/tema';
 import { transformarImagen } from '../../helpers/cloudinaryHelper';
-import { BotonRegistrar } from '../ui/BotonRegistrar';
+import { BotonPrincipal } from '../ui/BotonPrincipal';
 import { Leaf } from "lucide-react";
 
 export const CardPlanta = ({ planta }) => {
   const navigate = useNavigate();
+   const { user } = useContext(AuthContext);
 
   return (
     <div style={estilos.card}>
@@ -20,7 +23,7 @@ export const CardPlanta = ({ planta }) => {
             src={transformarImagen(planta.foto_perfil)}
             alt={planta.nombre_comun}
             style={estilos.img}
-            loading='lazy'
+            loading="lazy"
           />
         ) : (
           <div style={estilos.fallbackBosque}>
@@ -48,19 +51,21 @@ export const CardPlanta = ({ planta }) => {
         </div>
 
         {/* 3. Botón siempre al fondo */}
-        <BotonRegistrar
+        <BotonPrincipal
           texto="AGREGAR UBICACIÓN"
           onClick={(e) => {
-            e.stopPropagation(); // ⬅️ IMPORTANTE: Evita que se dispare el click de la Card
+            e.stopPropagation();
             navigate("/registro", {
               state: {
-                plantaId: planta.id, // Para vincular la ubicación en Supabase
-                nombreComun: planta.nombre_comun, // Para el título del formulario
-                vieneDeDetalle: true, // Para que el input de nombre salga bloqueado
+                plantaId: planta.id,
+                nombreComun: planta.nombre_comun,
+                vieneDeDetalle: true,
                 nombresSecundarios: planta.nombres_secundarios,
+                usuarioId: user.id,
               },
             });
           }}
+          textoCargando="Redirigiendo..."
         />
       </div>
     </div>
@@ -72,7 +77,7 @@ const estilos = {
     backgroundColor: "white",
     borderRadius: "20px",
     overflow: "hidden",
-    boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+    boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
     width: "100%",
     maxWidth: "340px", // El ancho grande que pediste
     height: "620px", // El alto grande que pediste

@@ -3,12 +3,12 @@ import { AuthContext } from "./AuthContext";
 import { supabase } from "../supabaseClient";
 import { colores } from "../constants/tema";
 import { LoginFormView } from "./LoginFormView";
+import { FaSpinner } from "react-icons/fa6";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
   const [esRegistro, setEsRegistro] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [exito, setExito] = useState(false);
   const [error, setError] = useState(null);
 
   const [form, setForm] = useState({
@@ -23,86 +23,91 @@ export const LoginScreen = () => {
     setForm({ ...form, [target.name]: target.value });
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setCargando(true);
-  setError(null);
-  setExito(false);
+    e.preventDefault();
+    setError(null);
 
-  const numeroCompleto = `${form.paisCodigo}${form.telefono}`;
+    const numeroCompleto = `${form.paisCodigo}${form.telefono}`;
 
-  try {
-    // 1. Buscamos al usuario en la base de datos (común para ambos flujos)
-    const { data: usuario, error: dbError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('telefono', numeroCompleto)
-      .single();
+    try {
+      // 1. Buscamos al usuario en la base de datos (común para ambos flujos)
+      const { data: usuario, error: dbError } = await supabase
+        .from("usuarios")
+        .select("*")
+        .eq("telefono", numeroCompleto)
+        .single();
 
-    if (!esRegistro) {
-      // ==========================================
-      // LÓGICA DE LOGIN (ENTRAR)
-      // ==========================================
-      if (dbError || !usuario) throw new Error("Número no registrado. Contacta al administrador.");
-      
-      if (usuario.status === 'PENDIENTE') {
-        throw new Error("Tu acceso está listo. Por favor, haz clic en 'Activa tu acceso' abajo.");
+      if (!esRegistro) {
+        // LÓGICA DE LOGIN (ENTRAR)
+        if (dbError || !usuario)
+          throw new Error("Número no registrado. Contacta al administrador.");
+
+        if (usuario.status === "PENDIENTE") {
+          throw new Error(
+            "Tu acceso está listo. Por favor, haz clic en 'Activa tu acceso' abajo.",
+          );
+        }
+
+        if (usuario.password !== form.password) {
+          throw new Error("Contraseña incorrecta. Verifica tus datos.");
+        }
+        // SI TODO ESTÁ BIEN: Recién aquí activamos el spinner de 3s
+        setCargando(true);
+        // --- TRANSICIÓN FLUIDA ---
+        setTimeout(() => {
+          login(usuario); // Redirección tras 1 segundo de mostrar el éxito
+        }, 3000);
+      } else {
+        // LÓGICA DE REGISTRO (ACTIVAR)
+        // 1. Validamos si existe la invitación en tu base de datos
+        if (dbError || !usuario) {
+          throw new Error(
+            "No tienes una invitación activa. Solicítala al administrador.",
+          );
+        }
+        // 2. Validamos que no haya sido activado antes
+        if (usuario.status === "ACTIVO") {
+          throw new Error(
+            "Este número ya está activo. Intenta iniciar sesión.",
+          );
+        }
+        // 3. Si todo está bien, activamos el spinner y actualizamos la BD
+        setCargando(true);
+        // Procedemos a la actualización/activación
+        const { error: updateError } = await supabase
+          .from("usuarios")
+          .update({
+            nombre_completo: form.nombre,
+            email: form.correo,
+            password: form.password,
+            status: "ACTIVO",
+          })
+          .eq("telefono", numeroCompleto);
+
+        if (updateError)
+          throw new Error("Error técnico al activar. Inténtalo más tarde.");
+
+        // 4. Esperamos un momento para que el usuario vea que se guardó
+        setTimeout(() => {
+          setEsRegistro(false);
+          setCargando(false);
+          setForm((prev) => ({ ...prev, password: "" })); // Limpiamos clave por seguridad
+        }, 1500);
       }
-
-      if (usuario.password !== form.password) {
-        throw new Error("Contraseña incorrecta. Verifica tus datos.");
-      }
-
-      // --- TRANSICIÓN FLUIDA ---
-      setExito(true);      // Primero encendemos el Éxito ("¡Bienvenido!")
-      setCargando(false);   // Inmediatamente apagamos la carga ("Autenticando...")
-      
-      setTimeout(() => {
-        login(usuario); // Redirección tras 1 segundo de mostrar el éxito
-      }, 1000);
-
-    } else {
-      // ==========================================
-      // LÓGICA DE REGISTRO (ACTIVAR)
-      // ==========================================
-      if (dbError || !usuario) {
-        throw new Error("No tienes una invitación activa. Solicítala al administrador.");
-      }
-
-      if (usuario.status === 'ACTIVO') {
-        throw new Error("Este número ya está activo. Intenta iniciar sesión.");
-      }
-
-      // Procedemos a la actualización/activación
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({ 
-          nombre_completo: form.nombre, 
-          email: form.correo, 
-          password: form.password,
-          status: 'ACTIVO' 
-        })
-        .eq('telefono', numeroCompleto);
-
-      if (updateError) throw new Error("Error técnico al activar. Inténtalo más tarde.");
-
-      // --- TRANSICIÓN FLUIDA ---
-      setExito(true);      // Primero encendemos el Éxito ("¡Registro Exitoso!")
-      setCargando(false);   // Luego apagamos la carga ("Guardando...")
-
-      setTimeout(() => {
-        setEsRegistro(false);
-        setExito(false);
-        setForm(prev => ({ ...prev, password: '' })); // Limpiamos clave por seguridad
-      }, 1500);
+    } catch (err) {
+      // Si hay un error, apagamos todo para mostrar el Banner de error
+      setError(err.message);
+      setCargando(false);
     }
-
-  } catch (err) {
-    // Si hay un error, apagamos todo para mostrar el Banner de error
-    setError(err.message);
-    setCargando(false);
-    setExito(false);
-    };
   };
+
+  // RENDERIZADO DEL SPINNER (Igual a DetallePage)
+  if (cargando && !esRegistro) {
+    return (
+      <div style={styles.loadingContainer}>
+        <FaSpinner style={styles.spinner} />
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -113,7 +118,6 @@ export const LoginScreen = () => {
         form={form}
         esRegistro={esRegistro}
         cargando={cargando}
-        exito={exito}
         error={error}
         onChange={handleInputChange}
         onSubmit={handleSubmit}
@@ -201,4 +205,33 @@ const styles = {
     gap: "12px",
     transition: "all 0.4s ease",
   }),
+  loadingContainer: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    width: "100vw",
+    backgroundColor: colores.fondo, // colores.fondo
+    position: "fixed",
+    top: 0,
+    left: 0,
+    zIndex: 9999,
+  },
+  spinner: {
+    fontSize: "4rem",
+    animation: "spin 2s linear infinite",
+    color: colores.frondoso,
+  },
 };
+
+const styleSheet = document.styleSheets[0];
+styleSheet.insertRule(
+  `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`,
+  styleSheet.cssRules.length,
+);

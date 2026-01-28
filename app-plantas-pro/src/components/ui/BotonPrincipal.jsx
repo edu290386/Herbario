@@ -5,8 +5,8 @@ export const BotonPrincipal = ({
   estaCargando,
   esExitoso,
   texto,
-  textoCargando = "Autenticando...",
-  textoExitoso = "¡Bienvenido!",
+  textoCargando = "Cargando...",
+  textoExitoso = "Listo!",
   type = "button",
 }) => {
   // Verde suave profesional (estilo Herbario)
@@ -24,6 +24,7 @@ export const BotonPrincipal = ({
         padding: "14px",
         borderRadius: "8px",
         border: "none",
+        boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
         width: "100%",
         fontWeight: "bold",
         fontSize: "16px",

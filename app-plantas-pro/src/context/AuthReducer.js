@@ -1,12 +1,18 @@
+export const types = {
+  login: "[Auth] Login",
+  logout: "[Auth] Logout",
+};
+
 export const authReducer = (state = {}, action) => {
   switch (action.type) {
-    case "login":
+    case types.login:
       return {
-        ...action.payload,
+        ...state,
         logged: true,
+        user: action.payload, // Aquí guardamos toda la info de Supabase
       };
 
-    case "logout":
+    case types.logout:
       return {
         logged: false,
       };

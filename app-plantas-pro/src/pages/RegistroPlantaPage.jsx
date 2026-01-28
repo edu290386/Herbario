@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { Leaf, Camera, CheckCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { uploadImage } from "../helpers/cloudinaryHelper";
-import { BotonRegistrar } from "../components/ui/BotonRegistrar";
+import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { colores } from "../constants/tema";
 import { BotonCancelar } from "../components/ui/BotonCancelar";
 import { formatearParaDB } from "../helpers/textHelper";
@@ -13,18 +13,20 @@ import {
   IoMdCloseCircle,
 } from "react-icons/io";
 import { obtenerDireccion } from "../helpers/geoHelper";
+import { AuthContext } from "../context/AuthContext";
+import { ImSpinner3 } from "react-icons/im";
 
 export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   // Detectamos si es una planta existente o nueva
-
   const plantaId = state?.plantaId;
-  const esSoloUbicacion = state?.vieneDeDetalle; // La planta que creamos
+  const esSoloUbicacion = state?.vieneDeDetalle;
 
+  // Estados del formulario
   const [nombreLocal, setNombreLocal] = useState(state?.nombreComun || "");
-  const nombresSecundarios = state?.nombresSecundarios || "";
   const [cargando, setCargando] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [foto, setFoto] = useState(null);
@@ -55,7 +57,6 @@ export const RegistroPlantaPage = () => {
       // Creación de subcarpetas cloudinary
       const nombreCarpetaBase = formatearParaDB(nombreLocal);
       const rutaCloudinary = `${nombreCarpetaBase}/ubicaciones`;
-
       const urlFoto = await uploadImage(foto, rutaCloudinary);
 
       // 2 SEGURIDAD: Si por algo Cloudinary no devolvió URL, detenemos todo aquí
@@ -83,7 +84,7 @@ export const RegistroPlantaPage = () => {
           .from("plantas")
           .select("id")
           .eq("nombre_comun", nombreLimpio)
-          .single();
+          .maybeSingle();
 
         if (existente) {
           idFinal = existente.id;
@@ -102,12 +103,12 @@ export const RegistroPlantaPage = () => {
       const { error: errU } = await supabase.from("ubicaciones").insert([
         {
           planta_id: idFinal,
-          foto_contexto: urlFoto, // Ahora garantizamos que urlFoto existe
+          usuario_id: user?.id, // ID del contexto de Auth
+          foto_contexto: urlFoto,
           latitud: coords.lat,
           longitud: coords.lng,
-          distrito: datosLugar.distrito,
           ciudad: datosLugar.ciudad,
-          colaborador: "Admin",
+          distrito: datosLugar.distrito,
         },
       ]);
 
@@ -117,7 +118,6 @@ export const RegistroPlantaPage = () => {
       setGuardadoExitoso(true);
       setTimeout(() => {
         navigate(`/planta/${idFinal}`, {
-          state: { planta: { id: idFinal } },
           replace: true,
         });
       }, 1800);
@@ -127,6 +127,9 @@ export const RegistroPlantaPage = () => {
       setCargando(false);
     }
   };
+
+  // Protección de ruta
+  if (!state) return <Navigate to="/" />;
 
   return (
     <div style={estilos.pagina}>
@@ -144,7 +147,7 @@ export const RegistroPlantaPage = () => {
             <div style={estilos.contenedorTexto}>
               <span style={estilos.label}>PLANTA SELECCIONADA:</span>
               <h2 style={estilos.nombreFijo}>{nombreLocal.toUpperCase()}</h2>
-              <OtrosNombres lista={nombresSecundarios} />
+              <OtrosNombres lista={state?.nombresSecundarios} />
             </div>
           ) : (
             <div style={estilos.contenedorInput}>
@@ -217,15 +220,13 @@ export const RegistroPlantaPage = () => {
           </div>
         </div>
 
-        <BotonRegistrar
-          type="submit" // ⬅️ IMPORTANTE para el formulario
-          texto={
-            guardadoExitoso
-              ? "REGISTRO EXITOSO"
-              : cargando
-                ? "GUARDANDO..."
-                : "FINALIZAR REGISTRO"
-          }
+        <BotonPrincipal
+          type="submit"
+          texto="FINALIZAR REGISTRO"
+          textoCargando="Guardando..."
+          textoExitoso="REGISTRO EXITOSO"
+          estaCargando={cargando}
+          esExitoso={guardadoExitoso}
           disabled={
             cargando ||
             guardadoExitoso ||
@@ -241,7 +242,7 @@ export const RegistroPlantaPage = () => {
       </form>
     </div>
   );
-};
+};;
 
 const estilos = {
   pagina: {
@@ -268,13 +269,13 @@ const estilos = {
   },
 
   cardForm: {
-    backgroundColor: colores.fondo,
+    backgroundColor: colores.white,
     width: "100%",
     maxWidth: "330px",
     borderRadius: "25px",
     padding: "25px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
     textAlign: "center",
+    boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
   },
 
   label: {
@@ -298,7 +299,7 @@ const estilos = {
     boxSizing: "border-box",
     boxShadow: "0 4px 10px rgba(0,0,0,0.05)", // Un toque de sombra para profundidad
   },
-  
+
   infoSeccion: {
     marginBottom: "30px",
     width: "100%",
@@ -319,7 +320,7 @@ const estilos = {
     justifyContent: "center",
     alignItems: "center",
     cursor: "pointer",
-    backgroundColor: colores.fondo,
+    backgroundColor: colores.white,
     marginBottom: "20px",
     color: "#1b3d18",
     fontWeight: "bold",
@@ -351,7 +352,7 @@ const estilos = {
   },
 
   contenedorValidacion: {
-    backgroundColor: colores.fondo,
+    backgroundColor: colores.white,
     padding: "15px 20px",
     borderRadius: "18px",
     marginBottom: "25px",

@@ -1,39 +1,41 @@
-import React, { useReducer, useEffect } from "react";
+import { useReducer } from "react";
 import { AuthContext } from "./AuthContext";
-import { authReducer } from "./AuthReducer";
+import { authReducer, types } from "./AuthReducer";
 
-// Esta función busca en el "hielo" (localStorage) antes de arrancar
 const init = () => {
-  const user = JSON.parse(localStorage.getItem("user_session"));
-  return user || { logged: false };
+  const user = JSON.parse(localStorage.getItem("user"));
+  return {
+    logged: !!user,
+    user: user,
+  };
 };
 
 export const AuthProvider = ({ children }) => {
-  const [authState, dispatch] = useReducer(authReducer, {}, init);
+  const [auth, dispatch] = useReducer(authReducer, {}, init);
 
-  // Cada vez que el authState cambie, lo guardamos en el localStorage
-  useEffect(() => {
-    if (!authState) return;
-    localStorage.setItem("user_session", JSON.stringify(authState));
-  }, [authState]);
+  const login = (usuario = {}) => {
+    // 1. Guardamos en el almacenamiento del navegador
+    localStorage.setItem("user", JSON.stringify(usuario));
 
-  const login = (usuarioEnDB) => {
+    // 2. Creamos la acción para el reducer
     const action = {
-      type: "login",
-      payload: usuarioEnDB,
+      type: types.login,
+      payload: usuario,
     };
+
+    // 3. Disparamos el cambio global
     dispatch(action);
   };
 
   const logout = () => {
-    localStorage.removeItem("user_session");
-    dispatch({ type: "logout" });
+    localStorage.removeItem("user");
+    dispatch({ type: types.logout });
   };
 
   return (
     <AuthContext.Provider
       value={{
-        ...authState, // Esto pasa 'logged', 'nombre', 'rol', etc.
+        ...auth, // Esto pasa 'logged' y 'user' directamente
         login,
         logout,
       }}

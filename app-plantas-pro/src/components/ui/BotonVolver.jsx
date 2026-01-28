@@ -25,7 +25,7 @@ const styles = {
     fontWeight: 750,
     position: "absolute", // Para que flote sobre la imagen
     top: "20px",
-    left: "20px",
+    left: "32px",
     zIndex: 10,
   },
 };

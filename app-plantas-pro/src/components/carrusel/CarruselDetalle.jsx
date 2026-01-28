@@ -35,7 +35,7 @@ export const CarruselDetalle = ({ imagenes, isMobile }) => {
 const styles = {
   container: {
     width: "100%",
-    maxWidth: "600px",
+    maxWidth: "710px",
     margin: "0 auto",
     display: "flex",
     flexDirection: "column",

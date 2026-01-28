@@ -11,7 +11,7 @@ import { AuthContext } from "./context/AuthContext";
 import { LoginScreen } from "./context/LoginScreen";
 import { HomePage } from "./pages/HomePage";
 import { DetallePage } from "./pages/DetallePage";
-
+import { RegistroPlantaPage} from "./pages/RegistroPlantaPage"
 export const App = () => {
   const { logged } = useContext(AuthContext);
 
@@ -25,12 +25,13 @@ export const App = () => {
             <Route path="*" element={<Navigate to="/login" replace />} />
           </>
         ) : (
-          /* RUTAS PRIVADAS */
+          /* RUTAS PRIVADAS Solo visibles si logged es true */
           <>
             <Route path="/" element={<HomePage />} />
-            <Route path="/registro-planta" element={<RegistroPlanta />} />
+            <Route path="/registro" element={<RegistroPlantaPage />} />
             <Route path="/planta/:id" element={<DetallePage />} />
-            {/* Si intenta ir a cualquier otro lado, vuelve al Home */}
+            {/* Si el usuario intenta volver al login estando logueado, lo mandamos al Home */}
+            <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         )}
