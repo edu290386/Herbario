@@ -1,10 +1,14 @@
 import { colores } from "../../constants/tema.js";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
 import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
+import { useContext } from "react";
 
 export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
   // Generamos las rutas dinámicas usando el helper
-  
+  console.log(ubicacion)
+  const { user } = useContext(AuthContext);
+  console.log(user);
 
   // 1. Extraemos los valores basándonos en tu console.log real
   const lat1 = parseFloat(userCoords?.lat);
@@ -65,7 +69,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
         className={cardClassName}
         style={{
           ...styles.card,
-          minHeight: "200px",
+          minHeight: "220px",
           maxWidth: isMobile ? "650px" : "550px",
         }}
       >
@@ -86,9 +90,10 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
             latitud={ubicacion.latitud}
             longitud={ubicacion.longitud}
             distancia={km}
-            colaborador={ubicacion.colaborador}
             fecha={ubicacion.created_at}
             isMobile={isMobile}
+            creador={ubicacion.usuarios.nombre_completo}
+            grupocreador={ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"}
           />
         </div>
       </div>
@@ -111,14 +116,14 @@ const styles = {
   },
   fotoLaptop: {
     width: "180px",
-    height: "240px",
+    height: "250px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,
   },
   fotoMobile: {
     width: "160px", // Reducido un poco para dar más espacio al texto en pantallas pequeñas
-    height: "200px",
+    height: "220px",
     backgroundSize: "cover",
     backgroundPosition: "center",
     flexShrink: 0,

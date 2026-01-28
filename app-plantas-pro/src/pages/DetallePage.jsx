@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
@@ -10,21 +10,20 @@ import {
   SeccionUbicaciones,
 } from "../components";
 import { colores } from "../constants/tema";
-import { FaSpinner } from "react-icons/fa6";
-import { AuthContext } from "../context/AuthContext";
 
+import { TbCloverFilled } from "react-icons/tb";
 
 export const DetallePage = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext);
-  console.log(user);
+
+  
   const navigate = useNavigate();
 
   const [planta, setPlanta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [userCoords, setUserCoords] = useState(null);
-
+console.log(planta);
   useEffect(() => {
     // Capturamos el GPS del usuario (solo una vez al cargar la página)
     if ("geolocation" in navigator) {
@@ -82,14 +81,17 @@ export const DetallePage = () => {
           .from("plantas")
           .select(
             `
-            *,
-            ubicaciones!fk_ubicacion_planta (
-              *,
-              usuarios!ubicaciones_usuario_id_fkey (
-                nombre_completo
-              )
-            )
-          `,
+    *,
+    ubicaciones!fk_ubicacion_planta (
+      *,
+      usuarios!ubicaciones_usuario_id_fkey (
+        nombre_completo,
+        grupos!fk_usuario_grupo (
+          nombre_grupo
+        )
+      )
+    )
+  `,
           )
           .eq("id", id)
           .single();
@@ -115,7 +117,7 @@ export const DetallePage = () => {
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
-        <FaSpinner style={styles.spinner} />
+        <TbCloverFilled style={styles.spinner} />
       </div>
     );
   }
@@ -241,7 +243,7 @@ const styles = {
     zIndex: 9999,
   },
   spinner: {
-    fontSize: "4rem",
+    fontSize: "8rem",
     animation: "spin 2s linear infinite",
     color: colores.frondoso,
   },

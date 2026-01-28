@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { colores } from "../constants/tema";
 import { LoginFormView } from "./LoginFormView";
 import { FaSpinner } from "react-icons/fa6";
+import { TbCloverFilled } from "react-icons/tb";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
@@ -104,7 +105,7 @@ export const LoginScreen = () => {
   if (cargando && !esRegistro) {
     return (
       <div style={styles.loadingContainer}>
-        <FaSpinner style={styles.spinner} />
+        <TbCloverFilled style={styles.spinner} />
       </div>
     );
   }

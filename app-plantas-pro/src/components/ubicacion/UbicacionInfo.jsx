@@ -6,12 +6,13 @@ import {
   FaCar,
 } from "react-icons/fa";
 import { TiDelete } from "react-icons/ti";
-import { FaHouse, FaCity } from "react-icons/fa6";
+import { FaHouse, FaCity, FaUserGroup } from "react-icons/fa6";
 import { SiWaze, SiWhatsapp } from "react-icons/si";
 import { generarRutas } from "../../helpers/linkHelper";
 import { BiMapPin } from "react-icons/bi";
 import { EtiquetaReciente } from "../ui/EtiquetaReciente";
 import { formatearFechaLocal } from "../../helpers/timeHelper";
+
 
 export const UbicacionInfo = ({
   distrito,
@@ -19,12 +20,12 @@ export const UbicacionInfo = ({
   latitud,
   longitud,
   distancia,
-  colaborador,
   fecha,
   isMobile,
+  creador,
+  grupocreador,
 }) => {
   const { google, waze } = generarRutas(latitud, longitud);
-  console.log(fecha)
 
   // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
   const sizes = {
@@ -82,14 +83,14 @@ export const UbicacionInfo = ({
             <FaCar
               className="info-icon"
               size={isMobile ? 17 : 18}
-              color="#000000"
+              color={colores.bosque}
             />
             <span style={{ fontSize: sizes.fuenteTexto }}>{distancia} Km</span>
           </div>
         </div>
       )}
 
-      {/* 4. COLABORADOR */}
+      {/* 4. CREADOR */}
       <div style={styles.filaSimple}>
         <FaUserPlus
           className="info-icon"
@@ -97,11 +98,25 @@ export const UbicacionInfo = ({
           color="#000000"
         />
         <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
-          <b>{colaborador || "Admin"}</b>
+          <b style={{ letterSpacing: isMobile ? "-1.6px" : "normal" }}>
+            {creador || "N/A"}
+          </b>
         </span>
       </div>
-
-      {/* 5. FECHA */}
+      {/* 5. GRUPO DE CREADOR */}
+      <div style={styles.filaSimple}>
+        <FaUserGroup
+          className="info-icon"
+          size={sizes.iconosFila}
+          color="#000000"
+        />
+        <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
+          <b style={{ letterSpacing: isMobile ? "-1.6px" : "normal" }}>
+            {grupocreador}
+          </b>
+        </span>
+      </div>
+      {/* 6. FECHA */}
       <div style={styles.filaSimple}>
         <FaRegCalendarCheck
           className="info-icon"
@@ -110,12 +125,11 @@ export const UbicacionInfo = ({
         />
         <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
           {formatearFechaLocal(fecha)}
-          <EtiquetaReciente fechaISO={fecha}/>
+          <EtiquetaReciente fechaISO={fecha} />
         </span>
-       
       </div>
 
-      {/* 6. ACCIONES */}
+      {/* 7. ACCIONES */}
       <div style={styles.acciones}>
         <div style={styles.contenedorNavegacion}>
           <button
@@ -204,7 +218,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    color: "#000",
+    color: colores.bosque,
     fontWeight: "800",
   },
   infoSecundaria: {
