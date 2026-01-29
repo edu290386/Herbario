@@ -17,7 +17,7 @@ export const HomePage = () => {
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
- 
+ console.log(user)
   // 1. Usamos 'function' para que JavaScript la reconozca en todo el archivo (Hoisting)
   async function obtenerPlantas() {
     try {

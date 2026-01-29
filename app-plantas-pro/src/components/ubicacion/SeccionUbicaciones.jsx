@@ -6,6 +6,7 @@ export const SeccionUbicaciones = ({
   nombrePlanta,
   isMobile,
   userCoords,
+  onEliminar,
 }) => {
   // Filtramos las que tienen coordenadas válidas
   const ubicacionesLimpias = ubicaciones.filter(
@@ -42,6 +43,7 @@ export const SeccionUbicaciones = ({
               ubicacion={ubi}
               userCoords={userCoords}
               isMobile={isMobile}
+              onEliminar={onEliminar}
               orden={index + 1} // Enviamos el ranking de cercanía
             />
           ))

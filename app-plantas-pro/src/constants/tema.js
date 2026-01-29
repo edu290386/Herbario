@@ -9,7 +9,7 @@ export const colores = {
   grisTexto: "#666666",
   grisSuave: "#F0F0F0",
   frondoso: "#2D8B57",
-  red: "#FF0000",
+  red: "#D32F2F",
   white: "#FFFFFF",
   encendido: "#34D399",
 };

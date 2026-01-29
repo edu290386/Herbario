@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
 import {
   BotonVolver,
   BotonPrincipal,
@@ -10,20 +9,21 @@ import {
   SeccionUbicaciones,
 } from "../components";
 import { colores } from "../constants/tema";
-
+import { getDetallePlanta, deleteUbicacion } from "../services/plantasServices";
 import { TbCloverFilled } from "react-icons/tb";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 export const DetallePage = () => {
   const { id } = useParams();
+  const { user } = useContext(AuthContext);
 
-  
   const navigate = useNavigate();
 
   const [planta, setPlanta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [userCoords, setUserCoords] = useState(null);
-console.log(planta);
+
   useEffect(() => {
     // Capturamos el GPS del usuario (solo una vez al cargar la página)
     if ("geolocation" in navigator) {
@@ -71,45 +71,21 @@ console.log(planta);
       try {
         setLoading(true);
 
-        // ⏳ Definimos un tiempo mínimo de 2 segundos para el spinner
+        // Promesa del tiempo mínimo (2 segundos)
         const tiempoMinimo = new Promise((resolve) =>
           setTimeout(resolve, 2000),
         );
-
-        // 🔍 Consulta a la base de datos con las relaciones explícitas que definimos
-        const consultaSupabase = supabase
-          .from("plantas")
-          .select(
-            `
-    *,
-    ubicaciones!fk_ubicacion_planta (
-      *,
-      usuarios!ubicaciones_usuario_id_fkey (
-        nombre_completo,
-        grupos!fk_usuario_grupo (
-          nombre_grupo
-        )
-      )
-    )
-  `,
-          )
-          .eq("id", id)
-          .single();
-
+        // Promesa de datos (Servicio)
+        const consultaSupabase = getDetallePlanta(id);
         // Esperamos a que ambas promesas terminen
         const [_, result] = await Promise.all([tiempoMinimo, consultaSupabase]);
-
-        if (result.error) throw result.error;
-        setPlanta(result.data);
+        setPlanta(result);
       } catch (error) {
         console.error("Error cargando planta:", error.message);
-        // Si hay error (ej. planta no existe), volvemos al inicio
-        // navigate("/");
       } finally {
         setLoading(false);
       }
     };
-
     fetchDatosCompletos();
   }, [id]);
 
@@ -137,6 +113,24 @@ console.log(planta);
   ].filter(Boolean);
 
   const imagenesCarrusel = fotosPlanta.length > 0 ? fotosPlanta : [null];
+
+  const manejarEliminarUbicacion = async (idUbi) => {
+    try {
+      // 1. Llamamos al servicio (pasando ID de ubicación y ID del usuario logueado)
+      await deleteUbicacion(idUbi, user.id);
+
+      // 2. Actualización Reactiva: Filtramos el estado local
+      // Como 'planta' tiene una lista de 'ubicaciones', creamos un nuevo objeto
+      setPlanta((prevPlanta) => ({
+        ...prevPlanta,
+        ubicaciones: prevPlanta.ubicaciones.filter((u) => u.id !== idUbi),
+      }));
+
+      console.log("Ubicación eliminada con éxito");
+    } catch (error) {
+      alert("No se pudo eliminar la ubicación: " + error.message);
+    }
+  };
 
   return (
     <div style={styles.wrapper}>
@@ -199,6 +193,7 @@ console.log(planta);
         nombrePlanta={planta.nombre_comun}
         isMobile={isMobile}
         userCoords={userCoords}
+        onEliminar={manejarEliminarUbicacion}
       />
     </div>
   );

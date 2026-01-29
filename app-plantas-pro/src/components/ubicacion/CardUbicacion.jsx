@@ -1,14 +1,11 @@
 import { colores } from "../../constants/tema.js";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
 import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
-import { AuthContext } from "../../context/AuthContext.jsx";
-import { useContext } from "react";
 
-export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
-  // Generamos las rutas dinámicas usando el helper
-  console.log(ubicacion)
-  const { user } = useContext(AuthContext);
-  console.log(user);
+
+export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar }) => {
+  
+
 
   // 1. Extraemos los valores basándonos en tu console.log real
   const lat1 = parseFloat(userCoords?.lat);
@@ -85,6 +82,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
         {/* INFORMACIÓN Y BOTONES */}
         <div style={styles.info}>
           <UbicacionInfo
+            ubicacionID={ubicacion.id}
             distrito={ubicacion.distrito}
             ciudad={ubicacion.ciudad}
             latitud={ubicacion.latitud}
@@ -92,8 +90,10 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords }) => {
             distancia={km}
             fecha={ubicacion.created_at}
             isMobile={isMobile}
+            creadorID={ubicacion.usuario_id}
             creador={ubicacion.usuarios.nombre_completo}
             grupocreador={ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"}
+            onEliminar={onEliminar}
           />
         </div>
       </div>

@@ -12,9 +12,11 @@ import { generarRutas } from "../../helpers/linkHelper";
 import { BiMapPin } from "react-icons/bi";
 import { EtiquetaReciente } from "../ui/EtiquetaReciente";
 import { formatearFechaLocal } from "../../helpers/timeHelper";
-
+import { AuthContext } from "../../context/AuthContext";
+import { useContext} from "react"
 
 export const UbicacionInfo = ({
+  ubicacionID,
   distrito,
   ciudad,
   latitud,
@@ -22,10 +24,16 @@ export const UbicacionInfo = ({
   distancia,
   fecha,
   isMobile,
+  creadorID,
   creador,
   grupocreador,
+  onEliminar,
 }) => {
   const { google, waze } = generarRutas(latitud, longitud);
+
+  const { user } = useContext(AuthContext);
+  const esDueño = user?.id === creadorID;
+  const esAdmin = user?.rol === "administrador";
 
   // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
   const sizes = {
@@ -161,19 +169,28 @@ export const UbicacionInfo = ({
           </button>
         </div>
 
-        <div style={styles.contenedorEliminar}>
-          <button
-            style={styles.btnIcono}
-            onClick={() => console.log("Eliminar ubicación")}
-            title="Eliminar ubicación"
-          >
-            <TiDelete
-              className="delete-icon"
-              size={sizes.iconoDelete}
-              color="#D32F2F"
-            />
-          </button>
-        </div>
+        {/* 3. Renderizado condicional: Solo si tiene permiso */}
+        {(esDueño || esAdmin) && (
+          <div style={styles.contenedorEliminar}>
+            <button
+              style={styles.btnIcono}
+              onClick={() => {
+                if (
+                  window.confirm("¿Estás seguro de eliminar esta ubicación?")
+                ) {
+                  onEliminar(ubicacionID); // Ejecuta la función que viene del padre
+                }
+              }}
+              title="Eliminar ubicación"
+            >
+              <TiDelete
+                className="delete-icon"
+                size={sizes.iconoDelete}
+                color={colores.red}
+              />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
