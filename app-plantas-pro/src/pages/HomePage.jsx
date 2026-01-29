@@ -6,10 +6,9 @@ import { CardPlanta } from "../components/planta/CardPlanta";
 import { normalizarParaBusqueda } from "../helpers/textHelper";
 import { AuthContext } from "../context/AuthContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
-import { MdGroups } from "react-icons/md";
-import { ImExit, ImUserCheck } from "react-icons/im";
 import { getPlantasBasico } from "../services/plantasServices";
-import { FaNetworkWired } from "react-icons/fa";
+import { IoLogOutOutline } from "react-icons/io5";
+import { TbCloverFilled } from "react-icons/tb";
 
 export const HomePage = () => {
 
@@ -49,34 +48,27 @@ console.log(user)
 
   return (
     <div style={estilos.pagina}>
-      <div style={estilos.userBarContainer}>
-        {/* Izquierda: Info del User */}
-        <div style={estilos.infoIzquierda}>
-          <div style={estilos.userName}>
-            <ImUserCheck size={18} color={colores.frondoso} />
-            <span>{user?.nombre_completo.split(" ")[0]}</span>
+      <div style={estilos.headerCompacto}>
+        <div style={estilos.userBarContainer}>
+          <div style={estilos.avatarEstiloNano}>
+            {user?.nombre_completo?.charAt(0).toUpperCase()}
           </div>
-          <div style={estilos.userName}>
-            <MdGroups size={18} color={colores.frondoso} />
-            <span>{user?.grupos.nombre_grupo}</span>
-          </div>
-          <div style={estilos.userName}>
-            <FaNetworkWired size={18} color={colores.frondoso} />
-            <span>{user?.rol}</span>
+          <div style={estilos.contenedorNombres}>
+            <span style={estilos.textoNombre}>
+              {user?.nombre_completo?.split(" ")[0]}
+            </span>
+            <span style={estilos.textoRol}>
+              {user?.grupos.nombre_grupo}{" "}
+              <span style={{ color: colores.frondoso }}><TbCloverFilled style={estilos.spinner} /></span>
+            </span>
           </div>
         </div>
-
         {/* Derecha: Botón Salir */}
         <button onClick={logout} style={estilos.logoutSimple}>
-          <ImExit size={30} color={colores.frondoso} />
-          <span style={estilos.textoSalir}></span>
+          <IoLogOutOutline size={35} />
         </button>
       </div>
       <header style={estilos.header}>
-        <div style={estilos.logoSeccion}>
-          <h1 style={estilos.titulo}>GALERIA</h1>
-        </div>
-
         <div style={estilos.buscadorWrapper}>
           <Search
             style={estilos.iconoBusqueda}
@@ -153,24 +145,21 @@ const estilos = {
     paddingLeft: "env(safe-area-inset-left)",
     paddingRight: "env(safe-area-inset-right)",
   },
+  headerCompacto: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    padding: "20px",
+    marginBottom: "10px",
+    boxSizing: "border-box",
+  },
   header: {
+    width: "90%",
     maxWidth: "800px",
     margin: "0 auto",
-    padding: "85px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
+    paddingBottom: "40px", // Añadimos padding para que no choque con la muesca del móvil
     textAlign: "center",
-  },
-  logoSeccion: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
-    marginBottom: "20px",
-  },
-  titulo: {
-    color: colores.frondoso,
-    fontSize: "2.2rem",
-    fontWeight: "700",
-    margin: 0,
   },
   buscadorWrapper: {
     position: "relative",
@@ -186,7 +175,7 @@ const estilos = {
   input: {
     width: "100%",
     padding: "15px 15px 15px 50px",
-    borderRadius: "25px",
+    borderRadius: "22px",
     border: `2px solid ${colores.frondoso}`,
     outline: "none",
     fontSize: "1rem",
@@ -232,36 +221,55 @@ const estilos = {
   },
   userBarContainer: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: "0 15px",
-    width: "100%",
-    boxSizing: "border-box",
-    position: "absolute", // Lo sacamos del flujo para que no empuje el header hacia abajo
-    top: "10px",
-    left: 0,
-    zIndex: 10,
+    alignItems: "center",
+    gap: "15px",
   },
-  infoIzquierda: {
+  avatarEstiloNano: {
+    width: "65px", // Tamaño generoso como en la foto
+    height: "65px",
+    backgroundColor: "#4E7D5B", // El verde exacto de la imagen
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    fontSize: "1.8rem", // Letra grande y clara
+    fontWeight: "bold",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)", // Sombra sutil
+  },
+  contenedorNombres: {
     display: "flex",
     flexDirection: "column",
-    gap: "4px",
+    justifyContent: "center",
   },
-  userName: {
+  textoNombre: {
+    fontSize: "1.4rem",
+    fontWeight: "800",
+    color: colores.bosque, // Tu color bosque
+    lineHeight: "1.1",
+  },
+  textoRol: {
+    fontSize: "1rem",
+    color: "#888",
+    fontWeight: "500",
     display: "flex",
     alignItems: "center",
-    gap: "6px",
-    color: colores.bosque,
-    fontWeight: "bold",
-    fontSize: "0.9rem",
+    gap: "5px",
   },
   logoutSimple: {
-    display: "flex",
-    flexDirection: "column", // Icono arriba, texto abajo (ahorra ancho)
-    alignItems: "center",
     background: "none",
     border: "none",
+    color: "#A0A0A0",
     cursor: "pointer",
-    padding: "5px",
+    padding: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    
+    marginRight: "-5px",
+  },
+  spinner: {
+    fontSize: "1rem",
+    color: colores.frondoso,
   },
 };
