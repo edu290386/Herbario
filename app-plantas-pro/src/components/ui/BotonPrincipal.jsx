@@ -9,17 +9,17 @@ export const BotonPrincipal = ({
   textoExitoso = "Listo!",
   type = "button",
 }) => {
-  // Verde suave profesional (estilo Herbario)
-  const verdeSuave = colores.frondoso;
-  const verdeOscuro = colores.encendido;
+  
+  const colorFondo = estaCargando ? colores.hoja : colores.frondoso;
 
   return (
     <button
       type={type}
       onClick={onClick}
+      // Se deshabilita si está cargando, si ya fue exitoso o por validaciones externas (foto/gps)
       disabled={estaCargando || esExitoso}
       style={{
-        backgroundColor: estaCargando || esExitoso ? verdeOscuro : verdeSuave,
+        backgroundColor: colorFondo,
         color: "white", // Letra blanca siempre, como propusimos al inicio
         padding: "14px",
         borderRadius: "8px",

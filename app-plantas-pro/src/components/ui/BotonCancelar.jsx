@@ -17,7 +17,7 @@ const estilos = {
     backgroundColor: colores.retama,
     color: colores.bosque,
     padding: "15px",
-    borderRadius: "15px",
+    borderRadius: "10px",
     fontWeight: "bold",
     cursor: "pointer",
     marginTop: "15px",
@@ -28,6 +28,6 @@ const estilos = {
     justifyContent: "center",
     gap: "10px",
     width: "100%",
-    textTransform: "uppercase",
+    border: "none",
   },
 };

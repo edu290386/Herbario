@@ -63,3 +63,62 @@ export const getPlantasBasico = async () => {
   return data;
 };
 
+//RegistroPlantaPage: Registra una ubicación y, si la planta no existe, la crea.
+ 
+export const registrarUbicacionCompleta = async (datos) => {
+  const { 
+    plantaId, 
+    nombreLimpio, 
+    usuarioId, 
+    urlFoto, 
+    coords, 
+    datosLugar 
+  } = datos;
+
+  let idFinal = plantaId;
+
+  // 1. Lógica de Planta (Si no tenemos ID, la buscamos o creamos)
+  if (!idFinal) {
+    // Verificamos si ya existe
+    const { data: existente } = await supabase
+      .from("plantas")
+      .select("id")
+      .eq("nombre_comun", nombreLimpio)
+      .maybeSingle();
+
+    if (existente) {
+      idFinal = existente.id;
+    } else {
+      // Creamos la planta nueva
+      const { data: nuevaP, error: errP } = await supabase
+        .from("plantas")
+        .insert([{ nombre_comun: nombreLimpio }])
+        .select()
+        .single();
+      
+      if (errP) throw errP;
+      idFinal = nuevaP.id;
+    }
+  }
+
+  // 2. Insertar Ubicación
+  const { data: ubicacion, error: errU } = await supabase
+    .from("ubicaciones")
+    .insert([
+      {
+        planta_id: idFinal,
+        usuario_id: usuarioId,
+        foto_contexto: urlFoto,
+        latitud: coords.lat,
+        longitud: coords.lng,
+        ciudad: datosLugar.ciudad,
+        distrito: datosLugar.distrito,
+      },
+    ])
+    .select()
+    .single();
+
+  if (errU) throw errU;
+
+  return { idFinal, ubicacion };
+};

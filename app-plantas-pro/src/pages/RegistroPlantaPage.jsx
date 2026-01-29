@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import { Leaf, Camera, CheckCircle } from "lucide-react";
-import { supabase } from "../supabaseClient";
+import { registrarUbicacionCompleta } from "../services/plantasServices";
 import { uploadImage } from "../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { colores } from "../constants/tema";
@@ -14,7 +14,6 @@ import {
 } from "react-icons/io";
 import { obtenerDireccion } from "../helpers/geoHelper";
 import { AuthContext } from "../context/AuthContext";
-import { ImSpinner3 } from "react-icons/im";
 
 export const RegistroPlantaPage = () => {
   const { state } = useLocation();
@@ -54,7 +53,7 @@ export const RegistroPlantaPage = () => {
     setCargando(true);
     try {
       // 1. Subir imagen a Cloudinary
-      // Creación de subcarpetas cloudinary
+      // Creación de subcarpetas cloudinary Usamos el nombre local o el que viene por state si ya existía
       const nombreCarpetaBase = formatearParaDB(nombreLocal);
       const rutaCloudinary = `${nombreCarpetaBase}/ubicaciones`;
       const urlFoto = await uploadImage(foto, rutaCloudinary);
@@ -70,49 +69,20 @@ export const RegistroPlantaPage = () => {
         const res = await obtenerDireccion(coords.lat, coords.lng);
         if (res) datosLugar = res;
       } catch (error) {
-        console.warn(error);
+        console.warn(
+          "No se pudo obtener la dirección, se guardará solo con coordenadas.",error
+        );
       }
-
-      let idFinal = plantaId;
 
       // 4. Lógica de Planta (Si es nueva)
-      if (!idFinal) {
-        const nombreLimpio = formatearParaDB(nombreLocal);
-
-        // Verificamos si ya existe para no duplicar
-        const { data: existente } = await supabase
-          .from("plantas")
-          .select("id")
-          .eq("nombre_comun", nombreLimpio)
-          .maybeSingle();
-
-        if (existente) {
-          idFinal = existente.id;
-        } else {
-          const { data: nuevaP, error: errP } = await supabase
-            .from("plantas")
-            .insert([{ nombre_comun: nombreLimpio }])
-            .select()
-            .single();
-          if (errP) throw errP;
-          idFinal = nuevaP.id;
-        }
-      }
-
-      // 4. Insertar Ubicación con datos del lugar
-      const { error: errU } = await supabase.from("ubicaciones").insert([
-        {
-          planta_id: idFinal,
-          usuario_id: user?.id, // ID del contexto de Auth
-          foto_contexto: urlFoto,
-          latitud: coords.lat,
-          longitud: coords.lng,
-          ciudad: datosLugar.ciudad,
-          distrito: datosLugar.distrito,
-        },
-      ]);
-
-      if (errU) throw errU;
+      const { idFinal } = await registrarUbicacionCompleta({
+        plantaId, // Viene de state (null si es nueva)
+        nombreLimpio: formatearParaDB(nombreLocal),
+        usuarioId: user?.id, // Del Contexto de Auth
+        urlFoto,
+        coords,
+        datosLugar,
+      });
 
       // ÉXITO: Feedback visual en el botón
       setGuardadoExitoso(true);
@@ -120,8 +90,9 @@ export const RegistroPlantaPage = () => {
         navigate(`/planta/${idFinal}`, {
           replace: true,
         });
-      }, 1800);
+      }, 2000);
     } catch (error) {
+      console.error("Error en registro:", error);
       alert("Error al guardar: " + error.message);
     } finally {
       setCargando(false);
@@ -223,7 +194,7 @@ export const RegistroPlantaPage = () => {
         <BotonPrincipal
           type="submit"
           texto="FINALIZAR REGISTRO"
-          textoCargando="Guardando..."
+          textoCargando="GUARDANDO..."
           textoExitoso="REGISTRO EXITOSO"
           estaCargando={cargando}
           esExitoso={guardadoExitoso}

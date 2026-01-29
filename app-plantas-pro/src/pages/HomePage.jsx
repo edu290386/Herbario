@@ -9,6 +9,7 @@ import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { MdGroups } from "react-icons/md";
 import { ImExit, ImUserCheck } from "react-icons/im";
 import { getPlantasBasico } from "../services/plantasServices";
+import { FaNetworkWired } from "react-icons/fa";
 
 export const HomePage = () => {
 
@@ -17,7 +18,7 @@ export const HomePage = () => {
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
- console.log(user)
+console.log(user)
    // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
     const obtenerPlantas = async () => {
@@ -57,7 +58,11 @@ export const HomePage = () => {
           </div>
           <div style={estilos.userName}>
             <MdGroups size={18} color={colores.bosque} />
-            <span>Admin</span>
+            <span>{user?.grupos.nombre_grupo}</span>
+          </div>
+          <div style={estilos.userName}>
+            <FaNetworkWired size={18} color={colores.bosque} />
+            <span>{user?.rol}</span>
           </div>
         </div>
 
@@ -141,13 +146,17 @@ const estilos = {
     position: "relative",
     backgroundColor: colores.fondo,
     minHeight: "100vh",
+    width: "100%",
     paddingTop: "5px",
     fontFamily: '"Segoe UI", sans-serif',
+    // Agregamos esto para que en horizontal el contenido no choque con los bordes
+    paddingLeft: "env(safe-area-inset-left)",
+    paddingRight: "env(safe-area-inset-right)",
   },
   header: {
     maxWidth: "800px",
     margin: "0 auto",
-    padding: "25px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
+    padding: "70px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
     textAlign: "center",
   },
   logoSeccion: {
@@ -170,8 +179,9 @@ const estilos = {
     maxWidth: "600px",
     margin: "0 auto",
   },
-  iconoBusqueda: { 
-    position: "absolute", left: "15px"
+  iconoBusqueda: {
+    position: "absolute",
+    left: "15px",
   },
   input: {
     width: "100%",
