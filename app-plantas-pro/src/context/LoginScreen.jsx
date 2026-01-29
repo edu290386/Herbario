@@ -1,9 +1,8 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "./AuthContext";
-import { supabase } from "../supabaseClient";
 import { colores } from "../constants/tema";
 import { LoginFormView } from "./LoginFormView";
-import { FaSpinner } from "react-icons/fa6";
+import { getUsuarioPorTelefono, activarUsuario } from "../services/usuariosServices";
 import { TbCloverFilled } from "react-icons/tb";
 
 export const LoginScreen = () => {
@@ -27,15 +26,14 @@ export const LoginScreen = () => {
     e.preventDefault();
     setError(null);
 
-    const numeroCompleto = `${form.paisCodigo}${form.telefono}`;
+    const numeroCompleto = `${form.paisCodigo}${form.telefono}`.replace(
+      /\s+/g,
+      "",
+    ).trim();
 
     try {
       // 1. Buscamos al usuario en la base de datos (común para ambos flujos)
-      const { data: usuario, error: dbError } = await supabase
-        .from("usuarios")
-        .select("*")
-        .eq("telefono", numeroCompleto)
-        .single();
+      const { data: usuario, error: dbError } = await getUsuarioPorTelefono(numeroCompleto)
 
       if (!esRegistro) {
         // LÓGICA DE LOGIN (ENTRAR)
@@ -74,15 +72,10 @@ export const LoginScreen = () => {
         // 3. Si todo está bien, activamos el spinner y actualizamos la BD
         setCargando(true);
         // Procedemos a la actualización/activación
-        const { error: updateError } = await supabase
-          .from("usuarios")
-          .update({
-            nombre_completo: form.nombre,
-            email: form.correo,
-            password: form.password,
-            status: "ACTIVO",
-          })
-          .eq("telefono", numeroCompleto);
+        const { error: updateError } = await activarUsuario(
+          numeroCompleto,
+          form,
+        );
 
         if (updateError)
           throw new Error("Error técnico al activar. Inténtalo más tarde.");

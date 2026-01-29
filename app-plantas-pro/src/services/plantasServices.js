@@ -2,7 +2,6 @@ import { supabase } from "../supabaseClient"; // Ajusta la ruta
 
 // Función para traer todo el detalle
 export const getDetallePlanta = async (idPlanta) => {
-    
   const respuesta = await supabase
     .from("plantas")
     .select(
@@ -40,3 +39,27 @@ export const deleteUbicacion = async (idUbicacion, idUsuario) => {
   if (error) throw error;
   return true;
 };
+
+// Función para la HomePage (Ligera)
+export const getPlantasBasico = async () => {
+  const { data, error } = await supabase
+    .from("plantas")
+    .select(
+      `
+      id,
+      nombre_comun, 
+      nombre_cientifico, 
+      nombres_secundarios, 
+      foto_perfil, 
+      busqueda_index
+    `,
+    )
+    .order("nombre_comun", { ascending: true });
+
+  if (error) {
+    console.error("Error al obtener plantas:", error.message);
+    throw error;
+  }
+  return data;
+};
+

@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
 import { Search } from "lucide-react";
 import { colores } from "../constants/tema";
 import { CardPlanta } from "../components/planta/CardPlanta";
@@ -9,6 +8,7 @@ import { AuthContext } from "../context/AuthContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { MdGroups } from "react-icons/md";
 import { ImExit, ImUserCheck } from "react-icons/im";
+import { getPlantasBasico } from "../services/plantasServices";
 
 export const HomePage = () => {
 
@@ -18,30 +18,30 @@ export const HomePage = () => {
   const navigate = useNavigate();
 
  console.log(user)
-  // 1. Usamos 'function' para que JavaScript la reconozca en todo el archivo (Hoisting)
-  async function obtenerPlantas() {
-    try {
-      const { data, error } = await supabase.from("plantas").select("*");
-
-      if (error) throw error;
-      setPlantas(data || []);
-    } catch (error) {
-      console.error("Error al obtener plantas:", error.message);
-    }
-  }
-
-  // 2. El useEffect llama a la función de forma segura al montar el componente
+   // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
+    const obtenerPlantas = async () => {
+      try {
+        // Opcional: podrías poner un setLoading(true) aquí
+        const data = await getPlantasBasico();
+        setPlantas(data || []);
+      } catch (error) {
+        console.error("Error al obtener plantas:", error.message);
+        // Aquí podrías mostrar una notificación de error al usuario
+      } finally {
+        // setLoading(false);
+      }
+    };
+
     obtenerPlantas();
   }, []);
-
-  // 3. Lógica de filtrado para la búsqueda
+  // 2. Lógica de filtrado para la búsqueda
   const plantasFiltradas = plantas.filter(
     (p) =>
       busqueda === "" ||
       p.busqueda_index.includes(normalizarParaBusqueda(busqueda)),
   );
-  // 4. CONTROL DE ADMIN: ¿Existe ya este nombre exacto?
+  // 3. CONTROL DE ADMIN: ¿Existe ya este nombre exacto?
   const existeCoincidenciaExacta = plantas.some(
     (p) => p.nombre_comun.toLowerCase() === busqueda.trim().toLowerCase(),
   );
@@ -144,14 +144,12 @@ const estilos = {
     paddingTop: "5px",
     fontFamily: '"Segoe UI", sans-serif',
   },
-
   header: {
     maxWidth: "800px",
     margin: "0 auto",
     padding: "25px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
     textAlign: "center",
   },
-
   logoSeccion: {
     display: "flex",
     alignItems: "center",
@@ -159,14 +157,12 @@ const estilos = {
     gap: "10px",
     marginBottom: "20px",
   },
-
   titulo: {
     color: colores.frondoso,
     fontSize: "2.2rem",
     fontWeight: "700",
     margin: 0,
   },
-
   buscadorWrapper: {
     position: "relative",
     display: "flex",
@@ -174,9 +170,9 @@ const estilos = {
     maxWidth: "600px",
     margin: "0 auto",
   },
-
-  iconoBusqueda: { position: "absolute", left: "15px" },
-
+  iconoBusqueda: { 
+    position: "absolute", left: "15px"
+  },
   input: {
     width: "100%",
     padding: "15px 15px 15px 50px",
@@ -185,7 +181,6 @@ const estilos = {
     outline: "none",
     fontSize: "1rem",
   },
-
   layoutPrincipal: {
     width: "100%",
     minHeight: "100vh",
@@ -195,8 +190,6 @@ const estilos = {
     padding: "0 20px 20px",
     boxSizing: "border-box",
   },
-
-  // GRILLA CORREGIDA: Multi-columna en escritorio, 1 columna en móvil
   grilla: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
@@ -207,7 +200,6 @@ const estilos = {
     justifyItems: "center", // Centra los cards cuando hay solo uno
     boxSizing: "border-box",
   },
-
   contenedorNuevo: {
     padding: "0px",
     marginTop: "0px",
@@ -218,13 +210,11 @@ const estilos = {
     width: "100%",
     maxWidth: "600px", // Para que no se vea gigante en PC
   },
-
   textoAviso: {
     color: colores.bosque,
     fontSize: "1rem",
     fontWeight: "500",
   },
-
   wrapperBotonRegistro: {
     width: "100%",
     maxWidth: "350px",
