@@ -53,15 +53,15 @@ console.log(user)
         {/* Izquierda: Info del User */}
         <div style={estilos.infoIzquierda}>
           <div style={estilos.userName}>
-            <ImUserCheck size={18} color={colores.bosque} />
+            <ImUserCheck size={18} color={colores.frondoso} />
             <span>{user?.nombre_completo.split(" ")[0]}</span>
           </div>
           <div style={estilos.userName}>
-            <MdGroups size={18} color={colores.bosque} />
+            <MdGroups size={18} color={colores.frondoso} />
             <span>{user?.grupos.nombre_grupo}</span>
           </div>
           <div style={estilos.userName}>
-            <FaNetworkWired size={18} color={colores.bosque} />
+            <FaNetworkWired size={18} color={colores.frondoso} />
             <span>{user?.rol}</span>
           </div>
         </div>
@@ -156,7 +156,7 @@ const estilos = {
   header: {
     maxWidth: "800px",
     margin: "0 auto",
-    padding: "70px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
+    padding: "85px 20px 40px 20px", // Añadimos padding para que no choque con la muesca del móvil
     textAlign: "center",
   },
   logoSeccion: {
