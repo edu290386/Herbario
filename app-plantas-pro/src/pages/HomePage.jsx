@@ -1,14 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
 import { colores } from "../constants/tema";
 import { CardPlanta } from "../components/planta/CardPlanta";
 import { normalizarParaBusqueda } from "../helpers/textHelper";
 import { AuthContext } from "../context/AuthContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { getPlantasBasico } from "../services/plantasServices";
-import { IoLogOutOutline } from "react-icons/io5";
+import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
+import { GoAlert, GoCheckCircleFill } from "react-icons/go";
 
 export const HomePage = () => {
 
@@ -59,7 +59,9 @@ console.log(user)
             </span>
             <span style={estilos.textoRol}>
               {user?.grupos.nombre_grupo}{" "}
-              <span style={{ color: colores.frondoso }}><TbCloverFilled style={estilos.spinner} /></span>
+              <span style={{ color: colores.frondoso }}>
+                <TbCloverFilled style={estilos.spinner} />
+              </span>
             </span>
           </div>
         </div>
@@ -70,10 +72,10 @@ console.log(user)
       </div>
       <header style={estilos.header}>
         <div style={estilos.buscadorWrapper}>
-          <Search
+          <IoSearchOutline
             style={estilos.iconoBusqueda}
             color={colores.hoja}
-            size={20}
+            size={24}
           />
           <input
             type="text"
@@ -86,47 +88,72 @@ console.log(user)
       </header>
 
       <main style={estilos.layoutPrincipal}>
-        {/* 1. SECCIÓN DE REGISTRO: Aparece si el usuario escribe algo que no existe IDÉNTICO */}
-        {busqueda.length > 0 && !existeCoincidenciaExacta && (
-          <div style={estilos.contenedorNuevo}>
-            <p style={estilos.textoAviso}>
-              ¿No encuentras{" "}
-              <mark style={estilos.resaltado}>{busqueda.toUpperCase()}</mark>?
-              Regístrala primero.
-            </p>
-            <div style={estilos.wrapperBotonRegistro}>
-              <BotonPrincipal
-                texto={`REGISTRAR NUEVA PLANTA`}
-                onClick={() =>
-                  navigate("/registro", {
-                    state: {
-                      nombreComun: busqueda.trim(),
-                      usuarioId: user.id,
-                    },
-                  })
-                }
-              />
+        {/* SECCIÓN DINÁMICA: Feedback y Registro */}
+        {busqueda.length > 0 && (
+          <div style={estilos.contenedorMensaje}>
+            {/* BANNER UNIFICADO: Cambia de color y contenido sin moverse */}
+            <div
+              style={{
+                ...estilos.mensajeCheck,
+                backgroundColor:
+                  plantasFiltradas.length > 0 ? colores.claro : "#FFF9C4", // Verde suave : Crema
+                borderColor:
+                  plantasFiltradas.length > 0
+                    ? `${colores.frondoso}44`
+                    : "#856404",
+              }}
+            >
+              {plantasFiltradas.length > 0 ? (
+                <>
+                  <GoCheckCircleFill size={22} color={colores.frondoso} />
+                  <span style={estilos.textoCoincidencias}>
+                    {plantasFiltradas.length}{" "}
+                    {plantasFiltradas.length === 1
+                      ? "coincidencia encontrada"
+                      : "coincidencias encontradas"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <GoAlert size={22} color="#856404" />
+                  <span
+                    style={{ ...estilos.textoCoincidencias, color: "#856404" }}
+                  >
+                    0 coincidencias encontradas
+                  </span>
+                </>
+              )}
             </div>
-            {/* Separador visual si hay sugerencias debajo */}
+
+            {/* BOTÓN DE REGISTRO: Aparece debajo del banner si no hay coincidencia exacta */}
+            {!existeCoincidenciaExacta && (
+              <div style={estilos.wrapperBotonRegistro}>
+                <BotonPrincipal
+                  texto={`REGISTRAR NUEVA PLANTA`}
+                  onClick={() =>
+                    navigate("/registro", {
+                      state: {
+                        nombreComun: busqueda.trim(),
+                        usuarioId: user.id,
+                      },
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            {/* Separador visual opcional */}
             {plantasFiltradas.length > 0 && <div style={estilos.divisor} />}
           </div>
         )}
 
-        {/* 2. SECCIÓN DE SUGERENCIAS: Muestra todo lo que coincida (Higuerilla, Higuereta, etc.) */}
-        {plantasFiltradas.length > 0 ? (
+        {/* SECCIÓN DE SUGERENCIAS */}
+        {plantasFiltradas.length > 0 && (
           <div style={estilos.grilla}>
             {plantasFiltradas.map((p) => (
               <CardPlanta key={p.id} planta={p} />
             ))}
           </div>
-        ) : (
-          // Mensaje cuando no hay absolutamente nada
-          busqueda.length > 0 &&
-          existeCoincidenciaExacta === false && (
-            <p style={estilos.mensajeVacio}>
-              Toca el botón de arriba para ser el primero en registrarla.
-            </p>
-          )
         )}
       </main>
     </div>
@@ -151,7 +178,6 @@ const estilos = {
     alignItems: "center",
     width: "100%",
     padding: "20px",
-    marginBottom: "10px",
     boxSizing: "border-box",
   },
   header: {
@@ -175,8 +201,8 @@ const estilos = {
   input: {
     width: "100%",
     padding: "15px 15px 15px 50px",
-    borderRadius: "22px",
-    border: `2px solid ${colores.frondoso}`,
+    borderRadius: "15px",
+    border: `2px solid ${colores.frondoso}80`,
     outline: "none",
     fontSize: "1rem",
   },
@@ -199,21 +225,6 @@ const estilos = {
     justifyItems: "center", // Centra los cards cuando hay solo uno
     boxSizing: "border-box",
   },
-  contenedorNuevo: {
-    padding: "0px",
-    marginTop: "0px",
-    backgroundColor: colores.fondo, // Un verde muy suave para resaltar
-    borderRadius: "20px",
-    marginBottom: "40px", // ⬅️ ESPACIO CLAVE: Separa el banner de la grilla
-    textAlign: "center",
-    width: "100%",
-    maxWidth: "600px", // Para que no se vea gigante en PC
-  },
-  textoAviso: {
-    color: colores.bosque,
-    fontSize: "1rem",
-    fontWeight: "500",
-  },
   wrapperBotonRegistro: {
     width: "100%",
     maxWidth: "350px",
@@ -227,7 +238,7 @@ const estilos = {
   avatarEstiloNano: {
     width: "65px", // Tamaño generoso como en la foto
     height: "65px",
-    backgroundColor: "#4E7D5B", // El verde exacto de la imagen
+    backgroundColor: colores.frondoso, // El verde exacto de la imagen
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
@@ -265,11 +276,44 @@ const estilos = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    
+
     marginRight: "-5px",
   },
   spinner: {
     fontSize: "1rem",
     color: colores.frondoso,
+  },
+  contenedorMensaje: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    width:"100%",
+    maxWidth:"600px",
+  },
+  mensajeCheck: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px 15px",
+    borderRadius: "12px",
+    border: `1px solid ${colores.frondoso}44`,
+  },
+  textoCoincidencias: {
+    color: colores.bosque,
+    fontWeight: "600",
+    fontSize: "0.95rem",
+  },
+  resaltado: {
+    backgroundColor: "#fff59d", // Amarillo suave para resaltar la búsqueda
+    padding: "2px 5px",
+    borderRadius: "4px",
+    fontWeight: "bold",
+    color: "#333",
+  },
+  divisor: {
+    height: "1px",
+    backgroundColor: "#eee",
+    margin: "10px 0",
+    width: "100%",
   },
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { CarruselImagenPrincipal } from "./CarruselImagenPrincipal";
 import { CarruselMiniaturas } from "./CarruselMiniaturas";
 import { CarruselControles } from "./CarruselControles";

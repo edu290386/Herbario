@@ -102,17 +102,15 @@ export const DetallePage = () => {
   if (!planta) return null;
 
   // PREPARACIÓN DE FOTOS PARA EL CARRUSEL
-  const fotosPlanta = [
-    planta.foto_perfil,
-    planta.foto_tallo,
-    planta.foto_hoja,
-    planta.foto_fruto,
-    planta.foto_raiz,
-    planta.foto_flor,
-    planta.foto_semilla,
-  ].filter(Boolean);
+const categorias = ["perfil", "tallo", "hoja", "fruto", "raiz", "flor", "semilla"];
 
-  const imagenesCarrusel = fotosPlanta.length > 0 ? fotosPlanta : [null];
+// Mapeamos para obtener el valor de cada campo y filtramos los que no tienen URL
+const imagenesCarrusel = categorias
+  .map((cat) => planta[`foto_${cat}`])
+  .filter(Boolean);
+
+// Si el array queda vacío, le ponemos null para que el carrusel sepa qué hacer
+if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
 
   const manejarEliminarUbicacion = async (idUbi) => {
     try {

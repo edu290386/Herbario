@@ -1,7 +1,7 @@
-import React from "react";
-import { transformarImagen } from "../../helpers/cloudinaryHelper"; // Ajusta la ruta según tu proyecto
+
+import { transformarImagen } from "../../helpers/cloudinaryHelper";
 import { colores } from "../../constants/tema";
-import { Leaf } from "lucide-react";
+import { PiPlantThin } from "react-icons/pi";
 
 export const CarruselImagenPrincipal = ({ url, isMobile }) => {
   
@@ -21,7 +21,7 @@ export const CarruselImagenPrincipal = ({ url, isMobile }) => {
           alignItems: "center",
         }}
       >
-        <Leaf size={100} color={colores.frondoso} strokeWidth={1} />
+        <PiPlantThin size={120} color={colores.frondoso} strokeWidth={1} />
       </div>
     );
   }

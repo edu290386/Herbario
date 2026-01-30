@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
-import { Leaf, Camera, CheckCircle } from "lucide-react";
 import { registrarUbicacionCompleta } from "../services/plantasServices";
 import { uploadImage } from "../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
@@ -11,9 +10,11 @@ import { OtrosNombres } from "../components/planta/OtrosNombres";
 import {
   IoMdCheckmarkCircle,
   IoMdCloseCircle,
+  IoIosCamera,
 } from "react-icons/io";
 import { obtenerDireccion } from "../helpers/geoHelper";
 import { AuthContext } from "../context/AuthContext";
+import { PiPlantFill } from "react-icons/pi";
 
 export const RegistroPlantaPage = () => {
   const { state } = useLocation();
@@ -105,7 +106,11 @@ export const RegistroPlantaPage = () => {
   return (
     <div style={estilos.pagina}>
       <header style={estilos.header}>
-        <Leaf size={40} color={colores.frondoso} style={estilos.iconoHeader} />
+        <PiPlantFill
+          size={40}
+          color={colores.frondoso}
+          style={estilos.iconoHeader}
+        />
         <h1 style={{ ...estilos.titulo, color: colores.bosque }}>
           {esSoloUbicacion ? "AÑADIR UBICACIÓN" : "REGISTRAR PLANTA"}
         </h1>
@@ -138,19 +143,30 @@ export const RegistroPlantaPage = () => {
           style={{
             ...estilos.zonaCamara,
             borderColor: foto ? colores.frondoso : colores.bosque,
+            backgroundColor: foto ? colores.claro : colores.white,
+            transition: "all 0.3s ease", // Para que el cambio de color sea suave
           }}
         >
-          {foto ? (
-            <div style={{ color: colores.frondoso, textAlign: "center" }}>
-              <CheckCircle size={50} color={colores.frondoso} />
-              <p style={{ fontWeight: "bold" }}>FOTO CAPTURADA</p>
-            </div>
-          ) : (
-            <div style={{ color: colores.bosque, textAlign: "center" }}>
-              <Camera size={50} color={colores.bosque} />
-              <p>TOCAR PARA TOMAR FOTO</p>
-            </div>
-          )}
+          <div
+            style={{
+              color: foto ? colores.frondoso : colores.bosque,
+              textAlign: "center",
+            }}
+          >
+            {foto ? (
+              <>
+                <IoMdCheckmarkCircle size={50} />
+                <p style={{ fontWeight: "bold", marginTop: "10px" }}>
+                  FOTO LISTA
+                </p>
+              </>
+            ) : (
+              <>
+                <IoIosCamera size={50} />
+                <p style={{ marginTop: "10px" }}>TOCAR PARA TOMAR FOTO</p>
+              </>
+            )}
+          </div>
           <input
             type="file"
             accept="image/*"
@@ -206,7 +222,6 @@ export const RegistroPlantaPage = () => {
             (!nombreLocal && !esSoloUbicacion)
           }
         />
-
         <div style={{ marginTop: "12px" }}>
           <BotonCancelar />
         </div>
@@ -224,7 +239,6 @@ const estilos = {
     alignItems: "center",
     padding: "0px",
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    //justifyContent: "center",
   },
   header: {
     display: "flex",
@@ -232,13 +246,11 @@ const estilos = {
     gap: "15px",
     margin: "20px 0",
   },
-
   titulo: {
     fontSize: "1.5rem",
     fontWeight: "650",
     letterSpacing: "2px",
   },
-
   cardForm: {
     backgroundColor: colores.white,
     width: "100%",
@@ -248,7 +260,6 @@ const estilos = {
     textAlign: "center",
     boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
   },
-
   label: {
     fontSize: "0.85rem",
     color: colores.bosque,
@@ -256,7 +267,6 @@ const estilos = {
     marginLeft: "5px",
     letterSpacing: "0.5px",
   },
-
   inputGrande: {
     width: "100%",
     padding: "15px 20px", // Más grande (padding generoso)
@@ -270,17 +280,10 @@ const estilos = {
     boxSizing: "border-box",
     boxShadow: "0 4px 10px rgba(0,0,0,0.05)", // Un toque de sombra para profundidad
   },
-
   infoSeccion: {
     marginBottom: "30px",
     width: "100%",
   },
-
-  nombrePlanta: {
-    margin: "5px 0 0 0",
-    fontSize: "1.2rem",
-  },
-
   zonaCamara: {
     width: "100%",
     height: "200px",
@@ -302,26 +305,12 @@ const estilos = {
     gap: "8px", // Espacio entre la etiqueta y el input
     textAlign: "left",
   },
-
-  statusGps: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-    marginBottom: "30px",
-    fontSize: "0.9rem",
-    color: "#555",
-  },
-
-  previsualizacion: { color: "#1b3d18" },
-
   nombreFijo: {
     color: colores.frondoso,
     fontSize: "1.6rem",
     fontWeight: "700",
     margin: "5px 0",
   },
-
   contenedorValidacion: {
     backgroundColor: colores.white,
     padding: "15px 20px",
@@ -334,7 +323,6 @@ const estilos = {
     boxSizing: "border-box", // Evita que el padding desborde el ancho
     textAlign: "left", // ⬅️ CRUCIAL: Fuerza el texto a la izquierda
   },
-
   filaValidacion: {
     display: "flex",
     alignItems: "center", // Centra verticalmente icono y texto

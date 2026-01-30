@@ -1,14 +1,17 @@
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import {
+  PiCaretDoubleRightBold,
+  PiCaretDoubleLeftBold,
+} from "react-icons/pi";
 import { colores } from "../../constants/tema";
 
 export const CarruselControles = ({ onNext, onPrev }) => {
   return (
     <>
       <button onClick={onPrev} style={{ ...styles.navBtn, left: "15px" }}>
-        <IoIosArrowBack size={24} />
+        <PiCaretDoubleLeftBold size={30} />
       </button>
       <button onClick={onNext} style={{ ...styles.navBtn, right: "15px" }}>
-        <IoIosArrowForward size={24} />
+        <PiCaretDoubleRightBold size={40} />
       </button>
     </>
   );
@@ -21,15 +24,15 @@ const styles = {
     transform: "translateY(-50%)",
     border: "none",
     borderRadius: "50%",
-    width: "45px",
-    height: "45px",
+    width: "40px",
+    height: "40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
     zIndex: 2,
     color: colores.bosque,
-    backgroundColor: colores.retama, // Fondo amarillo original
+    backgroundColor: colores.retama,
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
   },
 };

@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { IoIosHome } from "react-icons/io";
 import { colores } from "../../constants/tema";
+import { ImHome } from "react-icons/im";
 
 export const BotonVolver = () => {
   const navigate = useNavigate();
 
   return (
     <button onClick={() => navigate(-1)} style={styles.btnBack}>
-      <IoIosHome size={26} color={colores.bosque} />
+      <ImHome size={26} color={colores.bosque} />
     </button>
   );
 };

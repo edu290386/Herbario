@@ -1,7 +1,6 @@
-import React from "react";
 import { transformarImagen } from "../../helpers/cloudinaryHelper";
-import { Leaf, Minimize } from "lucide-react";
 import { colores } from "../../constants/tema";
+import { PiPlantLight } from "react-icons/pi";
 
 export const CarruselMiniaturas = ({
   imagenes,
@@ -22,7 +21,6 @@ export const CarruselMiniaturas = ({
               ...styles.thumbWrapper,
               transform: estaSeleccionada ? "scale(1.2)" : "scale(1)",
               zIndex: estaSeleccionada ? 10 : 1,
-             
             }}
           >
             {/* Si existe la imagen, la mostramos optimizada */}
@@ -36,7 +34,11 @@ export const CarruselMiniaturas = ({
             ) : (
               /* Si NO existe la imagen (undefined), mostramos el placeholder miniatura */
               <div style={styles.placeholderThumb}>
-                <Leaf size={25} color={colores.frondoso} strokeWidth={1.5} />
+                <PiPlantLight
+                  size={25}
+                  color={colores.frondoso}
+                  strokeWidth={1.5}
+                />
               </div>
             )}
           </div>

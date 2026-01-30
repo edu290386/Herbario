@@ -5,7 +5,7 @@ import { OtrosNombres } from '../../components/planta/OtrosNombres';
 import { colores } from '../../constants/tema';
 import { transformarImagen } from '../../helpers/cloudinaryHelper';
 import { BotonPrincipal } from '../ui/BotonPrincipal';
-import { Leaf } from "lucide-react";
+import { PiPlantThin } from "react-icons/pi";
 
 export const CardPlanta = ({ planta }) => {
   const navigate = useNavigate();
@@ -27,8 +27,8 @@ export const CardPlanta = ({ planta }) => {
           />
         ) : (
           <div style={estilos.fallbackBosque}>
-            <Leaf
-              size={60}
+            <PiPlantThin
+              size={100}
               color={colores.frondoso}
               strokeWidth={1}
               style={estilos.hojaIcono}
@@ -143,6 +143,6 @@ const estilos = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    opacity: '0.7',
+    opacity: '0.9',
   },
 };

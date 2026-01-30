@@ -12,6 +12,7 @@ export const colores = {
   red: "#D32F2F",
   white: "#FFFFFF",
   encendido: "#34D399",
+  claro: "#E8F5E9",
 };
 
 export const ui = {

@@ -10,7 +10,7 @@ export const BotonPrincipal = ({
   type = "button",
 }) => {
   
-  const colorFondo = estaCargando ? colores.hoja : colores.frondoso;
+  const colorFondo = estaCargando ? colores.bosque : colores.frondoso;
 
   return (
     <button
