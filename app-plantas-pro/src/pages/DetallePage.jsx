@@ -86,7 +86,7 @@ export const DetallePage = () => {
 
   // Si no hay planta después de cargar, no renderizamos nada (o un error)
   if (!planta) return null;
-console.log(planta)
+
   // PREPARACIÓN DE FOTOS PARA EL CARRUSEL
 const categorias = ["perfil", "tallo", "hoja", "fruto", "raiz", "flor", "semilla"];
 
@@ -113,8 +113,6 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
         ...prevPlanta,
         ubicaciones: prevPlanta.ubicaciones.filter((u) => u.id !== idUbi),
       }));
-
-      console.log("Ubicación eliminada con éxito");
     } catch (error) {
       alert("No se pudo eliminar la ubicación: " + error.message);
     }

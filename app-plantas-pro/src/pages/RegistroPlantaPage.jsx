@@ -54,14 +54,23 @@ export const RegistroPlantaPage = () => {
 
     // Definimos qué es una coordenada válida para nosotros
     const coordsValidas =
+      coords?.lat !== null &&
+      coords?.lng !== null &&
       coords?.lat !== 0 &&
-      coords?.lon !== 0 &&
+      coords?.lng !== 0 &&
       Math.abs(coords?.lat) <= 90 &&
-      Math.abs(coords?.lon) <= 180;
+      Math.abs(coords?.lng) <= 180;
     // Si falta algo, no hacemos nada (el botón ya estará visualmente avisando)
     if (!foto || !coordsValidas || (!nombreLocal && !esSoloUbicacion)) {
       console.warn(
-        "⚠️ Validación rechazada: Datos incompletos o coordenadas fuera de rango.",
+        "⚠️ Validación rechazada: Datos incompletos o coordenadas incorrectas.",
+        {
+          foto: !!foto,
+          coordsValidas,
+          nombre: !!nombreLocal,
+          lat: coords?.lat,
+          lng: coords?.lng, // <-- Revisa esto en tu consola
+        },
       );
       return;
     }

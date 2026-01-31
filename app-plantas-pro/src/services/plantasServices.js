@@ -10,7 +10,7 @@ export const getDetallePlanta = async (idPlanta) => {
       ubicaciones!fk_ubicacion_planta (
         *,
         usuarios!ubicaciones_usuario_id_fkey (
-          nombre_completo,
+          nombre,
           grupos!fk_usuario_grupo (
             nombre_grupo
           )
@@ -114,7 +114,6 @@ export const registrarUbicacionCompleta = async (datos) => {
       .eq("id", idFinal)
       .single();
     plantaData = existente;
-    console.log(plantaData) // 4. Se asigna si ya teníamos el ID
   }
 
   // --- 2. Lógica de Ubicación ---
@@ -138,11 +137,10 @@ export const registrarUbicacionCompleta = async (datos) => {
 
   // --- 3. RETORNO (Aquí es donde se "usa" plantaData) ---
   return {
-    id: idFinal,
-    nombre_comun: plantaData.nombre_comun,
-    nombre_cientifico: plantaData.nombre_cientifico,
-    nombres_secundarios: plantaData.nombres_secundarios,
-    foto_perfil: plantaId ? plantaData.foto_perfil : null,
-    ultima_ubicacion: ubicacion 
+    ...plantaData,
+    foto_perfil: plantaData.foto_perfil,
+    busqueda_index:
+      `${plantaData.nombre_comun} ${plantaData.nombre_cientifico || ""}`.toLowerCase(),
+    ultima_ubicacion: ubicacion,
   };
 };

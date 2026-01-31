@@ -7,7 +7,10 @@ export const BotonVolver = () => {
   const navigate = useNavigate();
 
   return (
-    <button onClick={() => navigate(-1)} style={styles.btnBack}>
+    <button
+      onClick={() => navigate("/", { replace: true })}
+      style={styles.btnBack}
+    >
       <ImHome size={26} color={colores.bosque} />
     </button>
   );

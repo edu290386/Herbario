@@ -36,7 +36,7 @@ export const UbicacionInfo = ({
 
   const { user } = useContext(AuthContext);
   const esDueño = user?.id === creadorID;
-  const esAdmin = user?.rol === "administrador";
+  const esAdmin = user?.rol === "Administrador";
 
   // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
   const sizes = {

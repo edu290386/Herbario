@@ -16,7 +16,6 @@ export const HomePage = () => {
   const {plantas, cargarPlantasHome} = useContext(PlantasContext)
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
-
    // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
     cargarPlantasHome()
@@ -38,14 +37,14 @@ export const HomePage = () => {
       <div style={estilos.headerCompacto}>
         <div style={estilos.userBarContainer}>
           <div style={estilos.avatarEstiloNano}>
-            {user?.nombre_completo?.charAt(0).toUpperCase()}
+            {user?.nombre?.charAt(0).toUpperCase()}
           </div>
           <div style={estilos.contenedorNombres}>
             <span style={estilos.textoNombre}>
-              {user?.nombre_completo?.split(" ")[0]}
+              {user?.nombre}
             </span>
             <span style={estilos.textoRol}>
-              {user?.grupos.nombre_grupo}{" "}
+              {user?.grupos?.nombre_grupo}{" "}
               <span style={{ color: colores.frondoso }}>
                 <TbCloverFilled style={estilos.spinner} />
               </span>

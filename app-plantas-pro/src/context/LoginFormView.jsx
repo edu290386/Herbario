@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { IoWarningOutline } from "react-icons/io5";
+import { TbEye, TbEyeOff } from "react-icons/tb";
 
 export const LoginFormView = ({
   form,
@@ -10,24 +12,42 @@ export const LoginFormView = ({
   onChange,
   onSubmit,
   onToggleMode,
-  styles, // Los estilos los recibe del padre para ser flexible
+  styles,
 }) => {
+  // Estados para controlar la visibilidad de cada contraseña por separado
+  const [verPass, setVerPass] = useState(false);
+  const [verConfirm, setVerConfirm] = useState(false);
+
   return (
     <div style={styles.formCard}>
       <form
         onSubmit={onSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "12px" }}
       >
-        {/* Bloque dinámico de campos adicionales (Nombre/Correo) */}
+        {/* BLOQUE DE REGISTRO: Cada campo en su propia fila */}
         <div style={styles.registroCampos(esRegistro)}>
           <input
-            type="text"
             name="nombre"
-            placeholder="Nombre completo"
+            placeholder="Nombres"
             value={form.nombre}
             onChange={onChange}
             style={styles.input}
             required={esRegistro}
+          />
+          <input
+            name="apellido"
+            placeholder="Apellidos"
+            value={form.apellido}
+            onChange={onChange}
+            style={styles.input}
+            required={esRegistro}
+          />
+          <input
+            name="alias"
+            placeholder="Alias (Opcional)"
+            value={form.alias}
+            onChange={onChange}
+            style={styles.input}
           />
           <input
             type="email"
@@ -40,7 +60,7 @@ export const LoginFormView = ({
           />
         </div>
 
-        {/* Bloque de Identificación */}
+        {/* Bloque de Identificación (Siempre visible) */}
         <div style={styles.row}>
           <select
             name="paisCodigo"
@@ -63,15 +83,47 @@ export const LoginFormView = ({
           />
         </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          value={form.password}
-          onChange={onChange}
-          style={styles.input}
-          required
-        />
+        {/* CONTRASEÑA PRINCIPAL CON OJO */}
+        <div style={{ position: "relative" }}>
+          <input
+            type={verPass ? "text" : "password"}
+            name="password"
+            placeholder="Contraseña"
+            value={form.password}
+            onChange={onChange}
+            style={{ ...styles.input, paddingRight: "45px" }}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setVerPass(!verPass)}
+            style={styles.botonOjo}
+          >
+            {verPass ? <TbEyeOff size={20} /> : <TbEye size={20} />}
+          </button>
+        </div>
+
+        {/* CONFIRMAR CONTRASEÑA CON SU PROPIO OJO (Solo en registro) */}
+        {esRegistro && (
+          <div style={{ position: "relative" }}>
+            <input
+              type={verConfirm ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirmar Contraseña"
+              value={form.confirmPassword}
+              onChange={onChange}
+              style={{ ...styles.input, paddingRight: "45px" }}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setVerConfirm(!verConfirm)}
+              style={styles.botonOjo}
+            >
+              {verConfirm ? <TbEyeOff size={20} /> : <TbEye size={20} />}
+            </button>
+          </div>
+        )}
 
         {/* Banner de Error */}
         <div style={styles.errorContainer}>

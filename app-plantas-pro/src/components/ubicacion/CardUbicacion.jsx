@@ -7,7 +7,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
 
   // 1. Extraemos los valores basándonos en tu console.log real
   const lat1 = parseFloat(userCoords?.lat);
-  const lon1 = parseFloat(userCoords?.lon); // ⬅️ Cambiado de lng a lon
+  const lon1 = parseFloat(userCoords?.lon || userCoords?.lng); // ⬅️ Cambiado de lng a lon
 
   const lat2 = parseFloat(ubicacion?.latitud || ubicacion?.lat);
   const lon2 = parseFloat(
@@ -31,7 +31,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
       distanciaDisplay = `${km.toFixed(2)} km`;
     }
   }
-console.log(nombrePlanta)
+
   const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
 
   return (
@@ -101,7 +101,7 @@ console.log(nombrePlanta)
             fecha={ubicacion.created_at}
             isMobile={isMobile}
             creadorID={ubicacion.usuario_id}
-            creador={ubicacion.usuarios.nombre_completo}
+            creador={ubicacion.usuarios.nombre}
             grupocreador={
               ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"
             }

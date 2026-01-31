@@ -6,7 +6,7 @@ export const BotonEliminar = ({ usuarioIdCreador, onConfirmar }) => {
 
   // 🛡️ Solo el dueño o un administrador pueden ver el botón
   const tienePermiso =
-    user?.id === usuarioIdCreador || user?.rol === "administrador";
+    user?.id === usuarioIdCreador || user?.rol === "Administrador";
 
   if (!tienePermiso) return null;
 

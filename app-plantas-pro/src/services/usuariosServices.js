@@ -21,7 +21,7 @@ export const activarUsuario = async (telefono, datos) => {
   const { error } = await supabase
     .from("usuarios")
     .update({
-      nombre_completo: datos.nombre,
+      nombre: datos.nombre,
       email: datos.correo,
       password: datos.password,
       status: "ACTIVO",
