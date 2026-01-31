@@ -59,7 +59,7 @@ export const UbicacionInfo = ({
         <FaHouse
           className="info-icon"
           size={sizes.iconosFila}
-          color={colores.bosque}
+          color="#000000"
         />
         <h4
           style={{
@@ -74,11 +74,7 @@ export const UbicacionInfo = ({
 
       {/* 2. CIUDAD */}
       <div style={styles.filaSimple}>
-        <FaCity
-          className="info-icon"
-          size={sizes.iconosFila}
-          color={colores.bosque}
-        />
+        <FaCity className="info-icon" size={sizes.iconosFila} color="#000000" />
         <span style={{ ...styles.ciudadTexto, fontSize: sizes.fuenteTexto }}>
           {ciudad || "Lima, Perú"}
         </span>
@@ -91,7 +87,7 @@ export const UbicacionInfo = ({
             <FaCar
               className="info-icon"
               size={isMobile ? 17 : 18}
-              color={colores.bosque}
+              color="#000000"
             />
             <span style={{ fontSize: sizes.fuenteTexto }}>{distancia} Km</span>
           </div>
@@ -215,8 +211,8 @@ const styles = {
     overflow: "hidden",
   },
   distrito: {
-    fontWeight: "700",
-    color: colores.bosque,
+    fontWeight: "600",
+    color: "#000000",
     margin: 0,
     whiteSpace: "nowrap", // Prohíbe el salto de línea
     overflow: "hidden", // Esconde lo que sobra
@@ -225,7 +221,7 @@ const styles = {
     minWidth: 0,
   },
   ciudadTexto: {
-    color: colores.bosque,
+    color: "#000000",
     fontWeight: "600",
   },
   badgeDistancia: {
@@ -235,8 +231,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    color: colores.bosque,
-    fontWeight: "800",
+    color: "#000000",
+    fontWeight: "600",
   },
   infoSecundaria: {
     color: "#333",

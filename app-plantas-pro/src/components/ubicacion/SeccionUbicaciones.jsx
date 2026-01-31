@@ -1,5 +1,7 @@
 import { CardUbicacion } from "./CardUbicacion";
 import { colores } from "../../constants/tema";
+import { StatusBanner } from "../ui/StatusBanner";
+import { TbReload } from "react-icons/tb";
 
 export const SeccionUbicaciones = ({
   ubicaciones,
@@ -7,7 +9,10 @@ export const SeccionUbicaciones = ({
   isMobile,
   userCoords,
   onEliminar,
+  errorGPS,
+  refrescarGPS,
 }) => {
+  const necesitaGPS = !userCoords || errorGPS;
   // Filtramos las que tienen coordenadas válidas
   const ubicacionesLimpias = ubicaciones.filter(
     (u) => u.latitud !== null && u.longitud !== null,
@@ -18,14 +23,28 @@ export const SeccionUbicaciones = ({
       {/* HEADER: Título y contador */}
       <div style={styles.header}>
         <h2 style={styles.titulo}>
-          Ubicaciones registradas de: {nombrePlanta}
+          Ubicaciones registradas para {nombrePlanta}
         </h2>
-        <span style={styles.badge}>
-          {ubicacionesLimpias.length}{" "}
-          {ubicacionesLimpias.length === 1
-            ? "registro encontrado"
-            : "registros encontrados"}
-        </span>
+        <div style={styles.contenedorSeccion}>
+          {/* 1. EL BANNER (Solo información) */}
+          <StatusBanner
+            status={errorGPS ? "error" : userCoords ? "success" : "warning"}
+            message={
+              errorGPS ||
+              (userCoords
+                ? `GPS Activo: ${ubicaciones.length} ubicaciones encontradas`
+                : "🛰️ Esperando señal...")
+            }
+          />
+
+          {/* 2. EL BOTÓN APARTE (Solo si falla o carga) */}
+          {necesitaGPS && (
+            <button onClick={refrescarGPS} style={styles.botonReiniciarGlobal}>
+              <TbReload size={20} />
+              <span>Reiniciar GPS</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* GRID DINÁMICO: 1 col en mobile, 2 en laptop */}
@@ -45,6 +64,7 @@ export const SeccionUbicaciones = ({
               isMobile={isMobile}
               onEliminar={onEliminar}
               orden={index + 1} // Enviamos el ranking de cercanía
+              onRecargar={refrescarGPS}
             />
           ))
         ) : (
@@ -74,23 +94,17 @@ const styles = {
     overflowX: "hidden",
   },
   header: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems:"center",
     textAlign: "center",
     marginBottom: "25px",
-    padding: "0 15px", // Mantiene el texto del título lejos de los bordes
   },
   titulo: {
     fontSize: "1.4rem",
     color: colores.bosque,
     marginBottom: "30px",
     fontWeight: "500",
-  },
-  badge: {
-    backgroundColor: colores.bosque,
-    color: "#fff",
-    padding: "10px 15px",
-    borderRadius: "15px",
-    fontSize: "0.85rem",
-    fontWeight: "400",
   },
   grid: {
     display: "grid",
@@ -100,7 +114,6 @@ const styles = {
     boxSizing: "border-box",
     // justifyItems: "stretch" asegura que el card intente ocupar todo el ancho
     justifyItems: "stretch",
-    
   },
   sinDatos: {
     gridColumn: "1 / -1", // Hace que el mensaje ocupe todo el ancho del grid
@@ -108,5 +121,29 @@ const styles = {
     color: "#888",
     padding: "40px",
     fontStyle: "italic",
+  },
+  contenedorSeccion: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "335px",
+    gap: "10px", // Espacio entre Banner, Botón y Grilla
+  },
+  botonReiniciarGlobal: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    width: "335px", // Para que no sea gigante en desktop
+    padding: "12px 0px",
+    backgroundColor: "#fff",
+    color: "#d32f2f", // Rojo suave
+    border: "2px solid #feb2b2",
+    borderRadius: "12px",
+    cursor: "pointer",
+    fontWeight: "700",
+    fontSize: "1rem",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+    transition: "transform 0.2s active",
   },
 };

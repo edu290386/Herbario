@@ -6,15 +6,14 @@ import { formatearParaDB, normalizarParaBusqueda } from "../helpers/textHelper";
 import { AuthContext } from "../context/AuthContext";
 import { PlantasContext } from "../context/PlantasContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
-
+import { StatusBanner } from "../components/ui/StatusBanner";
 import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
-import { GoAlert, GoCheckCircleFill } from "react-icons/go";
 
 export const HomePage = () => {
 
   const {user, logout} = useContext(AuthContext);
-  const {plantas, cargando, cargarPlantasHome} = useContext(PlantasContext)
+  const {plantas, cargarPlantasHome} = useContext(PlantasContext)
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
@@ -80,38 +79,12 @@ export const HomePage = () => {
         {busqueda.length > 0 && (
           <div style={estilos.contenedorMensaje}>
             {/* BANNER UNIFICADO: Cambia de color y contenido sin moverse */}
-            <div
-              style={{
-                ...estilos.mensajeCheck,
-                backgroundColor:
-                  plantasFiltradas.length > 0 ? colores.claro : "#FFF9C4", // Verde suave : Crema
-                borderColor:
-                  plantasFiltradas.length > 0
-                    ? `${colores.frondoso}44`
-                    : "#856404",
-              }}
-            >
-              {plantasFiltradas.length > 0 ? (
-                <>
-                  <GoCheckCircleFill size={22} color={colores.frondoso} />
-                  <span style={estilos.textoCoincidencias}>
-                    {plantasFiltradas.length}{" "}
-                    {plantasFiltradas.length === 1
-                      ? "coincidencia encontrada"
-                      : "coincidencias encontradas"}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <GoAlert size={22} color="#856404" />
-                  <span
-                    style={{ ...estilos.textoCoincidencias, color: "#856404" }}
-                  >
-                    0 coincidencias encontradas
-                  </span>
-                </>
-              )}
-            </div>
+            {busqueda.length > 0 && (
+              <StatusBanner
+                status={plantasFiltradas.length > 0 ? "success" : "warning"}
+                message={`${plantasFiltradas.length} coincidencias encontradas`}
+              />
+            )}
 
             {/* BOTÓN DE REGISTRO: Aparece debajo del banner si no hay coincidencia exacta */}
             {!existeCoincidenciaExacta && (
@@ -156,7 +129,6 @@ const estilos = {
     width: "100%",
     paddingTop: "5px",
     fontFamily: '"Segoe UI", sans-serif',
-    // Agregamos esto para que en horizontal el contenido no choque con los bordes
     paddingLeft: "env(safe-area-inset-left)",
     paddingRight: "env(safe-area-inset-right)",
   },
@@ -172,7 +144,7 @@ const estilos = {
     width: "90%",
     maxWidth: "800px",
     margin: "0 auto",
-    paddingBottom: "40px", // Añadimos padding para que no choque con la muesca del móvil
+    paddingBottom: "40px",
     textAlign: "center",
   },
   buscadorWrapper: {
@@ -199,7 +171,7 @@ const estilos = {
     minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center", // Centra el buscador y la grilla
+    alignItems: "center",
     padding: "0 20px 20px",
     boxSizing: "border-box",
   },
@@ -210,7 +182,7 @@ const estilos = {
     maxWidth: "1500px",
     width: "100%",
     justifyContent: "center",
-    justifyItems: "center", // Centra los cards cuando hay solo uno
+    justifyItems: "center",
     boxSizing: "border-box",
   },
   wrapperBotonRegistro: {
@@ -224,17 +196,17 @@ const estilos = {
     gap: "15px",
   },
   avatarEstiloNano: {
-    width: "65px", // Tamaño generoso como en la foto
+    width: "65px",
     height: "65px",
-    backgroundColor: colores.frondoso, // El verde exacto de la imagen
+    backgroundColor: colores.frondoso,
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: "white",
-    fontSize: "1.8rem", // Letra grande y clara
+    fontSize: "1.8rem",
     fontWeight: "bold",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)", // Sombra sutil
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
   },
   contenedorNombres: {
     display: "flex",
@@ -244,7 +216,7 @@ const estilos = {
   textoNombre: {
     fontSize: "1.4rem",
     fontWeight: "800",
-    color: colores.bosque, // Tu color bosque
+    color: colores.bosque,
     lineHeight: "1.1",
   },
   textoRol: {
@@ -264,7 +236,6 @@ const estilos = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-
     marginRight: "-5px",
   },
   spinner: {
@@ -275,28 +246,8 @@ const estilos = {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
-    width:"100%",
-    maxWidth:"600px",
-  },
-  mensajeCheck: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "10px 15px",
-    borderRadius: "12px",
-    border: `1px solid ${colores.frondoso}44`,
-  },
-  textoCoincidencias: {
-    color: colores.bosque,
-    fontWeight: "600",
-    fontSize: "0.95rem",
-  },
-  resaltado: {
-    backgroundColor: "#fff59d", // Amarillo suave para resaltar la búsqueda
-    padding: "2px 5px",
-    borderRadius: "4px",
-    fontWeight: "bold",
-    color: "#333",
+    width: "100%",
+    maxWidth: "600px",
   },
   divisor: {
     height: "1px",

@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect } from "react";
+import { useReducer, useCallback } from "react";
 import { PlantasContext } from "./PlantasContext";
 import { plantasReducer } from "./plantasReducer";
 import { getPlantasBasico } from "../services/plantasServices";

@@ -10,35 +10,22 @@ import {
 } from "../components";
 import { colores } from "../constants/tema";
 import { getDetallePlanta, deleteUbicacion } from "../services/plantasServices";
-import { TbCloverFilled } from "react-icons/tb";
+import { TbCloverFilled, TbReload } from "react-icons/tb";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { useGPS } from "../hooks/useGPS.js"
+
 
 export const DetallePage = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
-console.log(user)
+
   const navigate = useNavigate();
 
   const [planta, setPlanta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [userCoords, setUserCoords] = useState(null);
 
-  useEffect(() => {
-    // Capturamos el GPS del usuario (solo una vez al cargar la página)
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserCoords({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-        },
-        (error) => console.log(error),
-        { enableHighAccuracy: true },
-      );
-    }
-  }, []);
+  const { userCoords, errorGPS, refrescarGPS } = useGPS();
 
   // SOLUCIÓN AL SCROLL: Sube al inicio apenas carga el componente
   useEffect(() => {
@@ -135,16 +122,11 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
   };
 
   const ubicacionesPermitidas = planta.ubicaciones.filter((u) => {
-    
     const esMia = String(u.usuario_id) === String(user?.id);
-
-    
     const nombreGrupoUbi = u.usuarios?.grupos?.nombre_grupo;
     const miNombreGrupo = user?.grupos?.nombre_grupo; 
-
     const esDeMiGrupo =
       nombreGrupoUbi && miNombreGrupo && nombreGrupoUbi === miNombreGrupo;
-
     return esMia || esDeMiGrupo;
   });
 
@@ -187,7 +169,6 @@ console.log(ubicacionesPermitidas)
 
           <SeccionInformacion planta={planta} />
           <BotonPrincipal
-           
             texto="AGREGAR UBICACIÓN"
             onClick={() =>
               navigate("/registro", {
@@ -212,6 +193,8 @@ console.log(ubicacionesPermitidas)
         isMobile={isMobile}
         userCoords={userCoords}
         onEliminar={manejarEliminarUbicacion}
+        errorGPS={errorGPS}
+        refrescarGPS={refrescarGPS}
       />
     </div>
   );
@@ -259,5 +242,27 @@ const styles = {
     fontSize: "8rem",
     animation: "spin 2s linear infinite",
     color: colores.frondoso,
+  },
+  reloadIcon: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "6px 12px",
+    backgroundColor: "#4CAF50",
+    color: "white",
+    border: "none",
+    borderRadius: "20px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+  containerReloadIcon: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "15px 10px",
+    backgroundColor: "#f9f9f9",
+    borderRadius: "8px",
+    marginBottom: "10px",
   },
 };
