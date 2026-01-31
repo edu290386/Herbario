@@ -14,6 +14,7 @@ import { EtiquetaReciente } from "../ui/EtiquetaReciente";
 import { formatearFechaLocal } from "../../helpers/timeHelper";
 import { AuthContext } from "../../context/AuthContext";
 import { useContext} from "react"
+import { abrirWhatsappPlanta } from "../../helpers/contactHelper.js";
 
 export const UbicacionInfo = ({
   ubicacionID,
@@ -28,6 +29,8 @@ export const UbicacionInfo = ({
   creador,
   grupocreador,
   onEliminar,
+  nombrePlanta,
+  userPhone,
 }) => {
   const { google, waze } = generarRutas(latitud, longitud);
 
@@ -89,7 +92,7 @@ export const UbicacionInfo = ({
               size={isMobile ? 17 : 18}
               color="#000000"
             />
-            <span style={{ fontSize: sizes.fuenteTexto }}>{distancia} Km</span>
+            <span style={{ fontSize: sizes.fuenteTexto }}>{distancia}</span>
           </div>
         </div>
       )}
@@ -156,7 +159,16 @@ export const UbicacionInfo = ({
               size={sizes.iconosAccion}
             />
           </button>
-          <button style={{ ...styles.btnIcono, marginLeft: "4px" }}>
+          <button
+            onClick={() =>
+              abrirWhatsappPlanta(
+                nombrePlanta || "Planta", // 🚩 Pasamos el nombre aquí
+                distrito, ciudad, latitud, longitud,
+                distancia, userPhone
+              )
+            }
+            style={{ ...styles.btnIcono, marginLeft: "4px" }}
+          >
             <SiWhatsapp
               className="action-icon"
               size={sizes.iconosAccion}

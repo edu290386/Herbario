@@ -11,6 +11,7 @@ export const SeccionUbicaciones = ({
   onEliminar,
   errorGPS,
   refrescarGPS,
+  userPhone,
 }) => {
   const necesitaGPS = !userCoords || errorGPS;
   // Filtramos las que tienen coordenadas válidas
@@ -65,6 +66,8 @@ export const SeccionUbicaciones = ({
               onEliminar={onEliminar}
               orden={index + 1} // Enviamos el ranking de cercanía
               onRecargar={refrescarGPS}
+              nombrePlanta={nombrePlanta}
+              userPhone={userPhone}
             />
           ))
         ) : (

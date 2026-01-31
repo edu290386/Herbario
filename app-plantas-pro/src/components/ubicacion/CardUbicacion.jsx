@@ -3,9 +3,7 @@ import { UbicacionInfo } from "./UbicacionInfo.jsx";
 import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
 
 
-export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar }) => {
-  
-
+export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nombrePlanta, userPhone }) => {
 
   // 1. Extraemos los valores basándonos en tu console.log real
   const lat1 = parseFloat(userCoords?.lat);
@@ -21,7 +19,19 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar }) =
     !isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)
       ? calcularDistanciaPitagorica(lat1, lon1, lat2, lon2)
       : null;
+  
+  let distanciaDisplay = "";
 
+  if (km !== null) {
+    if (km < 1) {
+      // Si es menos de 1km, multiplicamos por 1000 y redondeamos sin decimales
+      distanciaDisplay = `${Math.round(km * 1000)} m`;
+    } else {
+      // Si es 1km o más, mostramos los 2 decimales que querías
+      distanciaDisplay = `${km.toFixed(2)} km`;
+    }
+  }
+console.log(nombrePlanta)
   const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
 
   return (
@@ -87,13 +97,17 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar }) =
             ciudad={ubicacion.ciudad}
             latitud={ubicacion.latitud}
             longitud={ubicacion.longitud}
-            distancia={km}
+            distancia={distanciaDisplay}
             fecha={ubicacion.created_at}
             isMobile={isMobile}
             creadorID={ubicacion.usuario_id}
             creador={ubicacion.usuarios.nombre_completo}
-            grupocreador={ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"}
+            grupocreador={
+              ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"
+            }
             onEliminar={onEliminar}
+            nombrePlanta={nombrePlanta}
+            userPhone={userPhone}
           />
         </div>
       </div>

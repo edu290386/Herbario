@@ -18,7 +18,6 @@ import { useGPS } from "../hooks/useGPS.js"
 export const DetallePage = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
-
   const navigate = useNavigate();
 
   const [planta, setPlanta] = useState(null);
@@ -87,7 +86,7 @@ export const DetallePage = () => {
 
   // Si no hay planta después de cargar, no renderizamos nada (o un error)
   if (!planta) return null;
-
+console.log(planta)
   // PREPARACIÓN DE FOTOS PARA EL CARRUSEL
 const categorias = ["perfil", "tallo", "hoja", "fruto", "raiz", "flor", "semilla"];
 
@@ -129,8 +128,6 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
       nombreGrupoUbi && miNombreGrupo && nombreGrupoUbi === miNombreGrupo;
     return esMia || esDeMiGrupo;
   });
-
-console.log(ubicacionesPermitidas)
 
   return (
     <div style={styles.wrapper}>
@@ -195,6 +192,7 @@ console.log(ubicacionesPermitidas)
         onEliminar={manejarEliminarUbicacion}
         errorGPS={errorGPS}
         refrescarGPS={refrescarGPS}
+        userPhone={user?.telefono}
       />
     </div>
   );

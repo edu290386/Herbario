@@ -51,9 +51,21 @@ export const RegistroPlantaPage = () => {
   const manejarEnvio = async (e) => {
     // Evita recargas accidentales
     if (e) e.preventDefault();
-    // Si falta algo, no hacemos nada (el botón ya estará visualmente avisando)
-    if (!foto || !coords.lat || (!nombreLocal && !esSoloUbicacion)) return;
 
+    // Definimos qué es una coordenada válida para nosotros
+    const coordsValidas =
+      coords?.lat !== 0 &&
+      coords?.lon !== 0 &&
+      Math.abs(coords?.lat) <= 90 &&
+      Math.abs(coords?.lon) <= 180;
+    // Si falta algo, no hacemos nada (el botón ya estará visualmente avisando)
+    if (!foto || !coordsValidas || (!nombreLocal && !esSoloUbicacion)) {
+      console.warn(
+        "⚠️ Validación rechazada: Datos incompletos o coordenadas fuera de rango.",
+      );
+      return;
+    }
+    
     setCargando(true);
     try {
       // 1. Subir imagen a Cloudinary
@@ -105,7 +117,7 @@ export const RegistroPlantaPage = () => {
     } finally {
       setCargando(false);
     }
-  };
+  };;
 
   // Protección de ruta
   if (!state) return <Navigate to="/" />;

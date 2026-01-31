@@ -72,8 +72,6 @@ const actualizarPlantasTrasRegistro = useCallback((plantaProcesada) => {
     });
   }, [state.plantas]); // Dependencia del estado actual de plantas
 
-console.log(state.plantas)
-
   return (
     <PlantasContext.Provider
       value={{
