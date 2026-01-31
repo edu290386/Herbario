@@ -69,6 +69,8 @@ export const registrarUbicacionCompleta = async (datos) => {
   const { 
     plantaId, 
     nombreLimpio, 
+    nombreCientifico = null,
+    nombresSecundarios = null,
     usuarioId, 
     urlFoto, 
     coords, 
@@ -76,32 +78,46 @@ export const registrarUbicacionCompleta = async (datos) => {
   } = datos;
 
   let idFinal = plantaId;
+  let plantaData = null; // 1. Se declara aquí
 
-  // 1. Lógica de Planta (Si no tenemos ID, la buscamos o creamos)
+  // --- 1. Lógica de Planta --- Traigo de supabase info de planta por nombre
   if (!idFinal) {
-    // Verificamos si ya existe
     const { data: existente } = await supabase
       .from("plantas")
-      .select("id")
+      .select("*")
       .eq("nombre_comun", nombreLimpio)
       .maybeSingle();
 
     if (existente) {
       idFinal = existente.id;
+      plantaData = existente; // 2. Se asigna si existe
     } else {
-      // Creamos la planta nueva
       const { data: nuevaP, error: errP } = await supabase
         .from("plantas")
-        .insert([{ nombre_comun: nombreLimpio }])
+        .insert([{ 
+            nombre_comun: nombreLimpio,
+            nombre_cientifico: nombreCientifico,
+            nombres_secundarios: nombresSecundarios
+        }])
         .select()
         .single();
       
       if (errP) throw errP;
+
       idFinal = nuevaP.id;
+      plantaData = nuevaP; // 3. Se asigna si es nueva
     }
+  } else {
+    const { data: existente } = await supabase
+      .from("plantas")
+      .select("*")
+      .eq("id", idFinal)
+      .single();
+    plantaData = existente;
+    console.log(plantaData) // 4. Se asigna si ya teníamos el ID
   }
 
-  // 2. Insertar Ubicación
+  // --- 2. Lógica de Ubicación ---
   const { data: ubicacion, error: errU } = await supabase
     .from("ubicaciones")
     .insert([
@@ -120,5 +136,13 @@ export const registrarUbicacionCompleta = async (datos) => {
 
   if (errU) throw errU;
 
-  return { idFinal, ubicacion };
+  // --- 3. RETORNO (Aquí es donde se "usa" plantaData) ---
+  return {
+    id: idFinal,
+    nombre_comun: plantaData.nombre_comun,
+    nombre_cientifico: plantaData.nombre_cientifico,
+    nombres_secundarios: plantaData.nombres_secundarios,
+    foto_perfil: plantaId ? plantaData.foto_perfil : null,
+    ultima_ubicacion: ubicacion 
+  };
 };

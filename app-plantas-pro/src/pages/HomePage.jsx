@@ -2,10 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { colores } from "../constants/tema";
 import { CardPlanta } from "../components/planta/CardPlanta";
-import { normalizarParaBusqueda } from "../helpers/textHelper";
+import { formatearParaDB, normalizarParaBusqueda } from "../helpers/textHelper";
 import { AuthContext } from "../context/AuthContext";
+import { PlantasContext } from "../context/PlantasContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
-import { getPlantasBasico } from "../services/plantasServices";
+
 import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
 import { GoAlert, GoCheckCircleFill } from "react-icons/go";
@@ -13,28 +14,15 @@ import { GoAlert, GoCheckCircleFill } from "react-icons/go";
 export const HomePage = () => {
 
   const {user, logout} = useContext(AuthContext);
-  const [plantas, setPlantas] = useState([]);
+  const {plantas, cargando, cargarPlantasHome} = useContext(PlantasContext)
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
-console.log(user)
    // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
-    const obtenerPlantas = async () => {
-      try {
-        // Opcional: podrías poner un setLoading(true) aquí
-        const data = await getPlantasBasico();
-        setPlantas(data || []);
-      } catch (error) {
-        console.error("Error al obtener plantas:", error.message);
-        // Aquí podrías mostrar una notificación de error al usuario
-      } finally {
-        // setLoading(false);
-      }
-    };
+    cargarPlantasHome()
+  }, [cargarPlantasHome]);
 
-    obtenerPlantas();
-  }, []);
   // 2. Lógica de filtrado para la búsqueda
   const plantasFiltradas = plantas.filter(
     (p) =>
@@ -133,7 +121,7 @@ console.log(user)
                   onClick={() =>
                     navigate("/registro", {
                       state: {
-                        nombreComun: busqueda.trim(),
+                        nombreComun: formatearParaDB(busqueda),
                         usuarioId: user.id,
                       },
                     })

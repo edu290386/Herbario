@@ -1,7 +1,4 @@
-export const types = {
-  login: "[Auth] Login",
-  logout: "[Auth] Logout",
-};
+import { types } from "../types/types";
 
 export const authReducer = (state = {}, action) => {
   switch (action.type) {
@@ -9,12 +6,12 @@ export const authReducer = (state = {}, action) => {
       return {
         ...state,
         logged: true,
-        user: action.payload, // Aquí guardamos toda la info de Supabase
+        user: action.payload,
       };
 
     case types.logout:
       return {
-        logged: false,
+        logged: false, // Limpia el estado
       };
 
     default:

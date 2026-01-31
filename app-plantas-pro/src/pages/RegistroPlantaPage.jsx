@@ -7,6 +7,7 @@ import { colores } from "../constants/tema";
 import { BotonCancelar } from "../components/ui/BotonCancelar";
 import { formatearParaDB } from "../helpers/textHelper";
 import { OtrosNombres } from "../components/planta/OtrosNombres";
+import { PlantasContext } from "../context/PlantasContext";
 import {
   IoMdCheckmarkCircle,
   IoMdCloseCircle,
@@ -20,9 +21,11 @@ export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { actualizarPlantasTrasRegistro } = useContext(PlantasContext);
 
   // Detectamos si es una planta existente o nueva
   const plantaId = state?.plantaId;
+
   const esSoloUbicacion = state?.vieneDeDetalle;
 
   // Estados del formulario
@@ -71,24 +74,28 @@ export const RegistroPlantaPage = () => {
         if (res) datosLugar = res;
       } catch (error) {
         console.warn(
-          "No se pudo obtener la dirección, se guardará solo con coordenadas.",error
+          "No se pudo obtener la dirección, se guardará solo con coordenadas.",
+          error,
         );
       }
 
       // 4. Lógica de Planta (Si es nueva)
-      const { idFinal } = await registrarUbicacionCompleta({
-        plantaId, // Viene de state (null si es nueva)
+      const plantaProcesada = await registrarUbicacionCompleta({
+        plantaId,
         nombreLimpio: formatearParaDB(nombreLocal),
-        usuarioId: user?.id, // Del Contexto de Auth
+        usuarioId: user?.id,
         urlFoto,
         coords,
         datosLugar,
       });
 
+      // 5. ACTUALIZACIÓN DEL ESTADO GLOBAL esta función "inyecta" la nueva planta en tu copia local (la Home)
+      actualizarPlantasTrasRegistro(plantaProcesada);
+
       // ÉXITO: Feedback visual en el botón
       setGuardadoExitoso(true);
       setTimeout(() => {
-        navigate(`/planta/${idFinal}`, {
+        navigate(`/planta/${plantaProcesada.id}`, {
           replace: true,
         });
       }, 2000);
@@ -228,7 +235,7 @@ export const RegistroPlantaPage = () => {
       </form>
     </div>
   );
-};;
+};
 
 const estilos = {
   pagina: {

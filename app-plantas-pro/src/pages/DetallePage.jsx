@@ -16,7 +16,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 export const DetallePage = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
-
+console.log(user)
   const navigate = useNavigate();
 
   const [planta, setPlanta] = useState(null);
@@ -113,12 +113,16 @@ const imagenesCarrusel = categorias
 if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
 
   const manejarEliminarUbicacion = async (idUbi) => {
+    if (!user) {
+      alert("Debes estar logueado para eliminar.");
+      return;
+    }
+
     try {
       // 1. Llamamos al servicio (pasando ID de ubicación y ID del usuario logueado)
       await deleteUbicacion(idUbi, user.id);
 
-      // 2. Actualización Reactiva: Filtramos el estado local
-      // Como 'planta' tiene una lista de 'ubicaciones', creamos un nuevo objeto
+      // 2. Filtramos el estado local // Como 'planta' tiene una lista de 'ubicaciones', creamos un nuevo objeto
       setPlanta((prevPlanta) => ({
         ...prevPlanta,
         ubicaciones: prevPlanta.ubicaciones.filter((u) => u.id !== idUbi),
@@ -129,6 +133,22 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
       alert("No se pudo eliminar la ubicación: " + error.message);
     }
   };
+
+  const ubicacionesPermitidas = planta.ubicaciones.filter((u) => {
+    
+    const esMia = String(u.usuario_id) === String(user?.id);
+
+    
+    const nombreGrupoUbi = u.usuarios?.grupos?.nombre_grupo;
+    const miNombreGrupo = user?.grupos?.nombre_grupo; 
+
+    const esDeMiGrupo =
+      nombreGrupoUbi && miNombreGrupo && nombreGrupoUbi === miNombreGrupo;
+
+    return esMia || esDeMiGrupo;
+  });
+
+console.log(ubicacionesPermitidas)
 
   return (
     <div style={styles.wrapper}>
@@ -187,7 +207,7 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
 
       {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
       <SeccionUbicaciones
-        ubicaciones={planta.ubicaciones}
+        ubicaciones={ubicacionesPermitidas}
         nombrePlanta={planta.nombre_comun}
         isMobile={isMobile}
         userCoords={userCoords}

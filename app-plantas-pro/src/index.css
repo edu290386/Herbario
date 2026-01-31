@@ -1,12 +1,13 @@
 html, body, #root {
   margin: 0px;
   padding: 0px;
-   /* El mismo color de fondo */
-  min-height: 100vh;
-  width: 100vw;
+  min-height: 100%; /* Cambia vh por % para mayor estabilidad */
+  width: 100%;      /* Cambia vw por % */
   background-color: var(--color-fondo) !important;
   overflow-x: hidden;
-  overscroll-behavior: none;
+  /* overflow-y: auto;  <-- Asegúrate de que esto NO sea hidden */
+  overscroll-behavior: auto; /* Cambia 'none' por 'contain' para permitir el scroll natural */
+  overflow-y: visible;
 }
 
 @keyframes spin {
