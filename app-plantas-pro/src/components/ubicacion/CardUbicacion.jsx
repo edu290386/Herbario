@@ -28,7 +28,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
       distanciaDisplay = `${Math.round(km * 1000)} m`;
     } else {
       // Si es 1km o más, mostramos los 2 decimales que querías
-      distanciaDisplay = `${km.toFixed(2)} km`;
+      distanciaDisplay = `${Number(km || 0).toFixed(2)} km`;
     }
   }
 
