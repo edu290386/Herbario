@@ -18,7 +18,7 @@ export const plantasReducer = (state, action) => {
 
     case "[Plantas] - Actualizar o Insertar": {
       // 🚩 Asegúrate que el nombre sea IDÉNTICO
-      console.log("3. LOG LOGRADO: Procesando planta...", action.payload);
+      
 
       const existe = state.plantas.some((p) => p.id === action.payload.id);
 

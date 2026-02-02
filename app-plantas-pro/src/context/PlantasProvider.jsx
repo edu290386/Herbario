@@ -60,7 +60,7 @@ export const PlantasProvider = ({ children }) => {
 
 const actualizarPlantasTrasRegistro = useCallback((plantaProcesada) => {
   // Usamos el dispatch para actualizar el estado global y el mismo type de "Cargar Basico" porque sobreescribe el array de plantas
-  console.log("2. RECIBIDO EN CONTEXTO:", plantaProcesada);
+  
   dispatch({
     type: "[Plantas] - Actualizar o Insertar",
     payload: plantaProcesada,

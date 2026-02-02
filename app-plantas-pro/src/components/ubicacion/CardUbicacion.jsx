@@ -5,7 +5,7 @@ import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
 
 export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nombrePlanta, userPhone }) => {
 
-  // 1. Extraemos los valores basándonos en tu console.log real
+  // 1. Extraemos los valores 
   const lat1 = parseFloat(userCoords?.lat);
   const lon1 = parseFloat(userCoords?.lon || userCoords?.lng); // ⬅️ Cambiado de lng a lon
 

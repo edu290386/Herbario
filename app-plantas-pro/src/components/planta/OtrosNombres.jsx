@@ -2,8 +2,7 @@ import { colores } from '../../constants/tema';
 
 export const OtrosNombres = ({ lista }) => {
   // 1. Log para depurar: Mira tu consola del navegador (F12) para ver qué llega
-  //console.log("Dato en OtrosNombres:", lista);
-
+  
   // 2. Si es nulo o vacío, no mostramos nada
   if (!lista) return null;
 
