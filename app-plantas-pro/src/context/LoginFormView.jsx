@@ -89,6 +89,7 @@ export const LoginFormView = ({
             type={verPass ? "text" : "password"}
             name="password"
             placeholder="Contraseña"
+            autocomplete="current-password"
             value={form.password}
             onChange={onChange}
             style={{ ...styles.input, paddingRight: "45px" }}
