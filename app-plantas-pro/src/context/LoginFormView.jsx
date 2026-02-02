@@ -75,6 +75,7 @@ export const LoginFormView = ({
           <input
             type="tel"
             name="telefono"
+            autocomplete="tel"
             placeholder="Celular"
             value={form.telefono}
             onChange={onChange}
