@@ -11,25 +11,28 @@ import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
 
 export const HomePage = () => {
-
-  const {user, logout} = useContext(AuthContext);
-  const {plantas, cargarPlantasHome} = useContext(PlantasContext)
+  const { user, logout } = useContext(AuthContext);
+  const { plantas, cargarPlantasHome } = useContext(PlantasContext);
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
-   // 1. El useEffect llama a la función de forma segura al montar el componente
+
+  // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
-    cargarPlantasHome()
+    cargarPlantasHome();
   }, [cargarPlantasHome]);
 
   // 2. Lógica de filtrado para la búsqueda
+  const busquedaNorm = busqueda ? normalizarParaBusqueda(busqueda) : "";
+
+  // 3. Lógica de filtrado para la Galería (incluye coincidencias parciales)
   const plantasFiltradas = plantas.filter(
     (p) =>
       busqueda === "" ||
-      p.busqueda_index.includes(normalizarParaBusqueda(busqueda)),
+      p.busqueda_index?.includes(busquedaNorm),
   );
-  // 3. CONTROL DE ADMIN: ¿Existe ya este nombre exacto?
-  const existeCoincidenciaExacta = plantas.some(
-    (p) => normalizarParaBusqueda(p.nombre_comun) === normalizarParaBusqueda(busqueda),
+  // 4. CONTROL DE ADMIN: ¿Existe ya este nombre exacto? True False
+  const existeCoincidenciaExacta = plantas.some((p) =>
+    p.busqueda_index?.split(",").some((n) => n.trim() === busquedaNorm),
   );
 
   return (
@@ -40,9 +43,7 @@ export const HomePage = () => {
             {user?.nombre?.charAt(0).toUpperCase()}
           </div>
           <div style={estilos.contenedorNombres}>
-            <span style={estilos.textoNombre}>
-              {user?.nombre}
-            </span>
+            <span style={estilos.textoNombre}>{user?.nombre}</span>
             <span style={estilos.textoRol}>
               {user?.grupos?.nombre_grupo}{" "}
               <span style={{ color: colores.frondoso }}>

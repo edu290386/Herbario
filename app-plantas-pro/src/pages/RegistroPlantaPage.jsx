@@ -5,7 +5,7 @@ import { uploadImage } from "../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { colores } from "../constants/tema";
 import { BotonCancelar } from "../components/ui/BotonCancelar";
-import { formatearParaDB } from "../helpers/textHelper";
+import { formatearParaDB, normalizarParaBusqueda } from "../helpers/textHelper";
 import { OtrosNombres } from "../components/planta/OtrosNombres";
 import { PlantasContext } from "../context/PlantasContext";
 import {
@@ -16,12 +16,13 @@ import {
 import { obtenerDireccion } from "../helpers/geoHelper";
 import { AuthContext } from "../context/AuthContext";
 import { PiPlantFill } from "react-icons/pi";
+import { StatusBanner } from "../components/ui/StatusBanner";
 
 export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { actualizarPlantasTrasRegistro } = useContext(PlantasContext);
+  const { plantas, actualizarPlantasTrasRegistro } = useContext(PlantasContext);
 
   // Detectamos si es una planta existente o nueva
   const plantaId = state?.plantaId;
@@ -34,6 +35,19 @@ export const RegistroPlantaPage = () => {
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [foto, setFoto] = useState(null);
   const [coords, setCoords] = useState({ lat: null, lng: null });
+
+  // Normalizamos con un seguro: si nombreLocal no existe, es string vacío
+  const nombreNormalizado = nombreLocal ? normalizarParaBusqueda(nombreLocal) : "";
+
+  // 2. EL CANDADO SEGURO: Usamos ?. para evitar que el código explote si busqueda_index es null
+  const existeCoincidenciaExacta =
+    !esSoloUbicacion &&
+    nombreNormalizado !== "" && // No validar si el campo está vacío
+    plantas.some((p) =>
+      p.busqueda_index
+        ?.split(",")
+        .some((nombre) => nombre.trim() === nombreNormalizado),
+    );
 
   // Captura de GPS al montar
   useEffect(() => {
@@ -74,7 +88,7 @@ export const RegistroPlantaPage = () => {
       );
       return;
     }
-    
+
     setCargando(true);
     try {
       // 1. Subir imagen a Cloudinary
@@ -108,6 +122,7 @@ export const RegistroPlantaPage = () => {
         urlFoto,
         coords,
         datosLugar,
+        busqueda_index: normalizarParaBusqueda(nombreLocal),
       });
 
       // 5. ACTUALIZACIÓN DEL ESTADO GLOBAL esta función "inyecta" la nueva planta en tu copia local (la Home)
@@ -126,7 +141,7 @@ export const RegistroPlantaPage = () => {
     } finally {
       setCargando(false);
     }
-  };;
+  };
 
   // Protección de ruta
   if (!state) return <Navigate to="/" />;
@@ -156,6 +171,16 @@ export const RegistroPlantaPage = () => {
           ) : (
             <div style={estilos.contenedorInput}>
               <label style={estilos.label}>NOMBRE DE LA PLANTA</label>
+              {nombreLocal.trim() && !esSoloUbicacion && !guardadoExitoso && (
+                <StatusBanner
+                  status={existeCoincidenciaExacta ? "error" : "success"}
+                  message={
+                    existeCoincidenciaExacta
+                      ? "Esta planta ya está registrada. Cancela y búscala en el Home."
+                      : "Nombre disponible. Puedes proceder con el registro."
+                  }
+                />
+              )}
               <input
                 type="text"
                 value={nombreLocal}
@@ -256,7 +281,7 @@ export const RegistroPlantaPage = () => {
       </form>
     </div>
   );
-};
+};;
 
 const estilos = {
   pagina: {
