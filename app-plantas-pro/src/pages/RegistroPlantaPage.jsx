@@ -272,7 +272,8 @@ export const RegistroPlantaPage = () => {
             guardadoExitoso ||
             !coords.lat ||
             !foto ||
-            (!nombreLocal && !esSoloUbicacion)
+            (!nombreLocal && !esSoloUbicacion) ||
+            existeCoincidenciaExacta
           }
         />
         <div style={{ marginTop: "12px" }}>
