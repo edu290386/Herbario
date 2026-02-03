@@ -29,7 +29,7 @@ export const HomePage = () => {
   );
   // 3. CONTROL DE ADMIN: ¿Existe ya este nombre exacto?
   const existeCoincidenciaExacta = plantas.some(
-    (p) => p.nombre_comun.toLowerCase() === busqueda.trim().toLowerCase(),
+    (p) => normalizarParaBusqueda(p.nombre_comun) === normalizarParaBusqueda(busqueda),
   );
 
   return (
