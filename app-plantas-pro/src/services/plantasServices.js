@@ -1,7 +1,7 @@
 import { supabase } from "../supabaseClient"; // Ajusta la ruta
 
 // Función para traer todo el detalle
-export const getDetallePlanta = async (idPlanta) => {
+export const getDetallePlanta = async (idPlanta, nombreGrupoUsuario) => {
   const respuesta = await supabase
     .from("plantas")
     .select(
@@ -25,7 +25,16 @@ export const getDetallePlanta = async (idPlanta) => {
     console.error("Error en servicio:", respuesta.error);
     throw respuesta.error;
   }
-  return respuesta.data;
+  const planta = respuesta.data;
+  const ubicacionesDelGrupo =
+    planta.ubicaciones?.filter((u) => {
+      return u.usuarios?.grupos?.nombre_grupo === nombreGrupoUsuario;
+    }) || [];
+  return {
+    ...planta,
+    nombres_planta: planta.nombres,
+    ubicaciones: ubicacionesDelGrupo,
+  };
 };
 
 // Función para eliminar ubicación
@@ -47,14 +56,12 @@ export const getPlantasBasico = async () => {
     .select(
       `
       id,
-      nombre_comun, 
-      nombre_cientifico, 
-      nombres_secundarios, 
-      foto_perfil, 
-      busqueda_index
+      nombres_planta: nombres,
+      nombre_cientifico,
+      foto_perfil
     `,
     )
-    .order("nombre_comun", { ascending: true });
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("Error al obtener plantas:", error.message);
@@ -64,28 +71,20 @@ export const getPlantasBasico = async () => {
 };
 
 //RegistroPlantaPage: Registra una ubicación y, si la planta no existe, la crea.
- 
+
 export const registrarUbicacionCompleta = async (datos) => {
-  const { 
-    plantaId, 
-    nombreLimpio, 
-    nombreCientifico = null,
-    nombresSecundarios = null,
-    usuarioId, 
-    urlFoto, 
-    coords, 
-    datosLugar 
-  } = datos;
+  const { plantaId, nombreLimpio, usuarioId, urlFoto, datosLugar, coords } =
+    datos;
 
   let idFinal = plantaId;
-  let plantaData = null; // 1. Se declara aquí
+  let plantaData = null; // Se declara aquí
 
   // --- 1. Lógica de Planta --- Traigo de supabase info de planta por nombre
   if (!idFinal) {
     const { data: existente } = await supabase
       .from("plantas")
-      .select("*")
-      .eq("nombre_comun", nombreLimpio)
+      .select("id, nombres_planta: nombres")
+      .contains("nombres", [nombreLimpio])
       .maybeSingle();
 
     if (existente) {
@@ -94,14 +93,14 @@ export const registrarUbicacionCompleta = async (datos) => {
     } else {
       const { data: nuevaP, error: errP } = await supabase
         .from("plantas")
-        .insert([{ 
-            nombre_comun: nombreLimpio,
-            nombre_cientifico: nombreCientifico,
-            nombres_secundarios: nombresSecundarios
-        }])
-        .select()
+        .insert([
+          {
+            nombres: [nombreLimpio], // Se guarda como el primer nombre
+          },
+        ])
+        .select("id, nombres_planta: nombres")
         .single();
-      
+
       if (errP) throw errP;
 
       idFinal = nuevaP.id;
@@ -110,7 +109,7 @@ export const registrarUbicacionCompleta = async (datos) => {
   } else {
     const { data: existente } = await supabase
       .from("plantas")
-      .select("*")
+      .select("id, nombres_planta: nombres")
       .eq("id", idFinal)
       .single();
     plantaData = existente;
@@ -138,9 +137,37 @@ export const registrarUbicacionCompleta = async (datos) => {
   // --- 3. RETORNO (Aquí es donde se "usa" plantaData) ---
   return {
     ...plantaData,
-    foto_perfil: plantaData.foto_perfil,
-    busqueda_index:
-      `${plantaData.nombre_comun} ${plantaData.nombre_cientifico || ""}`.toLowerCase(),
     ultima_ubicacion: ubicacion,
   };
+};
+
+export const eliminarUbicacionConFoto = async (idUbi, urlFoto) => {
+  try {
+    // 1. Extraer la ruta después de /upload/v12345/
+    const partes = urlFoto.split("/upload/");
+    const rutaPostUpload = partes[1].split("/");
+    const rutaSinVersion = rutaPostUpload.slice(1).join("/");
+
+    // 2. DECODIFICAR (Esto cambia %C3%A1 por á)
+    const publicIdCodificado = rutaSinVersion.split(".")[0];
+    const publicIdLimpio = decodeURIComponent(publicIdCodificado);
+
+    console.log("PublicID real para Cloudinary:", publicIdLimpio);
+
+    const { data, error } = await supabase.functions.invoke(
+      "eliminar-ubicacion-completa",
+      {
+        body: {
+          ubiId: idUbi,
+          publicId: publicIdLimpio, // <--- Enviamos el nombre con tildes reales
+        },
+      },
+    );
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error:", error.message);
+    return false;
+  }
 };

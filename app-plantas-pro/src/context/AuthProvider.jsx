@@ -14,14 +14,16 @@ const init = () => {
 export const AuthProvider = ({ children }) => {
   const [auth, dispatch] = useReducer(authReducer, {}, init);
 
-  const login = (usuario = {}) => {
-    localStorage.setItem("user", JSON.stringify(usuario));
-    const action = {
-      type: types.login,
-      payload: usuario,
-    };
-    dispatch(action);
-  };
+ const login = (usuario = {}) => {
+   // Guardamos todo el objeto para tener el id, nombre y grupo a la mano
+   localStorage.setItem("user", JSON.stringify(usuario));
+
+   const action = {
+     type: types.login,
+     payload: usuario,
+   };
+   dispatch(action);
+ };
 
   const logout = () => {
     localStorage.removeItem("user");

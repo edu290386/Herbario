@@ -1,38 +1,65 @@
-import { MdDelete } from "react-icons/md";
-import { useAuth } from "../context/AuthContext"; // Ajusta la ruta
+import { TiDelete } from "react-icons/ti";
+import { useAuth } from "../../hooks/useAuth";
+import { eliminarUbicacionConFoto } from "../../services/plantasServices";
 
-export const BotonEliminar = ({ usuarioIdCreador, onConfirmar }) => {
+export const BotonEliminar = ({
+  usuarioIdCreador,
+  ubiId,
+  fotoUrl,
+  onEliminar,
+}) => {
   const { user } = useAuth();
 
-  // 🛡️ Solo el dueño o un administrador pueden ver el botón
-  const tienePermiso =
-    user?.id === usuarioIdCreador || user?.rol === "Administrador";
+  // 🛡️ Lógica de permisos (Dueño o Admin)
+  const esDueño = user?.id === usuarioIdCreador;
+  const esAdmin = user?.rol === "Administrador";
 
-  if (!tienePermiso) return null;
+  if (!(esDueño || esAdmin)) return null;
 
-  const handleClick = () => {
-    if (
-      window.confirm("¿Estás seguro de que quieres eliminar esta ubicación?")
-    ) {
-      onConfirmar();
+  const handleClick = async () => {
+    if (window.confirm("¿Estás seguro de eliminar esta ubicación?")) {
+      // 1. El botón ejecuta la acción en Cloudinary y Supabase
+      const exito = await eliminarUbicacionConFoto(ubiId, fotoUrl);
+
+      if (exito) {
+        // 2. Si sale bien, avisamos al padre para limpiar la pantalla
+        // Usamos el nombre 'onEliminar' que tú prefieres
+        if (onEliminar) {
+          onEliminar(ubiId);
+        }
+      } else {
+        alert(
+          "Error: No se pudo eliminar de la base de datos o de Cloudinary.",
+        );
+      }
     }
   };
 
   return (
-    <button onClick={handleClick} style={styles.btnDelete}>
-      <MdDelete size={20} color="#ff4d4d" />
-    </button>
+    <div style={styles.contenedorEliminar}>
+      <button
+        style={styles.btnIcono}
+        onClick={handleClick}
+        title="Eliminar ubicación"
+      >
+        <TiDelete className="delete-icon" size={25} color="#ff4d4d" />
+      </button>
+    </div>
   );
 };
 
 const styles = {
-  btnDelete: {
+  contenedorEliminar: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  btnIcono: {
     background: "none",
     border: "none",
     cursor: "pointer",
     padding: "8px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
   },
 };

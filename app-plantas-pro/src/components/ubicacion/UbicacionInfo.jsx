@@ -1,11 +1,9 @@
-
-import { colores } from "../../constants/tema";
 import {
   FaRegCalendarCheck,
   FaUserPlus,
   FaCar,
 } from "react-icons/fa";
-import { TiDelete } from "react-icons/ti";
+
 import { FaHouse, FaCity, FaUserGroup } from "react-icons/fa6";
 import { SiWaze, SiWhatsapp } from "react-icons/si";
 import { generarRutas } from "../../helpers/linkHelper";
@@ -15,9 +13,11 @@ import { formatearFechaLocal } from "../../helpers/timeHelper";
 import { AuthContext } from "../../context/AuthContext";
 import { useContext} from "react"
 import { abrirWhatsappPlanta } from "../../helpers/contactHelper.js";
+import { BotonEliminar } from "../ui/BotonEliminar.jsx";
 
 export const UbicacionInfo = ({
   ubicacionID,
+  fotoUrl,
   distrito,
   ciudad,
   latitud,
@@ -162,9 +162,13 @@ export const UbicacionInfo = ({
           <button
             onClick={() =>
               abrirWhatsappPlanta(
-                nombrePlanta || "Planta", // 🚩 Pasamos el nombre aquí
-                distrito, ciudad, latitud, longitud,
-                distancia, userPhone
+                nombrePlanta || "Planta", // Pasamos el nombre aquí
+                distrito,
+                ciudad,
+                latitud,
+                longitud,
+                distancia,
+                userPhone,
               )
             }
             style={{ ...styles.btnIcono, marginLeft: "4px" }}
@@ -180,23 +184,12 @@ export const UbicacionInfo = ({
         {/* 3. Renderizado condicional: Solo si tiene permiso */}
         {(esDueño || esAdmin) && (
           <div style={styles.contenedorEliminar}>
-            <button
-              style={styles.btnIcono}
-              onClick={() => {
-                if (
-                  window.confirm("¿Estás seguro de eliminar esta ubicación?")
-                ) {
-                  onEliminar(ubicacionID); // Ejecuta la función que viene del padre
-                }
-              }}
-              title="Eliminar ubicación"
-            >
-              <TiDelete
-                className="delete-icon"
-                size={sizes.iconoDelete}
-                color={colores.red}
-              />
-            </button>
+            <BotonEliminar
+              usuarioIdCreador={creadorID}
+              ubiId={ubicacionID}
+              fotoUrl={fotoUrl}
+              onEliminar={onEliminar} // Pasa la función del padre directamente
+            />
           </div>
         )}
       </div>

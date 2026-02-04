@@ -25,14 +25,17 @@ export const HomePage = () => {
   const busquedaNorm = busqueda ? normalizarParaBusqueda(busqueda) : "";
 
   // 3. Lógica de filtrado para la Galería (incluye coincidencias parciales)
-  const plantasFiltradas = plantas.filter(
-    (p) =>
-      busqueda === "" ||
-      p.busqueda_index?.includes(busquedaNorm),
-  );
+  const plantasFiltradas = plantas.filter((p) => {
+    if (busqueda === "") return true;
+
+    // Solo busca dentro de la bolsa de nombres (Común + Secundarios)
+    return p.nombres_planta?.some((n) =>
+      normalizarParaBusqueda(n).includes(busquedaNorm),
+    );
+  });
   // 4. CONTROL DE ADMIN: ¿Existe ya este nombre exacto? True False
   const existeCoincidenciaExacta = plantas.some((p) =>
-    p.busqueda_index?.split(",").some((n) => n.trim() === busquedaNorm),
+    p.nombres_planta?.some((n) => normalizarParaBusqueda(n) === busquedaNorm),
   );
 
   return (

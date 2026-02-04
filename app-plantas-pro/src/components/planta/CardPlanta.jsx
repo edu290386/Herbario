@@ -21,7 +21,7 @@ export const CardPlanta = ({ planta }) => {
         {planta.foto_perfil ? (
           <img
             src={transformarImagen(planta.foto_perfil)}
-            alt={planta.nombre_comun}
+            alt={planta.nombres?.[0]}
             style={estilos.img}
             loading="lazy"
           />
@@ -40,14 +40,14 @@ export const CardPlanta = ({ planta }) => {
       {/* 2. Área de Información con Flexbox */}
       <div style={estilos.infoCard}>
         <div style={estilos.contenidoTexto}>
-          <h2 style={estilos.nombreComun}>{planta.nombre_comun}</h2>
+          <h2 style={estilos.nombreComun}>{planta.nombres_planta?.[0]}</h2>
 
           <p style={estilos.nombreCientifico}>
             <i>{planta.nombre_cientifico || "Nombre científico pendiente"}</i>
           </p>
 
           {/* Reutilizamos el componente de nombres secundarios */}
-          <OtrosNombres lista={planta.nombres_secundarios} />
+          <OtrosNombres lista={planta.nombres_planta} />
         </div>
 
         {/* 3. Botón siempre al fondo */}
@@ -58,9 +58,8 @@ export const CardPlanta = ({ planta }) => {
             navigate("/registro", {
               state: {
                 plantaId: planta.id,
-                nombreComun: planta.nombre_comun,
+                nombres_planta: planta.nombres_planta,
                 vieneDeDetalle: true,
-                nombresSecundarios: planta.nombres_secundarios,
                 usuarioId: user.id,
               },
             });

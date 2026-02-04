@@ -56,13 +56,13 @@ export const DetallePage = () => {
     const fetchDatosCompletos = async () => {
       try {
         setLoading(true);
-
         // Promesa del tiempo mínimo (2 segundos)
         const tiempoMinimo = new Promise((resolve) =>
           setTimeout(resolve, 2000),
         );
         // Promesa de datos (Servicio)
-        const consultaSupabase = getDetallePlanta(id);
+        const miNombreGrupo = user?.grupos?.nombre_grupo;
+        const consultaSupabase = getDetallePlanta(id, miNombreGrupo);
         // Esperamos a que ambas promesas terminen
         const [_, result] = await Promise.all([tiempoMinimo, consultaSupabase]);
         setPlanta(result);
@@ -72,8 +72,10 @@ export const DetallePage = () => {
         setLoading(false);
       }
     };
-    fetchDatosCompletos();
-  }, [id]);
+    if (id && user) {
+      fetchDatosCompletos();
+    }
+  }, [id, user]);
 
   // --- RENDERIZADO DE CARGA ---
   if (loading) {
@@ -98,34 +100,19 @@ const imagenesCarrusel = categorias
 // Si el array queda vacío, le ponemos null para que el carrusel sepa qué hacer
 if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
 
-  const manejarEliminarUbicacion = async (idUbi) => {
-    if (!user) {
-      alert("Debes estar logueado para eliminar.");
-      return;
-    }
-
-    try {
-      // 1. Llamamos al servicio (pasando ID de ubicación y ID del usuario logueado)
-      await deleteUbicacion(idUbi, user.id);
-
+  const manejarEliminarUbicacion =  (idUbi) => {
+       try {
       // 2. Filtramos el estado local // Como 'planta' tiene una lista de 'ubicaciones', creamos un nuevo objeto
       setPlanta((prevPlanta) => ({
         ...prevPlanta,
         ubicaciones: prevPlanta.ubicaciones.filter((u) => u.id !== idUbi),
       }));
     } catch (error) {
-      alert("No se pudo eliminar la ubicación: " + error.message);
+      alert("Error al actualizar la vista: " + error.message);
     }
   };
 
-  const ubicacionesPermitidas = planta.ubicaciones.filter((u) => {
-    const esMia = String(u.usuario_id) === String(user?.id);
-    const nombreGrupoUbi = u.usuarios?.grupos?.nombre_grupo;
-    const miNombreGrupo = user?.grupos?.nombre_grupo; 
-    const esDeMiGrupo =
-      nombreGrupoUbi && miNombreGrupo && nombreGrupoUbi === miNombreGrupo;
-    return esMia || esDeMiGrupo;
-  });
+console.log(planta.ubicaciones)
 
   return (
     <div style={styles.wrapper}>
@@ -169,9 +156,8 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
               navigate("/registro", {
                 state: {
                   plantaId: planta.id,
-                  nombreComun: planta.nombre_comun,
+                  nombres_planta: planta.nombres_planta,
                   nombreCientifico: planta.nombre_cientifico,
-                  nombresSecundarios: planta.nombres_secundarios,
                   fotosPrevia: imagenesCarrusel,
                   vieneDeDetalle: true,
                 },
@@ -183,8 +169,8 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
 
       {/* BLOQUE 2: RESTO DEL CONTENIDO (Scroll) */}
       <SeccionUbicaciones
-        ubicaciones={ubicacionesPermitidas}
-        nombrePlanta={planta.nombre_comun}
+        ubicaciones={planta.ubicaciones || []}
+        nombrePlanta={planta.nombres_planta?.[0]}
         isMobile={isMobile}
         userCoords={userCoords}
         onEliminar={manejarEliminarUbicacion}

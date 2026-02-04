@@ -1,31 +1,21 @@
 import { colores } from '../../constants/tema';
 
 export const OtrosNombres = ({ lista }) => {
-  // 1. Log para depurar: Mira tu consola del navegador (F12) para ver qué llega
-  
+ 
   // 2. Si es nulo o vacío, no mostramos nada
-  if (!lista) return null;
+  if (!lista || lista.length <= 1) return null;
 
   // 3. Convertir a Array si viene como String de Postgres "{a,b}" o string simple "a,b"
-  let nombresFinales = [];
+  const nombresSecundarios = lista.slice(1);
   
-  if (Array.isArray(lista)) {
-    nombresFinales = lista;
-  } else if (typeof lista === 'string') {
-    // Limpiamos llaves de Postgres y separamos por comas
-    nombresFinales = lista.replace(/{|}/g, '').split(',');
-  }
-
-  if (nombresFinales.length === 0) return null;
-
   return (
     <div style={estilos.contenedor}>
       <span style={estilos.label}>Otros Nombres: </span>
       <span style={estilos.texto}>
-        {nombresFinales.map((nombre, i) => (
+        {nombresSecundarios.map((nombre, i) => (
           <span key={i}>
             {nombre.trim()} {/* trim() quita espacios extra */}
-            {i < nombresFinales.length - 1 ? ', ' : ''}
+            {i < nombresSecundarios.length - 1 ? ', ' : ''}
           </span>
         ))}
       </span>

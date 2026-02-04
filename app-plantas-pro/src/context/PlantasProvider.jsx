@@ -21,24 +21,19 @@ export const PlantasProvider = ({ children }) => {
    dispatch({ type: "[Plantas] - Set Cargando" });
 
    try {
-     const data = await getPlantasBasico();
-
-     // Si todo sale bien, cargamos los datos (el reducer pone cargando: false)
-     dispatch({
-       type: "[Plantas] - Cargar Basico",
-       payload: data || [],
-     });
-   } catch (error) {
-     console.error("Error al cargar plantas:", error);
-
-     // ¡IMPORTANTE! Si falla, forzamos el fin del cargando con un array vacío
-     dispatch({
-       type: "[Plantas] - Cargar Basico",
-       payload: [],
-     });
-   }
-   // Eliminamos state.plantas de la dependencia para evitar bucles innecesarios
- }, [state.plantas]);
+      const data = await getPlantasBasico();
+      dispatch({
+        type: "[Plantas] - Cargar Basico",
+        payload: data || [],
+      });
+    } catch (error) {
+      console.error("Error al cargar plantas:", error);
+      dispatch({
+        type: "[Plantas] - Cargar Basico",
+        payload: [],
+      });
+    }
+  }, [state.plantas.length]);
   
  
  /* Agrega una planta recién creada al estado global. Esto permite que aparezca en la lista sin necesidad de recargar de la BD.  */

@@ -7,7 +7,9 @@ export const BloqueIdentidad = ({ planta }) => {
   return (
     <div style={estilos.bloque}>
       {/* Nombre Común */}
-      <h1 style={estilos.nombreComun}>{planta.nombre_comun}</h1>
+      <h1 style={estilos.nombreComun}>
+        {planta.nombres_planta?.[0] || "Planta sin nombre"}
+      </h1>
 
       {/* Nombre Científico */}
       <p style={estilos.nombreCientifico}>
@@ -16,8 +18,8 @@ export const BloqueIdentidad = ({ planta }) => {
 
       {/* Otros Nombres */}
       <div style={estilos.contenedorOtros}>
-        {planta.nombres_secundarios?.length > 0 ? (
-          <OtrosNombres lista={planta.nombres_secundarios} />
+        {planta.nombres_planta?.length > 1 ? (
+          <OtrosNombres lista={planta.nombres_planta} />
         ) : (
           <span style={estilos.textoVacio}>
             Sin nombres adicionales registrados

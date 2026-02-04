@@ -30,7 +30,9 @@ export const RegistroPlantaPage = () => {
   const esSoloUbicacion = state?.vieneDeDetalle;
 
   // Estados del formulario
-  const [nombreLocal, setNombreLocal] = useState(state?.nombreComun || "");
+  const [nombreLocal, setNombreLocal] = useState(
+    state?.nombreComun || state?.nombres_planta?.[0] || "",
+  );
   const [cargando, setCargando] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [foto, setFoto] = useState(null);
@@ -44,9 +46,9 @@ export const RegistroPlantaPage = () => {
     !esSoloUbicacion &&
     nombreNormalizado !== "" && // No validar si el campo está vacío
     plantas.some((p) =>
-      p.busqueda_index
-        ?.split(",")
-        .some((nombre) => nombre.trim() === nombreNormalizado),
+      p.nombres_planta?.some(
+        (nombre) => normalizarParaBusqueda(nombre) === nombreNormalizado,
+      ),
     );
 
   // Captura de GPS al montar
@@ -121,8 +123,7 @@ export const RegistroPlantaPage = () => {
         usuarioId: user?.id,
         urlFoto,
         coords,
-        datosLugar,
-        busqueda_index: normalizarParaBusqueda(nombreLocal),
+        datosLugar
       });
 
       // 5. ACTUALIZACIÓN DEL ESTADO GLOBAL esta función "inyecta" la nueva planta en tu copia local (la Home)
@@ -166,7 +167,7 @@ export const RegistroPlantaPage = () => {
             <div style={estilos.contenedorTexto}>
               <span style={estilos.label}>PLANTA SELECCIONADA:</span>
               <h2 style={estilos.nombreFijo}>{nombreLocal.toUpperCase()}</h2>
-              <OtrosNombres lista={state?.nombresSecundarios} />
+              <OtrosNombres lista={state?.nombres_planta} />
             </div>
           ) : (
             <div style={estilos.contenedorInput}>
@@ -282,7 +283,7 @@ export const RegistroPlantaPage = () => {
       </form>
     </div>
   );
-};;
+};
 
 const estilos = {
   pagina: {
