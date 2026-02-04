@@ -92,20 +92,9 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
         {/* INFORMACIÓN Y BOTONES */}
         <div style={styles.info}>
           <UbicacionInfo
-            ubicacionID={ubicacion.id}
-            fotoUrl={ubicacion.foto_contexto}
-            distrito={ubicacion.distrito}
-            ciudad={ubicacion.ciudad}
-            latitud={ubicacion.latitud}
-            longitud={ubicacion.longitud}
+            ubicacion={ubicacion}
             distancia={distanciaDisplay}
-            fecha={ubicacion.created_at}
             isMobile={isMobile}
-            creadorID={ubicacion.usuario_id}
-            creador={ubicacion.usuarios?.nombre || "Usuario desconocido"}
-            grupocreador={
-              ubicacion.usuarios.grupos?.nombre_grupo ?? "Sin grupo"
-            }
             onEliminar={onEliminar}
             nombrePlanta={nombrePlanta}
             userPhone={userPhone}

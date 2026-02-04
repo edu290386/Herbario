@@ -14,28 +14,28 @@ import { AuthContext } from "../../context/AuthContext";
 import { useContext} from "react"
 import { abrirWhatsappPlanta } from "../../helpers/contactHelper.js";
 import { BotonEliminar } from "../ui/BotonEliminar.jsx";
+import { obtenerIdentidad } from "../../helpers/identidadHelper.js";
 
 export const UbicacionInfo = ({
-  ubicacionID,
-  fotoUrl,
-  distrito,
-  ciudad,
-  latitud,
-  longitud,
+  ubicacion,
   distancia,
-  fecha,
   isMobile,
-  creadorID,
-  creador,
-  grupocreador,
   onEliminar,
   nombrePlanta,
   userPhone,
 }) => {
-  const { google, waze } = generarRutas(latitud, longitud);
+  const {
+    ciudad,
+    distrito,
+    latitud,
+    longitud,
 
+    
+  } = ubicacion;
+  const { google, waze } = generarRutas(latitud, longitud);
   const { user } = useContext(AuthContext);
-  const esDueño = user?.id === creadorID;
+  console.log(ubicacion)
+  const esDueño = user?.id === ubicacion.usuario_id;
   const esAdmin = user?.rol === "Administrador";
 
   // 1. CONFIGURACIÓN DE TAMAÑOS DINÁMICOS
@@ -71,7 +71,7 @@ export const UbicacionInfo = ({
             letterSpacing: isMobile ? "-1.6px" : "normal",
           }}
         >
-          {distrito || "Distrito no especificado"}
+          {ubicacion.distrito || "Distrito no especificado"}
         </h4>
       </div>
 
@@ -79,7 +79,7 @@ export const UbicacionInfo = ({
       <div style={styles.filaSimple}>
         <FaCity className="info-icon" size={sizes.iconosFila} color="#000000" />
         <span style={{ ...styles.ciudadTexto, fontSize: sizes.fuenteTexto }}>
-          {ciudad || "Lima, Perú"}
+          {ubicacion.ciudad || "Lima, Perú"}
         </span>
       </div>
 
@@ -106,7 +106,7 @@ export const UbicacionInfo = ({
         />
         <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
           <b style={{ letterSpacing: isMobile ? "-1.6px" : "normal" }}>
-            {creador || "N/A"}
+            @{obtenerIdentidad(ubicacion.usuarios)}
           </b>
         </span>
       </div>
@@ -119,7 +119,7 @@ export const UbicacionInfo = ({
         />
         <span style={{ ...styles.infoSecundaria, fontSize: sizes.fuenteTexto }}>
           <b style={{ letterSpacing: isMobile ? "-1.6px" : "normal" }}>
-            {grupocreador}
+            {ubicacion.usuarios?.grupos?.nombre_grupo ?? "Sin grupo"}
           </b>
         </span>
       </div>
@@ -131,8 +131,8 @@ export const UbicacionInfo = ({
           color="#000"
         />
         <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
-          {formatearFechaLocal(fecha)}
-          <EtiquetaReciente fechaISO={fecha} />
+          {formatearFechaLocal(ubicacion.created_at)}
+          <EtiquetaReciente fechaISO={ubicacion.created_at} />
         </span>
       </div>
 
@@ -185,9 +185,9 @@ export const UbicacionInfo = ({
         {(esDueño || esAdmin) && (
           <div style={styles.contenedorEliminar}>
             <BotonEliminar
-              usuarioIdCreador={creadorID}
-              ubiId={ubicacionID}
-              fotoUrl={fotoUrl}
+              usuarioIdCreador={ubicacion.usuario_id}
+              ubiId={ubicacion.id}
+              fotoUrl={ubicacion.foto_contexto}
               onEliminar={onEliminar} // Pasa la función del padre directamente
             />
           </div>

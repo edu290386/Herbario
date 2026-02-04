@@ -9,6 +9,7 @@ import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { StatusBanner } from "../components/ui/StatusBanner";
 import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
+import { obtenerIdentidad } from "../helpers/identidadHelper";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -46,7 +47,7 @@ export const HomePage = () => {
             {user?.nombre?.charAt(0).toUpperCase()}
           </div>
           <div style={estilos.contenedorNombres}>
-            <span style={estilos.textoNombre}>{user?.nombre}</span>
+            <span style={estilos.textoNombre}>{obtenerIdentidad(user)}</span>
             <span style={estilos.textoRol}>
               {user?.grupos?.nombre_grupo}{" "}
               <span style={{ color: colores.frondoso }}>

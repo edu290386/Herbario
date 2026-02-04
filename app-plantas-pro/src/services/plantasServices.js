@@ -11,6 +11,8 @@ export const getDetallePlanta = async (idPlanta, nombreGrupoUsuario) => {
         *,
         usuarios!ubicaciones_usuario_id_fkey (
           nombre,
+          apellido,
+          alias,
           grupos!fk_usuario_grupo (
             nombre_grupo
           )
