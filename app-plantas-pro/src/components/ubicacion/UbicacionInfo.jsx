@@ -130,7 +130,13 @@ export const UbicacionInfo = ({
           size={sizes.iconosFila}
           color="#000"
         />
-        <span style={{ ...styles.fechaTexto, fontSize: sizes.fuenteTexto }}>
+        <span
+          style={{
+            ...styles.fechaTexto,
+            fontSize: sizes.fuenteTexto,
+            letterSpacing: isMobile ? "-1.6px" : "normal",
+          }}
+        >
           {formatearFechaLocal(ubicacion.created_at)}
           <EtiquetaReciente fechaISO={ubicacion.created_at} />
         </span>
