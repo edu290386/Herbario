@@ -84,7 +84,7 @@ export const procesarUbicacionesConGPS = (ubicaciones, userCoords, errorGPS) => 
   
   let mensaje = "🛰️ Esperando señal GPS...";
   if (errorGPS) mensaje = errorGPS;
-  else if (señalInestable) mensaje = "⚠️ Ubicación imprecisa (Señal débil)";
+  else if (señalInestable) mensaje = "Ubicación imprecisa (Señal débil)";
   else if (userCoords) mensaje = `GPS Activo: ${listaProcesada.length} ubicaciones`;
 
   return {
