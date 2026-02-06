@@ -112,8 +112,6 @@ if (imagenesCarrusel.length === 0) imagenesCarrusel.push(null);
     }
   };
 
-console.log(planta.ubicaciones)
-
   return (
     <div style={styles.wrapper}>
       <BotonVolver />

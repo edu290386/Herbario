@@ -23,20 +23,16 @@ export const obtenerDireccion = async (latitud, longitud) => {
 
     // Priorizamos nombres locales para el distrito
     return {
-      distrito:
-        addr.suburb ||
-        addr.city_district ||
-        addr.neighbourhood ||
-        addr.town ||
-        addr.village ||
-        "Distrito",
-      ciudad: addr.city || addr.state || "Ciudad",
+      distrito: addr.suburb || addr.city || "No detectado",
+      ciudad: addr.state || addr.region || addr.province || "No detectada",
     };
   } catch {
     // catch vacío para silenciar avisos de variables no usadas
     return null;
   }
 };
+
+
 
 /**
  * Tu lógica: Cálculo de Distancia Pitagórica (en km).
