@@ -36,7 +36,7 @@ if (typeof window !== "undefined") {
 }
 
 const auditoriaMasiva = async () => {
-  const coordenadas = [["-11.97937800", "-77.08601400"]];
+  const coordenadas = [["-11.97047600", "-77.08061200"]];
 
   const reporte = []; 
 
