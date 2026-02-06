@@ -9,7 +9,7 @@ import {
   SeccionUbicaciones,
 } from "../components";
 import { colores } from "../constants/tema";
-import { getDetallePlanta, deleteUbicacion } from "../services/plantasServices";
+import { getDetallePlanta } from "../services/plantasServices";
 import { TbCloverFilled, TbReload } from "react-icons/tb";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { useGPS } from "../hooks/useGPS.js"

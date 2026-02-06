@@ -2,6 +2,7 @@ import { CardUbicacion } from "./CardUbicacion";
 import { colores } from "../../constants/tema";
 import { StatusBanner } from "../ui/StatusBanner";
 import { TbReload } from "react-icons/tb";
+import { procesarUbicacionesConGPS } from "../../helpers/geoHelper";
 
 export const SeccionUbicaciones = ({
   ubicaciones,
@@ -13,11 +14,9 @@ export const SeccionUbicaciones = ({
   refrescarGPS,
   userPhone,
 }) => {
-  const necesitaGPS = !userCoords || errorGPS;
-  // Filtramos las que tienen coordenadas válidas
-  const ubicacionesLimpias = ubicaciones.filter(
-    (u) => u.latitud !== null && u.longitud !== null,
-  );
+ 
+  const { ubicacionesProcesadas, statusGps, mensajeGps, hayErrorReal } =
+    procesarUbicacionesConGPS(ubicaciones, userCoords, errorGPS);
 
   return (
     <div style={isMobile ? styles.containerMobile : styles.containerLaptop}>
@@ -27,19 +26,11 @@ export const SeccionUbicaciones = ({
           Ubicaciones registradas para {nombrePlanta}
         </h2>
         <div style={styles.contenedorSeccion}>
-          {/* 1. EL BANNER (Solo información) */}
-          <StatusBanner
-            status={errorGPS ? "error" : userCoords ? "success" : "warning"}
-            message={
-              errorGPS ||
-              (userCoords
-                ? `GPS Activo: ${ubicaciones.length} ubicaciones encontradas`
-                : "🛰️ Esperando señal...")
-            }
-          />
+          {/* Banner con inteligencia de distancia (se pone rojo si detecta error de laptop) */}
+          <StatusBanner status={statusGps} message={mensajeGps} />
 
-          {/* 2. EL BOTÓN APARTE (Solo si falla o carga) */}
-          {necesitaGPS && (
+          {/* Botón de reinicio: Se muestra si hay error real, señal inestable o falta el GPS */}
+          {(hayErrorReal || !userCoords) && (
             <button onClick={refrescarGPS} style={styles.botonReiniciarGlobal}>
               <TbReload size={20} />
               <span>Reiniciar GPS</span>
@@ -56,16 +47,15 @@ export const SeccionUbicaciones = ({
           gap: isMobile ? "5px" : "20px",
         }}
       >
-        {ubicacionesLimpias.length > 0 ? (
-          ubicacionesLimpias.map((ubi, index) => (
+        {ubicacionesProcesadas.length > 0 ? (
+          ubicacionesProcesadas.map((ubi) => (
             <CardUbicacion
               key={ubi.id}
               ubicacion={ubi}
-              userCoords={userCoords}
+              distanciaTexto={ubi.distanciaTexto}
+              esReal={ubi.esReal} // Indica si la señal es verídica
               isMobile={isMobile}
               onEliminar={onEliminar}
-              orden={index + 1} // Enviamos el ranking de cercanía
-              onRecargar={refrescarGPS}
               nombrePlanta={nombrePlanta}
               userPhone={userPhone}
             />

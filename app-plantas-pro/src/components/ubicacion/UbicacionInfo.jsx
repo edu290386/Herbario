@@ -19,22 +19,16 @@ import { obtenerIdentidad } from "../../helpers/identidadHelper.js";
 export const UbicacionInfo = ({
   ubicacion,
   distancia,
+  esReal,
   isMobile,
   onEliminar,
   nombrePlanta,
   userPhone,
 }) => {
-  const {
-    ciudad,
-    distrito,
-    latitud,
-    longitud,
-
-    
-  } = ubicacion;
+  const { ciudad, distrito, latitud, longitud } = ubicacion;
   const { google, waze } = generarRutas(latitud, longitud);
   const { user } = useContext(AuthContext);
-  console.log(ubicacion)
+  
   const esDueño = user?.id === ubicacion.usuario_id;
   const esAdmin = user?.rol === "Administrador";
 
@@ -84,7 +78,7 @@ export const UbicacionInfo = ({
       </div>
 
       {/* 3. DISTANCIA */}
-      {distancia && (
+      {distancia && esReal ? (
         <div style={styles.badgeDistancia}>
           <div style={styles.textoDistancia}>
             <FaCar
@@ -95,6 +89,34 @@ export const UbicacionInfo = ({
             <span style={{ fontSize: sizes.fuenteTexto }}>{distancia}</span>
           </div>
         </div>
+      ) : (
+        /* Si la señal no es real (Caso Laptop 0,0), mostramos advertencia */
+        !esReal && (
+          <div
+            style={{
+              ...styles.badgeDistancia,
+              backgroundColor: "#FFE5E5",
+              border: "1px solid #FFCDD2",
+            }}
+          >
+            <div style={styles.textoDistancia}>
+              <FaSatelliteDish
+                className="info-icon"
+                size={16}
+                color="#D32F2F"
+              />
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#D32F2F",
+                  fontWeight: "bold",
+                }}
+              >
+                SEÑAL DÉBIL
+              </span>
+            </div>
+          </div>
+        )
       )}
 
       {/* 4. CREADOR */}
@@ -168,12 +190,12 @@ export const UbicacionInfo = ({
           <button
             onClick={() =>
               abrirWhatsappPlanta(
-                nombrePlanta || "Planta", // Pasamos el nombre aquí
+                nombrePlanta || "Planta",
                 distrito,
                 ciudad,
                 latitud,
                 longitud,
-                distancia,
+                esReal ? distancia : null, // Solo envía distancia si es real
                 userPhone,
               )
             }
@@ -194,7 +216,7 @@ export const UbicacionInfo = ({
               usuarioIdCreador={ubicacion.usuario_id}
               ubiId={ubicacion.id}
               fotoUrl={ubicacion.foto_contexto}
-              onEliminar={onEliminar} // Pasa la función del padre directamente
+              onEliminar={onEliminar}
             />
           </div>
         )}

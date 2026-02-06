@@ -1,6 +1,7 @@
 import { TiDelete } from "react-icons/ti";
 import { useAuth } from "../../hooks/useAuth";
 import { eliminarUbicacionConFoto } from "../../services/plantasServices";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 export const BotonEliminar = ({
   usuarioIdCreador,
@@ -42,7 +43,7 @@ export const BotonEliminar = ({
         onClick={handleClick}
         title="Eliminar ubicación"
       >
-        <TiDelete className="delete-icon" size={25} color="#ff4d4d" />
+        <RiDeleteBin6Line className="delete-icon" size={26} color="#ff4d4d" />
       </button>
     </div>
   );
@@ -58,7 +59,7 @@ const styles = {
     background: "none",
     border: "none",
     cursor: "pointer",
-    padding: "8px",
+    padding: "0px",
     display: "flex",
     alignItems: "center",
   },

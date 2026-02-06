@@ -1,36 +1,15 @@
 import { colores } from "../../constants/tema.js";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
-import { calcularDistanciaPitagorica } from "../../helpers/geoHelper.js";
 
-
-export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nombrePlanta, userPhone }) => {
-
-  // 1. Extraemos los valores 
-  const lat1 = parseFloat(userCoords?.lat);
-  const lon1 = parseFloat(userCoords?.lon || userCoords?.lng); // ⬅️ Cambiado de lng a lon
-
-  const lat2 = parseFloat(ubicacion?.latitud || ubicacion?.lat);
-  const lon2 = parseFloat(
-    ubicacion?.longitud || ubicacion?.lon || ubicacion?.lng,
-  );
-
-  // 2. Validación y Cálculo
-  const km =
-    !isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)
-      ? calcularDistanciaPitagorica(lat1, lon1, lat2, lon2)
-      : null;
-  
-  let distanciaDisplay = "";
-
-  if (km !== null) {
-    if (km < 1) {
-      // Si es menos de 1km, multiplicamos por 1000 y redondeamos sin decimales
-      distanciaDisplay = `${Math.round(km * 1000)} m`;
-    } else {
-      // Si es 1km o más, mostramos los 2 decimales que querías
-      distanciaDisplay = `${Number(km || 0).toFixed(2)} km`;
-    }
-  }
+export const CardUbicacion = ({
+  ubicacion,
+  nombrePlanta,
+  isMobile,
+  distanciaTexto,
+  esReal,
+  onEliminar,
+  userPhone,
+}) => {
 
   const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
 
@@ -72,6 +51,7 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
           }
         `}
       </style>
+
       <div
         className={cardClassName}
         style={{
@@ -93,7 +73,8 @@ export const CardUbicacion = ({ ubicacion, isMobile, userCoords, onEliminar, nom
         <div style={styles.info}>
           <UbicacionInfo
             ubicacion={ubicacion}
-            distancia={distanciaDisplay}
+            distancia={distanciaTexto}
+            esReal={esReal}
             isMobile={isMobile}
             onEliminar={onEliminar}
             nombrePlanta={nombrePlanta}

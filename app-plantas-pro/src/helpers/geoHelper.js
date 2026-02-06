@@ -45,21 +45,56 @@ export const obtenerDireccion = async (latitud, longitud) => {
 export const calcularDistanciaPitagorica = (lat1, lon1, lat2, lon2) => {
   try {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-
-    // Convertimos a números por seguridad
     const p1 = { lat: parseFloat(lat1), lon: parseFloat(lon1) };
     const p2 = { lat: parseFloat(lat2), lon: parseFloat(lon2) };
 
     const x = p2.lat - p1.lat;
-
-    // Ajuste de longitud según la latitud para mayor precisión en el plano
     const y = (p2.lon - p1.lon) * Math.cos((p1.lat * Math.PI) / 180);
-
-    // 111.32 km es el valor aproximado de un grado de latitud
     const distancia = Math.sqrt(x * x + y * y) * 111.32;
 
-    return distancia.toFixed(1); // Retorna ej: "1.2"
+    return distancia; // Retornamos el número puro para poder validarlo
   } catch {
     return null;
   }
+};
+
+// NUEVA FUNCIÓN: Procesa toda la lista y decide el estado del GPS
+export const procesarUbicacionesConGPS = (ubicaciones, userCoords, errorGPS) => {
+  const LIMITE_REALIDAD_KM = 5000;
+  let señalInestable = false;
+
+  // 1. Procesar la lista
+  const listaProcesada = ubicaciones
+    .filter(u => u.latitud && u.longitud)
+    .map(ubi => {
+      const latUsuario = userCoords?.lat;
+      const lonUsuario = userCoords?.lon || userCoords?.lng;
+      
+      const km = calcularDistanciaPitagorica(latUsuario, lonUsuario, ubi.latitud, ubi.longitud);
+
+      // Si detectamos distancia absurda (Laptop error)
+      if (km > LIMITE_REALIDAD_KM) {
+        señalInestable = true;
+        return { ...ubi, distanciaTexto: null, esReal: false };
+      }
+
+      const texto = km ? (km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`) : null;
+      return { ...ubi, distanciaTexto: texto, esReal: true };
+    });
+
+  // 2. Determinar el estado global
+  const hayError = errorGPS || señalInestable;
+  const status = hayError ? "error" : userCoords ? "success" : "warning";
+  
+  let mensaje = "🛰️ Esperando señal GPS...";
+  if (errorGPS) mensaje = errorGPS;
+  else if (señalInestable) mensaje = "⚠️ Ubicación imprecisa (Señal débil)";
+  else if (userCoords) mensaje = `GPS Activo: ${listaProcesada.length} ubicaciones`;
+
+  return {
+    ubicacionesProcesadas: listaProcesada,
+    statusGps: status,
+    mensajeGps: mensaje,
+    hayErrorReal: hayError
+  };
 };
