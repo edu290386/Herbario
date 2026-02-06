@@ -224,7 +224,7 @@ export const RegistroPlantaPage = () => {
           <input
             type="file"
             accept="image/*"
-            capture="environment"
+            //capture="environment"
             onChange={(e) => setFoto(e.target.files[0])}
             style={{ display: "none" }}
           />

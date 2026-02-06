@@ -2,6 +2,7 @@ import {
   FaRegCalendarCheck,
   FaUserPlus,
   FaCar,
+  FaSatellite,
 } from "react-icons/fa";
 
 import { FaHouse, FaCity, FaUserGroup } from "react-icons/fa6";
@@ -100,11 +101,7 @@ export const UbicacionInfo = ({
             }}
           >
             <div style={styles.textoDistancia}>
-              <FaSatelliteDish
-                className="info-icon"
-                size={16}
-                color="#D32F2F"
-              />
+              <FaSatellite className="info-icon" size={16} color="#D32F2F" />
               <span
                 style={{
                   fontSize: "0.75rem",
