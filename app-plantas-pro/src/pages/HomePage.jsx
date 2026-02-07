@@ -18,7 +18,12 @@ export const HomePage = () => {
 
   // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
+    //Para limpiar la busqueda (solo filtra un card) luego de agregar ubicacion en detallepage
+       const timeout = setTimeout(() => {
+     setBusqueda("");
+   }, 0);
     cargarPlantasHome();
+    return () => clearTimeout(timeout);
   }, [cargarPlantasHome]);
 
   // 2. Lógica de filtrado para la búsqueda
@@ -108,7 +113,7 @@ export const HomePage = () => {
           {plantasFiltradas.length > 0 && (
             <div className="home-grid">
               {plantasFiltradas.map((p) => (
-                <CardPlanta key={p.id} planta={p} />
+                <CardPlanta key={p.id} planta={p} busqueda={busqueda} />
               ))}
             </div>
           )}

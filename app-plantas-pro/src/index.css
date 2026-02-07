@@ -17,7 +17,7 @@
   --color-claro: rgb(232, 245, 233);
 
   --font-principal: 'Open Sans', sans-serif;
-  --margen-maestro: 15px;
+  --margen-maestro: 5px;
 }
 
 /* 3. RESET GLOBAL */
@@ -42,7 +42,7 @@ html, body, #root {
 
 .home-layout-container {
   width: 100%;
-  max-width: 1490px; /* Límite de 4 cards (350*4 + 20*3) */
+  max-width: 1510px; /* Límite de 4 cards (350*4 + 20*3) */
   margin: 0 auto;
   padding: 0 var(--margen-maestro);
   box-sizing: border-box;
@@ -101,9 +101,8 @@ html, body, #root {
 .search-section, 
 .search-feedback-container {
   width: 100%;
-  max-width: 720px; 
+  max-width: 740px; 
   margin: 0 auto;
-  padding: 0;
 }
 
 .search-wrapper {
@@ -152,13 +151,128 @@ html, body, #root {
 .home-grid {
   display: grid;
   /* Ancho 300px min, 350px max según acuerdo */
-  grid-template-columns: repeat(auto-fill, minmax(300px, 350px));
+  grid-template-columns: repeat(auto-fill, minmax(310px, 360px));
   gap: 20px;
   justify-content: center;
   justify-items: center;   /* Centra la card dentro de su propia columna */
   width: 100%;
   padding: 0px 0;
   margin: 0px auto;
+}
+
+/* --- ESTILOS DE LA CARD PLANTA (VALORES FIJOS ACORDADOS) --- */
+.card-planta {
+  background-color: var(--color-blanco);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 360px;
+  height: 690px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+  isolation: isolate;
+  -webkit-transition: transform 0.2s ease;
+  -moz-transition: transform 0.2s ease;
+  -ms-transition: transform 0.2s ease;
+  -o-transition: transform 0.2s ease;
+}
+
+.card-planta:hover {
+  transform: translateY(-5px);
+}
+
+.card-contenedor-img {
+  height: 440px; /* Altura fija que pediste */
+  width: 100%;
+  flex-shrink: 0;
+  background-color: rgb(249, 249, 249);
+  cursor: pointer;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Mantiene la proporción 4:3 sin deformar */
+  display: block;
+}
+
+.card-info {
+  padding: 10px 20px 20px 20px;
+  height: 250px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-texto {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.card-nombre-comun {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--color-bosque);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.card-nombre-cientifico {
+  margin: 0 0 0px 0;
+  font-size: 1rem;
+  color: rgb(136, 136, 136);
+}
+
+.card-fallback {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-retama);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.9;
+}
+
+/* El contenedor maestro que ya tenemos en CardPlanta */
+.card-otros-nombres-container {
+  margin-top: 8px;
+  line-height: 1.4;
+  height: auto;
+  overflow: hidden;
+
+  /* ACTIVADORES DE ELIPSIS */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4; /* Aquí defines las 4 líneas */
+  line-clamp: 4;
+  text-overflow: ellipsis;
+}
+
+/* Estilos que antes estaban en el componente */
+.otros-nombres-label {
+  font-weight: 700;
+  font-size: 0.95rem; /* Ajustado para que quepa mejor */
+  color: var(--color-bosque);
+}
+
+.otros-nombres-texto {
+  font-size: 0.95rem;
+  color: var(--color-grisTexto);
+}
+
+/* resaltado de texto en buscador */
+.resaltado-amarillo {
+  background-color: #ffff00; /* Usamos tu color retama */
+  color: var(--color-bosque);
+  padding: 0 2px;
+  border-radius: 4px;
+  font-weight: inherit; /* Mantiene la negrita si el padre la tiene */
 }
 
 /* 8. AJUSTES RESPONSIVOS (Giro y Landscape) */

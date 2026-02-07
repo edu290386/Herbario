@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import "./index.css";
-import { obtenerDireccion } from "./helpers/validateCoords";
+import "./helpers/validateCoords";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

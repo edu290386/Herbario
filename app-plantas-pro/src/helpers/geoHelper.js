@@ -2,33 +2,37 @@
  * Obtiene el nombre del distrito y ciudad a partir de coordenadas.
  * Usa Nominatim (OpenStreetMap) de forma gratuita.
  */
-export const obtenerDireccion = async (latitud, longitud) => {
-  if (!latitud || !longitud || latitud === "undefined") return null;
+export const obtenerDireccion = async (lat, lon) => {
+  if (!lat || !lon) return null;
+
+  // Cambiamos a BigDataCloud para evitar que el Registro se bloquee por CORS
+  const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`;
 
   try {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitud}&lon=${longitud}&addressdetails=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error en el servidor de mapas");
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept-Language": "es",
-        "User-Agent": "AppBotanicaAdmin/1.0", // Identificador para la API
-      },
-    });
+    const data = await res.json();
 
-    if (!response.ok) return null;
+    // 1. Aplicamos tu jerarquía de Administrador
+    let nombreLimpio =
+      data.locality || data.city || data.principalSubdivision || "Sin nombre";
 
-    const data = await response.json();
-    const addr = data.address || {};
+    // 2. Limpieza de prefijos para que en tu BD entre el nombre directo
+    nombreLimpio = nombreLimpio.replace(
+      /^(distrito de|provincia de|departamento de|municipalidad de)\s+/gi,
+      "",
+    );
 
-    // Priorizamos nombres locales para el distrito
+    // 3. Devolvemos el objeto con la estructura que tu formulario ya usa
     return {
-      distrito: addr.suburb || addr.city || "No detectado",
-      ciudad: addr.state || addr.region || addr.province || "No detectada",
+      distrito: nombreLimpio,
+      estado: data.principalSubdivision || "Sin nombre",
+      full_data: data,
     };
-  } catch {
-    // catch vacío para silenciar avisos de variables no usadas
-    return null;
+  } catch (error) {
+    console.error("Error en registro de ubicación:", error.message);
+    return { distrito: "Error", estado: "Error" };
   }
 };
 
