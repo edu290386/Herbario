@@ -1,32 +1,176 @@
+/* 1. FUENTES */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+/* 2. VARIABLES DE DISEÑO */
+:root {
+  /* Colores en RGB para inspección fácil */
+  --color-bosque: rgb(47, 69, 56);
+  --color-hoja: rgb(173, 188, 159);
+  --color-retama: rgb(244, 226, 133);
+  --color-fondo: rgb(241, 242, 237);
+  --color-blanco: rgb(255, 255, 255);
+  --color-frondoso: rgb(45, 139, 87);
+  --color-red: rgb(211, 47, 47);
+  --color-grisTexto: rgb(102, 102, 102);
+  --color-grisSuave: rgb(240, 240, 240);
+  --color-encendido: rgb(52, 211, 153);
+  --color-claro: rgb(232, 245, 233);
+
+  --font-principal: 'Open Sans', sans-serif;
+  --margen-maestro: 15px;
+}
+
+/* 3. RESET GLOBAL */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-principal);
+}
+
 html, body, #root {
-  margin: 0px;
-  padding: 0px;
-  min-height: 100%; /* Cambia vh por % para mayor estabilidad */
-  width: 100%;      /* Cambia vw por % */
   background-color: var(--color-fondo) !important;
-  overflow-x: hidden;
-  /* overflow-y: auto;  <-- Asegúrate de que esto NO sea hidden */
-  overscroll-behavior: auto; /* Cambia 'none' por 'contain' para permitir el scroll natural */
-  overflow-y: visible;
+  width: 100%;
+  min-height: 100vh;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 4. CONTENEDORES MAESTROS */
+.home-page {
+  width: 100%;
+  min-height: 100vh;
 }
 
-.blink_me {
-  color: #34D399;
-  animation: blinker 1.7s step-start infinite;
-  -webkit-animation: blinker 1.7s step-start infinite;
+.home-layout-container {
+  width: 100%;
+  max-width: 1490px; /* Límite de 4 cards (350*4 + 20*3) */
+  margin: 0 auto;
+  padding: 0 var(--margen-maestro);
+  box-sizing: border-box;
 }
 
-@keyframes blinker {
-  50% {
-    opacity: 0;
+/* 5. TOP BAR (Avatar y Logout) */
+.home-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 5px 0;
+}
+
+.user-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-text-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name-text {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-bosque);
+  line-height: 1.1;
+}
+
+.user-role-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-grisTexto);
+}
+
+.logout-btn-simple {
+  background: none;
+  border: none;
+  color: var(--color-grisTexto);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.logout-btn-simple:hover {
+  color: var(--color-red);
+  transform: scale(1.1);
+}
+
+/* 6. BUSCADOR Y BANNERS (Máximo 2 cards = 720px) */
+.search-section, 
+.search-feedback-container {
+  width: 100%;
+  max-width: 720px; 
+  margin: 0 auto;
+  padding: 0;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 15px 15px 15px 50px;
+  border-radius: 15px;
+  border: 2px solid rgba(45, 139, 87, 0.4);
+  outline: none;
+  font-size: 1rem;
+  background-color: var(--color-blanco);
+  box-sizing: border-box;
+}
+
+.search-icon {
+  position: absolute;
+  left: 15px;
+  color: var(--color-frondoso);
+  pointer-events: none;
+}
+
+.status-banner-wrapper {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.register-button-wrapper {
+  width: 100%;
+  /* Sincronizado con el ancho máximo de la CardPlanta */
+  max-width: 350px; 
+  /* Centrado automático y margen vertical para separarlo del banner */
+  margin: 10px auto 20px; 
+  /* Asegura que el botón interno ocupe todo el wrapper */
+  display: flex;
+  justify-content: center;
+}
+
+/* 7. GRID DE CARDS */
+.home-grid {
+  display: grid;
+  /* Ancho 300px min, 350px max según acuerdo */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 350px));
+  gap: 20px;
+  justify-content: center;
+  justify-items: center;   /* Centra la card dentro de su propia columna */
+  width: 100%;
+  padding: 0px 0;
+  margin: 0px auto;
+}
+
+/* 8. AJUSTES RESPONSIVOS (Giro y Landscape) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .home-top-bar { padding: 10px 0; }
+  .user-name-text { font-size: 1.1rem; }
+  .search-section { padding-bottom: 10px; }
+}
+/* . Refuerzo específico para Desktop */
+@media (min-width: 1440px) {
+  .home-grid {
+    /* Forzamos las 4 columnas exactas en pantallas de escritorio */
+    grid-template-columns: repeat(4, 350px);
   }
 }
