@@ -13,7 +13,7 @@ import {
 } from "react-icons/io5";
 import { GiCircularSaw } from "react-icons/gi";
 import { TbCloverFilled } from "react-icons/tb";
-import { RegistroLog } from "../components/logs/RegistroLog";
+import { RegistroLog } from "../components/paneles/RegistroLog";
 import {
   getLogs,
   processProposal,
