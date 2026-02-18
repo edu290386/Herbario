@@ -196,9 +196,9 @@ export const HomePage = () => {
               style={{ color: "var(--color-frondoso)", fontSize: "3rem" }}
             />
             <div className="user-text-details">
-              <span className="user-name-text">{user.alias}</span>
+              <span className="user-name-text">{user?.alias}</span>
               <span className="user-role-text">
-                {user?.grupos?.nombre_grupo}
+                {user?.grupos?.nombre_grupo || "Sin grupo"}
               </span>
             </div>
           </div>

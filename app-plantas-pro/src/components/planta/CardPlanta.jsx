@@ -1,19 +1,27 @@
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
 import { OtrosNombres } from "../../components/planta/OtrosNombres";
 import { transformarImagen } from "../../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../ui/BotonPrincipal";
 import { PiPlantThin } from "react-icons/pi";
 import { resaltarTexto } from "../../helpers/highLightText";
 
-export const CardPlanta = ({ planta , busqueda }) => {
+export const CardPlanta = ({ planta, busqueda }) => {
   const navigate = useNavigate();
-  const imagenPerfil = planta.foto_perfil?.[0];
 
   // Función centralizada para navegar al detalle
   const irADetalle = () => {
     navigate(`/planta/${planta.id}`, { state: { planta } });
   };
+
+  // 1. Extraemos la primera foto del array de forma segura
+  const imagenPerfil =
+    Array.isArray(planta.foto_perfil) && planta.foto_perfil.length > 0
+      ? planta.foto_perfil[0]
+      : null;
+
+  // 2. Solo transformamos si imagenPerfil es un string real (no null, no undefined)
+  const imagenFinal =
+    typeof imagenPerfil === "string" ? transformarImagen(imagenPerfil) : null;
 
   return (
     <div className="card-planta">
@@ -21,7 +29,7 @@ export const CardPlanta = ({ planta , busqueda }) => {
       <div className="card-contenedor-img" onClick={irADetalle}>
         {imagenPerfil ? ( // Ahora preguntamos por nuestra constante
           <img
-            src={transformarImagen(imagenPerfil)} // Le pasamos el string limpio (la primera posición)
+            src={imagenFinal} // Le pasamos el string limpio (la primera posición)
             alt={planta.nombres_planta?.[0]}
             className="card-img"
             loading="lazy"
@@ -72,4 +80,4 @@ export const CardPlanta = ({ planta , busqueda }) => {
       </div>
     </div>
   );
-};
+};;
