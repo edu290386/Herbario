@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useMemo } from "react"; // Añadido useMemo
 import { PlantasContext } from "./PlantasContext";
 import { plantasReducer } from "./plantasReducer";
 import { getPlantasBasico } from "../services/plantasServices";
@@ -11,16 +11,10 @@ const INITIAL_STATE = {
 export const PlantasProvider = ({ children }) => {
   const [state, dispatch] = useReducer(plantasReducer, INITIAL_STATE);
 
-  /* Carga las plantas para la HomePage. Si ya existen plantas en el estado global, no realiza la petición a Supabase. */
-
-
- const cargarPlantasHome = useCallback(async () => {
-   //  Si ya hay plantas, salimos.
-   if (state.plantas.length > 0) return;
-
-   dispatch({ type: "[Plantas] - Set Cargando" });
-
-   try {
+  const cargarPlantasHome = useCallback(async () => {
+    if (state.plantas.length > 0) return;
+    dispatch({ type: "[Plantas] - Set Cargando" });
+    try {
       const data = await getPlantasBasico();
       dispatch({
         type: "[Plantas] - Cargar Basico",
@@ -34,9 +28,7 @@ export const PlantasProvider = ({ children }) => {
       });
     }
   }, [state.plantas.length]);
-  
- 
- /* Agrega una planta recién creada al estado global. Esto permite que aparezca en la lista sin necesidad de recargar de la BD.  */
+
   const agregarPlantaLocal = useCallback((nuevaPlanta) => {
     dispatch({
       type: "[Plantas] - Agregar Nueva",
@@ -44,8 +36,6 @@ export const PlantasProvider = ({ children }) => {
     });
   }, []);
 
-
-  /* Actualiza las ubicaciones de una planta específica en el estado global. Ideal para cuando el usuario agrega una ubicación desde el detalle. */
   const agregarUbicacionAlEstado = useCallback((plantaId, nuevaUbi) => {
     dispatch({
       type: "[Plantas] - Actualizar Ubicaciones",
@@ -53,26 +43,35 @@ export const PlantasProvider = ({ children }) => {
     });
   }, []);
 
-const actualizarPlantasTrasRegistro = useCallback((plantaProcesada) => {
-  // Usamos el dispatch para actualizar el estado global y el mismo type de "Cargar Basico" porque sobreescribe el array de plantas
-  
-  dispatch({
-    type: "[Plantas] - Actualizar o Insertar",
-    payload: plantaProcesada,
-  });
-}, []);
+  const actualizarPlantasTrasRegistro = useCallback((plantaProcesada) => {
+    dispatch({
+      type: "[Plantas] - Actualizar o Insertar",
+      payload: plantaProcesada,
+    });
+  }, []);
+
+  // ✅ ESTO DETIENE EL DESMONTAJE DEL GPS
+  // Memorizamos todo el objeto. Si 'state' no cambia, el objeto es el mismo.
+  // Así, AppRouter no detecta cambios falsos y no reinicia la página de registro.
+  const plantasValue = useMemo(
+    () => ({
+      ...state,
+      cargarPlantasHome,
+      agregarPlantaLocal,
+      agregarUbicacionAlEstado,
+      actualizarPlantasTrasRegistro,
+    }),
+    [
+      state,
+      cargarPlantasHome,
+      agregarPlantaLocal,
+      agregarUbicacionAlEstado,
+      actualizarPlantasTrasRegistro,
+    ],
+  );
 
   return (
-    <PlantasContext.Provider
-      value={{
-        ...state,
-        // Métodos y Funciones
-        cargarPlantasHome,
-        agregarPlantaLocal,
-        agregarUbicacionAlEstado,
-        actualizarPlantasTrasRegistro,
-      }}
-    >
+    <PlantasContext.Provider value={plantasValue}>
       {children}
     </PlantasContext.Provider>
   );

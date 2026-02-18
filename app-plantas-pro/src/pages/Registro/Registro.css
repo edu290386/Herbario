@@ -1,0 +1,240 @@
+/* Contenedor Principal */
+.registro-page-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 100px; /* Espacio para no chocar con el footer */
+}
+
+/* Header */
+.registro-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.registro-titulo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-texto-oscuro, #333);
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Tarjeta Principal */
+.registro-card {
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Secciones de Formulario */
+.registro-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.registro-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-gris-medio, #666);
+}
+
+.registro-label-mini {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* Inputs y Selects */
+.registro-input-text, .registro-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #edf2f7;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+}
+
+.registro-input-text:focus, .registro-select:focus {
+  outline: none;
+  border-color: var(--color-frondoso);
+  background: white;
+}
+
+/* Nombre Fijo (Flujo Ubicación) */
+.nombre-fijo-display {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--color-frondoso);
+  margin: 0;
+  padding: 5px 0;
+}
+
+/* Zona de Cámara / Foto */
+.registro-zona-foto {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #f1f5f9;
+  border: 3px dashed #cbd5e1;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #64748b;
+  gap: 10px;
+}
+
+.registro-zona-foto:hover {
+  background: #e2e8f0;
+  border-color: var(--color-frondoso);
+}
+
+.registro-zona-foto.foto-ok {
+  background: #f0fff4;
+  border-style: solid;
+  border-color: var(--color-frondoso);
+  color: var(--color-frondoso);
+}
+
+.registro-zona-foto p {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Validaciones GPS */
+.registro-validaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.val-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Footer de Botones */
+.registro-botones-footer {
+  margin-top: 10px;
+}
+
+/* Select de país específico */
+.selector-pais-box {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+/* --- ESTILOS COMPONENTE GUÍA REGISTRO --- */
+.guia-container {
+  padding: 18px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.05);
+  animation: slideInDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.guia-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.guia-titulo {
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #495057;
+}
+
+.guia-lista {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guia-item {
+  font-size: 0.88rem;
+  color: #4b5563;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.guia-item strong {
+  color: var(--color-frondoso, #2d6a4f);
+}
+
+.sacred-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  color: #2f9e44;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.sacred-leaf {
+  animation: pulse-leaf 2s infinite ease-in-out;
+}
+
+/* Animaciones */
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-leaf {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+}
+
+.guia-container.imagen-tecnica {
+  background: #f0f9ff; /* Azul suave */
+  border-left: 5px solid #0284c7;
+}
+
+/* Estilo para los selects dentro de las tarjetas para que no se vean como inputs planos */
+select.registro-input-text {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 18px;
+  padding-right: 40px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}

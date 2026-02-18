@@ -1,0 +1,66 @@
+/* --- Estilos base del Bloque --- */
+.bloque-identidad {
+    background-color: white;
+    width: 100%;
+    margin: 0 auto 25px auto;
+    padding: 30px 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+/* --- Solo afectan cuando están DENTRO del BloqueIdentidad --- */
+.bloque-identidad .otros-nombres-label {
+    font-size: 0.85rem !important;
+    color: #888 !important;
+    text-transform: uppercase !important;
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-weight: 700 !important;
+}
+
+.bloque-identidad .otros-nombres-texto {
+    font-size: 1.1rem !important;
+    color: #222 !important;
+    line-height: 1.8 !important;
+    display: inline-block !important;
+}
+
+/* --- Estilos generales de Badges (estos sí pueden ser globales) --- */
+.badge-pais {
+    font-size: 0.85rem;
+    background-color: #e8e8e8;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    color: #111;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid #ddd;
+    margin-left: 5px;
+}
+
+.icono-contexto {
+    color: #222;
+    margin-left: 5px;
+}
+
+/* --- Estilos del encabezado del Bloque --- */
+.identidad-nombre-comun {
+    margin: 0;
+    font-size: 2.4rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: capitalize;
+    font-weight: 800;
+}
+
+.identidad-linea-acento {
+    width: 55px;
+    height: 5px;
+    border-radius: 2px;
+    margin: 18px 0 22px 0;
+}

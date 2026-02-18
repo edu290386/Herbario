@@ -24,12 +24,7 @@ export const SeccionInformacion = ({ planta }) => {
        )}
 
        {/* Links Externos: Solo si existen en tu BD */}
-       { (
-         <AcordeonInformacion
-           titulo="Links externos"
-           contenido={<p style={styles.textInterno}></p>}
-         />
-       )}
+       {<AcordeonInformacion titulo="Links externos" contenido={acordeon2} />}
      </div>
    </div>
  );

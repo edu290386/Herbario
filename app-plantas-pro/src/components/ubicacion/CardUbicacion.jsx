@@ -1,131 +1,41 @@
-import { colores } from "../../constants/tema.js";
+import React from "react";
 import { UbicacionInfo } from "./UbicacionInfo.jsx";
+import "./Ubicaciones.css";
 
 export const CardUbicacion = ({
   ubicacion,
   nombrePlanta,
-  isMobile,
+  
   distanciaTexto,
   esReal,
   onEliminar,
   userPhone,
 }) => {
-
-  const cardClassName = `card-herbario-${isMobile ? "mobile" : "desktop"}`;
+  const urlImagen = ubicacion.foto_contexto;
 
   return (
-    <>
-      <style>
-        {`
-          @media (orientation: landscape) and (max-width: 900px) {
-            .${cardClassName} { 
-              height: 280px !important; 
-              max-width: 600px !important; 
-            }
-            .${cardClassName} .foto-contexto { 
-              width: 210px !important; 
-              height: 280px !important; 
-            }
-            /* TEXTOS: Igualamos a Desktop */
-            .${cardClassName} h4 { font-size: 1.1rem !important; }
-            .${cardClassName} span { font-size: 0.95rem !important; }
-            .${cardClassName} b { font-size: 0.95rem !important; }
-
-             /* ICONOS DE FILA (Casa, Ciudad, etc): Desktop usa 20px */
-            .${cardClassName} .info-icon { 
-              width: 20px !important; 
-              height: 20px !important; 
-             }
-
-            /* ICONOS DE ACCIÓN (Maps, Waze, WS): Desktop usa 28px */
-            .${cardClassName} .action-icon { 
-              width: 28px !important; 
-              height: 28px !important; 
-            }
-
-            /* ICONO ELIMINAR: Desktop usa 40px */
-            .${cardClassName} .delete-icon { 
-              width: 40px !important; 
-              height: 40px !important; 
-            }
-          }
-        `}
-      </style>
-
+    <div className="card-ubicacion-base">
       <div
-        className={cardClassName}
+        className={`foto-contexto ${!urlImagen ? "sin-foto" : ""}`}
         style={{
-          ...styles.card,
-          minHeight: "220px",
-          maxWidth: isMobile ? "650px" : "550px",
+          // Si no hay urlImagen, no ponemos la propiedad backgroundImage
+          backgroundImage: urlImagen ? `url("${urlImagen}")` : "none",
+          backgroundColor: urlImagen ? "transparent" : "#e0e0e0", // Color gris neutro si no hay foto
         }}
       >
-        {/* IMAGEN DE CONTEXTO */}
-        <div
-          className="foto-contexto"
-          style={{
-            ...(isMobile ? styles.fotoMobile : styles.fotoLaptop),
-            backgroundImage: `url(${ubicacion.foto_contexto || "https://via.placeholder.com/300"})`,
-          }}
-        />
-
-        {/* INFORMACIÓN Y BOTONES */}
-        <div style={styles.info}>
-          <UbicacionInfo
-            ubicacion={ubicacion}
-            distancia={distanciaTexto}
-            esReal={esReal}
-            isMobile={isMobile}
-            onEliminar={onEliminar}
-            nombrePlanta={nombrePlanta}
-            userPhone={userPhone}
-          />
-        </div>
+        {!urlImagen && <span className="placeholder-text">Sin Foto</span>}
       </div>
-    </>
-  );
-};
 
-const styles = {
-  card: {
-    display: "flex",
-    flexFlow: "row nowrap",
-    width: "100%",
-    overflow: "hidden",
-    boxSizing: "border-box",
-    boxShadow: "8px 2px 20px rgba(0,0,0,0.15)",
-    borderRadius: "20px",
-    backgroundColor: colores.blanco,
-    margin: "10px auto",
-    transition: "all 0.3s ease",
-  },
-  fotoLaptop: {
-    width: "180px",
-    height: "250px",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    flexShrink: 0,
-  },
-  fotoMobile: {
-    width: "160px", // Reducido un poco para dar más espacio al texto en pantallas pequeñas
-    height: "220px",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    flexShrink: 0,
-  },
-  info: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    padding: "10px 10px",
-    gap: "4px",
-    minWidth: 0,
-    overflow: "hidden",
-  },
-  colaborador: {
-    fontSize: "0.8rem",
-    color: "#888",
-    fontStyle: "italic", // Un toque sutil para diferenciarlo de los datos geográficos
-  },
+      <div className="info-contenedor">
+        <UbicacionInfo
+          ubicacion={ubicacion}
+          distancia={distanciaTexto}
+          esReal={esReal}
+          onEliminar={onEliminar}
+          nombrePlanta={nombrePlanta}
+          userPhone={userPhone}
+        />
+      </div>
+    </div>
+  );
 };

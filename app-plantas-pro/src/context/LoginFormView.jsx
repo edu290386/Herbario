@@ -43,13 +43,6 @@ export const LoginFormView = ({
             required={esRegistro}
           />
           <input
-            name="alias"
-            placeholder="Alias (Opcional)"
-            value={form.alias}
-            onChange={onChange}
-            style={styles.input}
-          />
-          <input
             type="email"
             name="correo"
             placeholder="Correo electrónico"

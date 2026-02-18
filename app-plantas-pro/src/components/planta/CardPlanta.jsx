@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { OtrosNombres } from "../../components/planta/OtrosNombres";
 import { transformarImagen } from "../../helpers/cloudinaryHelper";
@@ -9,7 +8,7 @@ import { resaltarTexto } from "../../helpers/highLightText";
 
 export const CardPlanta = ({ planta , busqueda }) => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const imagenPerfil = planta.foto_perfil?.[0];
 
   // Función centralizada para navegar al detalle
   const irADetalle = () => {
@@ -20,9 +19,9 @@ export const CardPlanta = ({ planta , busqueda }) => {
     <div className="card-planta">
       {/* 1. Contenedor de Imagen (Fijo 400px) */}
       <div className="card-contenedor-img" onClick={irADetalle}>
-        {planta.foto_perfil ? (
+        {imagenPerfil ? ( // Ahora preguntamos por nuestra constante
           <img
-            src={transformarImagen(planta.foto_perfil)}
+            src={transformarImagen(imagenPerfil)} // Le pasamos el string limpio (la primera posición)
             alt={planta.nombres_planta?.[0]}
             className="card-img"
             loading="lazy"
@@ -52,7 +51,7 @@ export const CardPlanta = ({ planta , busqueda }) => {
 
           {/* Lista de nombres secundarios */}
           <div className="card-otros-nombres-container">
-            <OtrosNombres lista={planta.nombres_planta} busqueda={busqueda}/>
+            <OtrosNombres lista={planta.nombres_planta} busqueda={busqueda} />
           </div>
         </div>
 
@@ -65,8 +64,6 @@ export const CardPlanta = ({ planta , busqueda }) => {
               state: {
                 plantaId: planta.id,
                 nombres_planta: planta.nombres_planta,
-                vieneDeDetalle: true,
-                usuarioId: user?.id,
               },
             });
           }}

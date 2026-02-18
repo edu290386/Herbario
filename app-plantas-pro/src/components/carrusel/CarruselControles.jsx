@@ -1,38 +1,35 @@
-import {
-  PiCaretDoubleRightBold,
-  PiCaretDoubleLeftBold,
-} from "react-icons/pi";
 import { colores } from "../../constants/tema";
+import "./Carrusel.css";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 export const CarruselControles = ({ onNext, onPrev }) => {
   return (
     <>
-      <button onClick={onPrev} style={{ ...styles.navBtn, left: "15px" }}>
-        <PiCaretDoubleLeftBold size={30} />
+      <button
+        onClick={onPrev}
+        className="nav-btn-carrusel"
+        style={{ left: "15px", backgroundColor: colores.retama }}
+      >
+        <FaAngleLeft
+          size={35}
+          color={colores.bosque}
+          style={{ transform: "translateX(-1px)" }}
+        />
       </button>
-      <button onClick={onNext} style={{ ...styles.navBtn, right: "15px" }}>
-        <PiCaretDoubleRightBold size={40} />
+      <button
+        onClick={onNext}
+        className="nav-btn-carrusel"
+        style={{
+          right: "15px",
+          backgroundColor: colores.retama,
+        }}
+      >
+        <FaAngleRight
+          size={35}
+          color={colores.bosque}
+          style={{ transform: "translateX(2px)" }}
+        />
       </button>
     </>
   );
-};
-
-const styles = {
-  navBtn: {
-    position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
-    border: "none",
-    borderRadius: "50%",
-    width: "40px",
-    height: "40px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    zIndex: 2,
-    color: colores.bosque,
-    backgroundColor: colores.retama,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  },
 };

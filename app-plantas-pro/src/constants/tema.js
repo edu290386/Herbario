@@ -13,6 +13,9 @@ export const colores = {
   white: "#FFFFFF",
   encendido: "#34D399",
   claro: "#E8F5E9",
+  azul: "#3b82f6",
+  amarillo: "#fbbf24",
+  azul_claro: "#eff6ff",
 };
 
 export const ui = {

@@ -6,9 +6,27 @@ import { AuthContext } from "../context/AuthContext";
 import { PlantasContext } from "../context/PlantasContext";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { StatusBanner } from "../components/ui/StatusBanner";
-import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
+import {
+  IoLogOutOutline,
+  IoSearchOutline,
+  IoCloseOutline,
+} from "react-icons/io5";
+import { GiCircularSaw } from "react-icons/gi";
 import { TbCloverFilled } from "react-icons/tb";
-import { obtenerIdentidad } from "../helpers/identidadHelper";
+import { LogCard } from "../components/logs/LogCard"; // Ajusta la ruta
+import {
+  getLogs,
+  processProposal,
+} from "../services/plantasServices";
+import {
+  FaRegBell,
+  FaRegCheckCircle,
+  FaExclamationTriangle,
+  FaMapMarkerAlt,
+  FaSeedling,
+} from "react-icons/fa";
+import { GiCircularSawblade } from "react-icons/gi";
+import { colores } from "../constants/tema";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -16,15 +34,88 @@ export const HomePage = () => {
   const [busqueda, setBusqueda] = useState("");
   const navigate = useNavigate();
 
+  // ESTADOS PARA EL PANEL (DRAWER)
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [tipoPanel, setTipoPanel] = useState(null); // 'actividades' o 'gestion'
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   // 1. El useEffect llama a la función de forma segura al montar el componente
   useEffect(() => {
     //Para limpiar la busqueda (solo filtra un card) luego de agregar ubicacion en detallepage
-       const timeout = setTimeout(() => {
-     setBusqueda("");
-   }, 0);
+    const timeout = setTimeout(() => {
+      setBusqueda("");
+    }, 0);
     cargarPlantasHome();
     return () => clearTimeout(timeout);
   }, [cargarPlantasHome]);
+
+  // FUNCIÓN PARA ABRIR Y CARGAR
+  const togglePanel = async (tipo) => {
+    if (!isPanelOpen || tipoPanel !== tipo) {
+      setLoading(true);
+      setTipoPanel(tipo);
+      setIsPanelOpen(true);
+      try {
+        // getLogs ahora retorna { data, error }
+        const { data, error } = await getLogs(tipo);
+
+        if (error) {
+          console.error(`Error en descartes de ${tipo}:`, error.message);
+          return;
+        }
+        setLogs(data || []);
+      } catch (err) {
+        console.error("Error inesperado:", err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setIsPanelOpen(false);
+    }
+  };
+
+  const handleReview = async (log) => {
+    // Solo los administradores activan esto al dar clic al Warning
+    const res = await processProposal(log, "veredicto_final_admin", user);
+
+    if (res.success) {
+      setLogs((prev) =>
+        prev.map((l) =>
+          l.id === log.id
+            ? {
+                ...l,
+                veredicto: "revisado",
+                veredicto_por: user.alias,
+                revisado: true,
+              }
+            : l,
+        ),
+      );
+    }
+  };
+
+  const handleAction = async (log, accion) => {
+    // accion es "aprobado" o "rechazado" (lo que viene del botón)
+    const comando =
+      accion === "aprobado"
+        ? "filtro_operativo_aprobar"
+        : "filtro_operativo_rechazar";
+
+    const res = await processProposal(log, comando, user);
+
+    if (res.success) {
+      setLogs((prev) =>
+        prev.map((l) =>
+          l.id === log.id
+            ? { ...l, revisado: true } // Veredicto sigue siendo null hasta que tú des clic al Warning
+            : l,
+        ),
+      );
+
+      if (accion === "aprobado") cargarPlantasHome();
+    }
+  };
 
   // 2. Lógica de filtrado para la búsqueda
   const busquedaNorm = busqueda ? normalizarParaBusqueda(busqueda) : "";
@@ -45,25 +136,92 @@ export const HomePage = () => {
 
   return (
     <div className="home-page">
-      {/* EL CONTENEDOR MAESTRO QUE RIGE LOS MÁRGENES DE 15PX */}
+      {/* OVERLAY OSCURO (Al hacer clic fuera, se cierra) */}
+      <div
+        className={`drawer-overlay ${isPanelOpen ? "active" : ""}`}
+        onClick={() => setIsPanelOpen(false)}
+      ></div>
+
+      {/* EL PANEL DESLIZABLE (DRAWER) */}
+      <aside className={`drawer-panel ${isPanelOpen ? "open" : ""}`}>
+        <div className="drawer-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {tipoPanel === "actividades" ? (
+              <>
+                <FaRegBell size={24}/>
+                <h3 style={{ margin: 0 }}>Historial de Actividades</h3>
+              </>
+            ) : (
+              <>
+                <GiCircularSawblade
+                  size={28}
+                  className="icon-spin"
+                />
+                <h3 style={{ margin: 0 }}>Panel de Control</h3>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={() => setIsPanelOpen(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#111111" }}
+          >
+            <IoCloseOutline size={30} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          {loading ? (
+            <p className="loading-text">Cargando...</p>
+          ) : logs.length > 0 ? (
+            logs.map((log) => (
+              <LogCard
+                key={log.id}
+                log={log}
+                userRole={user?.rol}
+                panelType={tipoPanel}
+                onAction={handleAction}
+                onReview={handleReview}
+              />
+            ))
+          ) : (
+            <p className="empty-text">Sin registros recientes</p>
+          )}
+        </div>
+      </aside>
+
       <div className="home-layout-container">
-        {/* TOP BAR: Crece hasta 4 cards */}
         <div className="home-top-bar">
           <div className="user-profile-info">
             <TbCloverFilled
               style={{ color: "var(--color-frondoso)", fontSize: "3rem" }}
             />
             <div className="user-text-details">
-              <span className="user-name-text">{obtenerIdentidad(user)}</span>
+              <span className="user-name-text">{user.alias}</span>
               <span className="user-role-text">
                 {user?.grupos?.nombre_grupo}
               </span>
             </div>
           </div>
 
-          <button onClick={logout} className="logout-btn-simple">
-            <IoLogOutOutline size={40} />
-          </button>
+          <div className="nav-actions">
+            <button
+              onClick={() => togglePanel("actividades")}
+              className="icon-btn"
+            >
+              <FaRegBell size={30} color={colores.frondoso} />
+            </button>
+            {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
+              <button
+                onClick={() => togglePanel("gestion")}
+                className="icon-btn"
+              >
+                <GiCircularSaw size={35} color={colores.frondoso}/>
+              </button>
+            )}
+            <button onClick={logout} className="icon-btn logout-sep">
+              <IoLogOutOutline size={40} />
+            </button>
+          </div>
         </div>
 
         {/* BUSCADOR: Crece hasta 2 cards */}
@@ -90,7 +248,6 @@ export const HomePage = () => {
                   message={`${plantasFiltradas.length} coincidencias encontradas`}
                 />
               </div>
-
               {!existeCoincidenciaExacta && (
                 <div className="register-button-wrapper">
                   <BotonPrincipal

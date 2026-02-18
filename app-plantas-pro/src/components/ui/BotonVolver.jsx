@@ -20,7 +20,7 @@ const styles = {
   btnBack: {
     display: "flex",
     alignItems: "center",
-    padding: "8px 14px 8px 14px",
+    padding: "6px 8px 7px 8px",
     backgroundColor: colores.retama,
     color: colores.bosque,
     border: "none",
@@ -28,8 +28,8 @@ const styles = {
     cursor: "pointer",
     fontWeight: 750,
     position: "absolute", // Para que flote sobre la imagen
-    top: "20px",
-    left: "32px",
+    top: "15px",
+    left: "15px",
     zIndex: 10,
   },
 };

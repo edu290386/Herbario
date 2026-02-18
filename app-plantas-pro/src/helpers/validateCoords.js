@@ -2,7 +2,7 @@
 
 export const obtenerDireccion = async (lat, lon) => {
   if (!lat || !lon)
-    return { Latitud: lat, Longitud: lon, Distrito: "Faltan datos" };
+    return { Latitud: lat, Longitud: lon, distrito: "Faltan datos" };
 
   const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`;
 
@@ -29,22 +29,23 @@ export const obtenerDireccion = async (lat, lon) => {
     );
 
     return {
-      Latitud: lat,
-      Longitud: lon,
-      Distrito: nombreLimpio,
-      Estado: estadoRegion,
+      latitud: lat,
+      longitud: lon,
+      distrito: nombreLimpio,
+      ciudad: estadoRegion,
+      pais: data.countryName || "S/N",
       full_data: data,
     };
   } catch (error) {
     return {
-      Latitud: lat,
-      Longitud: lon,
-      Distrito: "Error: " + error.message,
-      Estado: "Fallo",
+      latitud: lat,
+      longitud: lon,
+      distrito: "Error: " + error.message,
+      ciudad: "Fallo",
     };
   }
 };
 
 // El anclaje global 'auditar' se mantiene igual que en la versión anterior...
 
-//auditar(["-11.86548400", "-77.01673100"]);
+//setGPS("-11.86548400", "-77.01673100");

@@ -2,36 +2,35 @@ import { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-// Importa tus páginas
+// Páginas
 import { HomePage } from "../pages/HomePage";
-import { LoginScreen } from "../context/LoginScreen";
-import { DetallePage } from "../pages/DetallePage";
-import { RegistroPlantaPage } from "../pages/RegistroPlantaPage";
+import { LoginScreen } from "..//context/LoginScreen"; // ✅ Movido de context a pages
+import { DetallePage } from "../pages/Detalle/DetallePage";
+import { RegistroPlantaPage } from "../pages/Registro/RegistroPlantaPage";
 
 export const AppRouter = () => {
-  // Extraemos el estado de autenticación del contexto de Auth
   const { logged } = useContext(AuthContext);
 
+  // Si estás validando el token, muestra un spinner y NO las rutas
   return (
     <Routes>
-      {!logged ? (
-        /* RUTAS PÚBLICAS: Si no está logueado, solo ve login */
-        <>
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/*" element={<Navigate to="/login" replace />} />
-        </>
-      ) : (
-        /* RUTAS PRIVADAS: Solo visibles si logged es true */
-        <>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/registro" element={<RegistroPlantaPage />} />
-          <Route path="/planta/:id" element={<DetallePage />} />
-
-          {/* Redirecciones de seguridad */}
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/*" element={<Navigate to="/" replace />} />
-        </>
-      )}
+      <Route
+        path="/login"
+        element={!logged ? <LoginScreen /> : <Navigate to="/" />}
+      />
+      <Route
+        path="/"
+        element={logged ? <HomePage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/registro"
+        element={logged ? <RegistroPlantaPage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/planta/:id"
+        element={logged ? <DetallePage /> : <Navigate to="/login" />}
+      />
+      <Route path="/*" element={<Navigate to={logged ? "/" : "/login"} />} />
     </Routes>
   );
 };

@@ -1,6 +1,6 @@
 import { resaltarTexto } from "../../helpers/highLightText";
 
-export const OtrosNombres = ({ lista , busqueda}) => {
+export const OtrosNombres = ({ lista, busqueda }) => {
   if (!lista || lista.length <= 1) return null;
 
   const nombresSecundarios = lista.slice(1);
@@ -11,7 +11,10 @@ export const OtrosNombres = ({ lista , busqueda}) => {
       <span className="otros-nombres-texto">
         {nombresSecundarios.map((nombre, i) => (
           <span key={i}>
-            {resaltarTexto(nombre.trim(), busqueda)}
+            {/* Si es string, usamos trim y resaltado. Si no, renderizamos el objeto/icono */}
+            {typeof nombre === "string"
+              ? resaltarTexto(nombre.trim(), busqueda)
+              : nombre}
             {i < nombresSecundarios.length - 1 ? ", " : ""}
           </span>
         ))}

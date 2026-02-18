@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useMemo } from "react";
 import { AuthContext } from "./AuthContext";
 import { authReducer } from "./authReducer"; // Asegúrate de que el nombre coincida
 import { types } from "../types/types"; // O donde tengas tus types
@@ -14,31 +14,33 @@ const init = () => {
 export const AuthProvider = ({ children }) => {
   const [auth, dispatch] = useReducer(authReducer, {}, init);
 
- const login = (usuario = {}) => {
-   // Guardamos todo el objeto para tener el id, nombre y grupo a la mano
-   localStorage.setItem("user", JSON.stringify(usuario));
-
-   const action = {
-     type: types.login,
-     payload: usuario,
-   };
-   dispatch(action);
- };
+  const login = (usuario = {}) => {
+    localStorage.setItem("user", JSON.stringify(usuario));
+    const action = {
+      type: types.login,
+      payload: usuario,
+    };
+    dispatch(action);
+  };
 
   const logout = () => {
     localStorage.removeItem("user");
     dispatch({ type: types.logout });
   };
 
+  // ✅ MEMORIZAMOS EL VALOR
+  // Esto evita que el objeto cambie su dirección de memoria si el estado 'auth' es el mismo.
+  // Sin esto, AppRouter siempre detecta un cambio y desmonta tu página de Registro.
+  const authValue = useMemo(
+    () => ({
+      ...auth,
+      login,
+      logout,
+    }),
+    [auth],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        ...auth,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
   );
 };

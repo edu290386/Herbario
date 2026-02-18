@@ -27,7 +27,7 @@ export const obtenerDireccion = async (lat, lon) => {
     // 3. Devolvemos el objeto con la estructura que tu formulario ya usa
     return {
       distrito: nombreLimpio,
-      estado: data.principalSubdivision || "Sin nombre",
+      ciudad: data.principalSubdivision || "Sin nombre",
       full_data: data,
     };
   } catch (error) {
@@ -35,8 +35,6 @@ export const obtenerDireccion = async (lat, lon) => {
     return { distrito: "Error", estado: "Error" };
   }
 };
-
-
 
 /**
  * Tu lógica: Cálculo de Distancia Pitagórica (en km).
@@ -59,18 +57,27 @@ export const calcularDistanciaPitagorica = (lat1, lon1, lat2, lon2) => {
 };
 
 // NUEVA FUNCIÓN: Procesa toda la lista y decide el estado del GPS
-export const procesarUbicacionesConGPS = (ubicaciones, userCoords, errorGPS) => {
+export const procesarUbicacionesConGPS = (
+  ubicaciones,
+  userCoords,
+  errorGPS,
+) => {
   const LIMITE_REALIDAD_KM = 5000;
   let señalInestable = false;
 
   // 1. Procesar la lista
   const listaProcesada = ubicaciones
-    .filter(u => u.latitud && u.longitud)
-    .map(ubi => {
+    .filter((u) => u.latitud && u.longitud)
+    .map((ubi) => {
       const latUsuario = userCoords?.lat;
       const lonUsuario = userCoords?.lon || userCoords?.lng;
-      
-      const km = calcularDistanciaPitagorica(latUsuario, lonUsuario, ubi.latitud, ubi.longitud);
+
+      const km = calcularDistanciaPitagorica(
+        latUsuario,
+        lonUsuario,
+        ubi.latitud,
+        ubi.longitud,
+      );
 
       // Si detectamos distancia absurda (Laptop error)
       if (km > LIMITE_REALIDAD_KM) {
@@ -78,23 +85,75 @@ export const procesarUbicacionesConGPS = (ubicaciones, userCoords, errorGPS) => 
         return { ...ubi, distanciaTexto: null, esReal: false };
       }
 
-      const texto = km ? (km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`) : null;
+      const texto = km
+        ? km < 1
+          ? `${Math.round(km * 1000)} m`
+          : `${km.toFixed(2)} km`
+        : null;
       return { ...ubi, distanciaTexto: texto, esReal: true };
     });
 
   // 2. Determinar el estado global
   const hayError = errorGPS || señalInestable;
   const status = hayError ? "error" : userCoords ? "success" : "warning";
-  
+
   let mensaje = "🛰️ Esperando señal GPS...";
   if (errorGPS) mensaje = errorGPS;
   else if (señalInestable) mensaje = "Ubicación imprecisa (Señal débil)";
-  else if (userCoords) mensaje = `GPS Activo: ${listaProcesada.length} ubicaciones`;
+  else if (userCoords)
+    mensaje = `GPS Activo: ${listaProcesada.length} ubicaciones`;
 
   return {
     ubicacionesProcesadas: listaProcesada,
     statusGps: status,
     mensajeGps: mensaje,
-    hayErrorReal: hayError
+    hayErrorReal: hayError,
+  };
+};
+
+export const validarProximidadGlobal = (userCoords, coordsExistentes) => {
+  if (!userCoords || !userCoords.lat)
+    return {
+      status: "warning",
+      message: "Esperando señal GPS...",
+      bloquear: true,
+    };
+  if (!coordsExistentes || coordsExistentes.length === 0)
+    return {
+      status: "success",
+      message: "Primer registro para esta planta.",
+      bloquear: false,
+    };
+
+  let minKm = Infinity;
+  coordsExistentes.forEach((u) => {
+    const d = calcularDistanciaPitagorica(
+      userCoords.lat,
+      userCoords.lng,
+      u.latitud,
+      u.longitud,
+    );
+    if (d !== null && d < minKm) minKm = d;
+  });
+
+  const metros = Math.round(minKm * 1000);
+
+  if (metros <= 40)
+    return {
+      status: "error",
+      message: `Bloqueado: Planta registrada a ${metros}m.`,
+      bloquear: true,
+    };
+  if (metros <= 100)
+    return {
+      status: "warning",
+      message: `Aviso: Otra planta a ${metros}m.`,
+      bloquear: false,
+    };
+
+  return {
+    status: "success",
+    message: `Zona libre: Planta más cercana a ${metros}m.`,
+    bloquear: false,
   };
 };

@@ -7,6 +7,7 @@ import {
   activarUsuario,
 } from "../services/usuariosServices";
 import { TbCloverFilled } from "react-icons/tb";
+import { obtenerIdentidad } from "../helpers/identidadHelper";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
@@ -92,7 +93,10 @@ export const LoginScreen = () => {
           ...form,
           nombre: form.nombre.trim(),
           apellido: form.apellido.trim(),
-          alias: form.alias.trim(),
+          alias: obtenerIdentidad({
+            nombre: form.nombre,
+            apellido: form.apellido,
+          }),
         };
 
         const { error: updateError } = await activarUsuario(
