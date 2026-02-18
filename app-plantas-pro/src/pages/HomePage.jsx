@@ -21,7 +21,6 @@ import {
 import { FaRegBell } from "react-icons/fa";
 import { GiCircularSawblade } from "react-icons/gi";
 import { colores } from "../constants/tema";
-import { RegistroLog } from "../components/logs/RegistroLog.jsx";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -138,7 +137,7 @@ export const HomePage = () => {
       ></div>
 
       {/* EL PANEL DESLIZABLE (DRAWER) */}
-     
+    
 
       <div className="home-layout-container">
         <div className="home-top-bar">
