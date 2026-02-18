@@ -13,18 +13,12 @@ import {
 } from "react-icons/io5";
 import { GiCircularSaw } from "react-icons/gi";
 import { TbCloverFilled } from "react-icons/tb";
-import { LogCard } from "../components/logs/LogCard"; // Ajusta la ruta
+import { LogCard } from "../components/logs/LogCard"
 import {
   getLogs,
   processProposal,
 } from "../services/plantasServices";
-import {
-  FaRegBell,
-  FaRegCheckCircle,
-  FaExclamationTriangle,
-  FaMapMarkerAlt,
-  FaSeedling,
-} from "react-icons/fa";
+import { FaRegBell } from "react-icons/fa";
 import { GiCircularSawblade } from "react-icons/gi";
 import { colores } from "../constants/tema";
 
