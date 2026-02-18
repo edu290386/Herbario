@@ -1,10 +1,8 @@
-const CLOUD_NAME = "dk9faaztd"; // Reemplaza con tu Cloud Name de Cloudinary
-const UPLOAD_PRESET = "plantas_preset"; // Reemplaza con tu Upload Preset (debe ser 'unsigned')
+const CLOUD_NAME = "dk9faaztd";
+const UPLOAD_PRESET = "plantas_preset";
 
 /**
  * Sube una imagen directamente a Cloudinary
- * @param {File} file - El archivo de imagen capturado por la cámara o galería
- * @returns {Promise<string>} - La URL de la imagen subida
  */
 export const uploadImage = async (file, path) => {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
@@ -12,8 +10,6 @@ export const uploadImage = async (file, path) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
-  // Si por algún error el path llega vacío, lo mandamos a una carpeta general
-  // para que no se pierda la foto en la raíz de Cloudinary
   formData.append("folder", path || "otros_registros");
 
   try {
@@ -29,31 +25,40 @@ export const uploadImage = async (file, path) => {
     }
 
     const data = await response.json();
-    return data.secure_url; // Esta es la URL que guardaremos en Supabase
+    return data.secure_url;
   } catch (error) {
     console.error("Cloudinary Upload Error:", error);
     return null;
   }
-};;
+};
 
-
+/**
+ * Transforma la URL de Cloudinary de forma segura
+ */
 export const transformarImagen = (url, modo = "card") => {
-  if (!url) return "";
+  // 1. SEGURO TOTAL: Si no es un string, devolvemos vacío y evitamos el crash
+  if (!url || typeof url !== "string") return "";
 
-  // CONFIGURACIÓN PARA DETALLE (CARRUSEL)
-  if (modo === "detalle") {
+  // 2. SEGURO DE FORMATO: Si la URL no es de Cloudinary, la devolvemos tal cual
+  if (!url.includes("/upload/")) return url;
+
+  try {
+    // CONFIGURACIÓN PARA DETALLE (CARRUSEL)
+    if (modo === "detalle") {
+      return url.replace(
+        "/upload/",
+        "/upload/ar_3:4,c_fill,g_auto,w_1200,f_auto,q_auto/",
+      );
+    }
+
+    // CONFIGURACIÓN PARA HOME (LISTADO)
     return url.replace(
       "/upload/",
-      // w_1080, h_1350 -> Relación 4:5 (universal para móvil/laptop)
-      // c_fill -> Llena el espacio sin deformar
-      // g_auto -> Inteligencia Artificial para no cortar la flor/fruto
-      "/upload/ar_3:4,c_fill,g_auto,w_1200,f_auto,q_auto/",
+      "/upload/w_500,h_700,c_fill,g_auto,f_auto,q_auto/",
     );
+  } catch (error) {
+    // Si algo falla en el replace, devolvemos la URL original para no romper la app
+    console.error("Error en transformarImagen:", error);
+    return url;
   }
-
-  // CONFIGURACIÓN PARA HOME (LISTADO)
-  return url.replace(
-    "/upload/",
-    "/upload/w_500,h_700,c_fill,g_auto,f_auto,q_auto/",
-  );
 };
