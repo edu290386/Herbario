@@ -13,7 +13,6 @@ import {
 } from "react-icons/io5";
 import { GiCircularSaw } from "react-icons/gi";
 import { TbCloverFilled } from "react-icons/tb";
-import { LogCard } from "../components/logs/LogCard"
 import {
   getLogs,
   processProposal,
