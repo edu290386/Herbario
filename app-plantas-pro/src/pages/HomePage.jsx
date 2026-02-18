@@ -13,6 +13,7 @@ import {
 } from "react-icons/io5";
 import { GiCircularSaw } from "react-icons/gi";
 import { TbCloverFilled } from "react-icons/tb";
+import { RegistroLog } from "../components/logs/RegistroLog";
 import {
   getLogs,
   processProposal,
@@ -136,7 +137,51 @@ export const HomePage = () => {
       ></div>
 
       {/* EL PANEL DESLIZABLE (DRAWER) */}
-    
+      <aside className={`drawer-panel ${isPanelOpen ? "open" : ""}`}>
+        <div className="drawer-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {tipoPanel === "actividades" ? (
+              <>
+                <FaRegBell size={24}/>
+                <h3 style={{ margin: 0 }}>Historial de Actividades</h3>
+              </>
+            ) : (
+              <>
+                <GiCircularSawblade
+                  size={28}
+                  className="icon-spin"
+                />
+                <h3 style={{ margin: 0 }}>Panel de Control</h3>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={() => setIsPanelOpen(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#111111" }}
+          >
+            <IoCloseOutline size={30} />
+          </button>
+        </div>
+        <div className="drawer-body">
+          {loading ? (
+            <p className="loading-text">Cargando...</p>
+          ) : logs.length > 0 ? (
+            logs.map((log) => (
+              <RegistroLog
+                key={log.id}
+                log={log}
+                userRole={user?.rol}
+                panelType={tipoPanel}
+                onAction={handleAction}
+                onReview={handleReview}
+              />
+            ))
+          ) : (
+            <p className="empty-text">Sin registros recientes</p>
+          )}
+        </div>
+      </aside>
 
       <div className="home-layout-container">
         <div className="home-top-bar">
