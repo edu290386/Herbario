@@ -1,6 +1,6 @@
 import { CardUbicacion } from "./CardUbicacion";
 import { StatusBanner } from "../ui/StatusBanner";
-import "./ubicaciones.css"
+import "./Ubicaciones.css"
 import { procesarUbicacionesConGPS } from "../../helpers/geoHelper";
 import { BotonPrincipal } from "../ui/BotonPrincipal";
 
