@@ -116,7 +116,7 @@ const styles = {
   },
   contenedorImagen: {
     width: "100%",
-    aspectRatio: "1 / 1",
+    aspectRatio: "4 / 5",
     backgroundColor: "#f8fafc",
   },
   imagen: {

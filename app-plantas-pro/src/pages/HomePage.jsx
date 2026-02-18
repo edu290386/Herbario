@@ -89,25 +89,24 @@ export const HomePage = () => {
     }
   };
 
-  const handleAction = async (log, accion) => {
-    // accion es "aprobado" o "rechazado" (lo que viene del botón)
-    const comando =
-      accion === "aprobado"
-        ? "filtro_operativo_aprobar"
-        : "filtro_operativo_rechazar";
-
+  const handleAction = async (log, comando) => {
     const res = await processProposal(log, comando, user);
 
     if (res.success) {
       setLogs((prev) =>
         prev.map((l) =>
           l.id === log.id
-            ? { ...l, revisado: true } // Veredicto sigue siendo null hasta que tú des clic al Warning
+            ? {
+                ...l,
+                revisado: true,
+                revisado_por: user.alias,
+                fecha_revision: new Date().toISOString(),
+                }
             : l,
         ),
       );
-
-      if (accion === "aprobado") cargarPlantasHome();
+    } else {
+      alert("Error: " + res.error);
     }
   };
 
