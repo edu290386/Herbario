@@ -65,10 +65,11 @@ export const getLogs = async (panelType) => {
   if (panelType === "gestion") {
     const fecha7 = new Date();
     fecha7.setDate(fecha7.getDate() - 7);
+
     return await query
       .in("tipo_accion", ["nueva_imagen", "nuevo_nombre"])
       .or(
-        `revisado.eq.false,and(revisado.eq.true,created_at.gte.${fecha7.toISOString()})`,
+        `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${fecha7.toISOString()})`,
       );
   }
 };
@@ -77,7 +78,7 @@ export const getLogs = async (panelType) => {
  * REGISTROS INICIALES (POST)
  */
 
-// 4. Crear nueva especie (Nace con veredicto null para tu revisión)
+// 4. Crear nueva especie
 export const crearEspecieNueva = async (
   nombre,
   fotoUrl,
@@ -111,7 +112,7 @@ export const crearEspecieNueva = async (
       tipo_accion: "nueva_planta",
       contenido: fotoUrl,
       revisado: false,
-      veredicto: null,
+      auditado: null,
     },
   ]);
   return nueva;
@@ -164,12 +165,12 @@ export const agregarUbicacion = async (
       ciudad: datos?.ciudad || null,
       distrito: datos?.distrito || null,
       revisado: true,
-      veredicto: "revisado",
-      veredicto_por: alias,
+      auditado: "revisado",
+      auditado_por: alias,
       revisado_por: alias,
       // Enviamos la fecha a ambos campos para evitar fallos de visualización
       fecha_revision: ahora,
-      fecha_veredicto: ahora,
+      fecha_auditado: ahora,
       created_at: ahora,
     },
   ]);
@@ -200,8 +201,8 @@ export const registrarPropuestaImagen = async (
       grupo_id: grupoId,
       tipo_accion: "nueva_imagen",
       contenido: `${etiqueta}|${url}`,
-      revisado: false,
-      veredicto: null,
+      revisado: "pendiente",
+      auditado: "pendiente",
     },
   ]);
 };
@@ -260,7 +261,7 @@ export const agregarDetalleStaff = async (
       contenido: nuevoNombre,
       pais_codigo: paisCodigo,
       revisado: false,
-      veredicto: null,
+      auditado: null,
     },
   ]);
 
@@ -268,60 +269,64 @@ export const agregarDetalleStaff = async (
   return { id: plantaId }; // Retorno mínimo para que el Registro no de error
 };
 
-/**
- * Procesa la aprobación o rechazo de una propuesta en el log
- * @param {Object} proposal - El objeto completo del log
- * @param {string} veredicto - 'Aprobado' o 'Rechazado'
- * @param {string} revisorActual - El nombre/id del usuario que revisa (ej: 'kcenteno')
- */
-export const processProposal = async (proposal, veredicto, revisorActual) => {
+
+export const processProposal = async (proposal, comando, revisorAlias) => {
   try {
-    const { id: logId, contenido, tipo_accion } = proposal;
-    const isRejecting = veredicto === 'Rechazado';
-    
-    // 1. Preparar el objeto base de actualización
+    const { id: logId, contenido } = proposal;
+
+    // Identificamos la acción según el comando del botón
+    const esAprobar = comando === "filtro_operativo_aprobar";
+    const esRechazar = comando === "filtro_operativo_rechazar";
+    const esAuditoriaAdmin = comando === "auditado_final_admin";
+
+    console.log(`🛠️ Procesando Comando: ${comando} | Por: ${revisorAlias}`);
+
+    // Objeto base de actualización
     let updateData = {
-      veredicto: veredicto,
-      revisado_por: revisorActual,
-      fecha_revision: new Date().toISOString()
+      revisado_por: revisorAlias,
+      fecha_revision: new Date().toISOString(),
     };
 
-    // 2. LÓGICA DE LIMPIEZA TOTAL (Si es Rechazado)
-    // Se ejecuta para CUALQUIER revisor autorizado
-    if (isRejecting) {
-      console.log(`🚫 Rechazo procesado por: ${revisorActual}. Iniciando limpieza...`);
-      
-      // Cambiamos el tipo de acción y limpiamos el contenido
-      updateData.tipo_accion = 'imagen_rechazada';
-      
-      // Extraemos la parte del nombre (hoja, flor, etc.) antes del '|'
-      const categoria = contenido.split('|')[0].trim();
-      updateData.contenido = `${categoria}| Archivo eliminado físicamente`;
+    // CASO 1: APROBAR (Filtro Operativo)
+    if (esAprobar) {
+      updateData.revisado = "aprobado"; // Cambia de bool a string
+    }
 
-      // Intentamos el borrado físico en Cloudinary
-      if (contenido.includes('http')) {
-        const urlFoto = contenido.split('|')[1]?.trim();
+    // CASO 2: RECHAZAR (Filtro Operativo + Limpieza)
+    if (esRechazar) {
+      updateData.revisado = "rechazado"; // Cambia de bool a string
+      updateData.tipo_accion = "imagen_rechazada";
+
+      const partes = contenido.split("|");
+      const categoria = partes[0].trim();
+      updateData.contenido = `${categoria}| Archivo eliminado`;
+
+      if (contenido.includes("http")) {
+        const urlFoto = partes[1]?.trim();
         if (urlFoto) {
-          console.log("🗑️ Solicitando borrado físico de:", urlFoto);
-          await ejecutarEliminarImagenLog(urlFoto); 
+          console.log("🗑️ Borrando archivo físico de Cloudinary...");
+          await ejecutarEliminarImagenLog(urlFoto);
         }
       }
     }
 
-    // 3. ACTUALIZACIÓN EN SUPABASE
+    // CASO 3: AUDITORÍA (Clic en el Warning - Admin)
+    if (esAuditoriaAdmin) {
+      updateData.auditado = "revisado"; // Cambia de 'pendiente' a 'revisado'
+    }
+
     const { data, error } = await supabase
-      .from('logs')
+      .from("logs")
       .update(updateData)
-      .eq('id', logId)
+      .eq("id", logId)
       .select();
 
     if (error) throw error;
 
-    console.log("✅ Log actualizado con éxito:", data);
-    return { success: true, data };
-
+    console.log("✅ Registro actualizado:", data[0]);
+    return { success: true, data: data[0] };
   } catch (err) {
-    console.error("❌ Error en processProposal:", err.message);
+    console.error("🚨 Error en processProposal:", err.message);
     return { success: false, error: err.message };
   }
 };

@@ -6,10 +6,11 @@ export const RegistroLog = ({ log, userRole, panelType, onAction, onReview }) =>
   const isAdmin = userRole === "Administrador";
 
   // PUNTO 2: El filtro operativo (Botones) desaparece si el log ya fue REVISADO
-  const mostrarBotones = esGestion && !log.revisado;
+  const mostrarBotones =
+    esGestion && log.revisado !== "aprobado" && log.revisado !== "rechazado";
 
-  // PUNTO 3: El Check Azul solo aparece si TÚ diste el veredicto final
-  const tieneVeredicto = log.veredicto === "revisado";
+  // PUNTO 3: El Check Azul
+  const estaAuditado = log.auditado === "revisado";
 
   // 1. PROCESAR CONTENIDO (etiqueta|url para imágenes)
   const partes = log.contenido?.split("|") || [];
@@ -51,16 +52,16 @@ export const RegistroLog = ({ log, userRole, panelType, onAction, onReview }) =>
           <div
             style={{
               ...styles.estadoIcono,
-              cursor: isAdmin && !tieneVeredicto ? "pointer" : "default",
+              cursor: isAdmin && !estaAuditado ? "pointer" : "default",
             }}
             onClick={() =>
               isAdmin &&
-              !tieneVeredicto &&
-              onReview(log, "veredicto_final_admin")
+              !estaAuditado &&
+              onReview(log, "auditado_final_admin")
             }
-            title={isAdmin ? "Dar veredicto final" : ""}
+            title={isAdmin ? "Auditar" : ""}
           >
-            {tieneVeredicto ? (
+            {estaAuditado ? (
               <FaRegCheckCircle size={32} color={colores.azul} />
             ) : (
               <FaExclamationTriangle size={32} color="#cbd5e1" />

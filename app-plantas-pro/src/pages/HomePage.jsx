@@ -71,7 +71,8 @@ export const HomePage = () => {
 
   const handleReview = async (log) => {
     // Solo los administradores activan esto al dar clic al Warning
-    const res = await processProposal(log, "veredicto_final_admin", user);
+    // Pasamos el alias directamente: user.alias
+    const res = await processProposal(log, "auditado_final_admin", user.alias);
 
     if (res.success) {
       setLogs((prev) =>
@@ -79,9 +80,7 @@ export const HomePage = () => {
           l.id === log.id
             ? {
                 ...l,
-                veredicto: "revisado",
-                veredicto_por: user.alias,
-                revisado: true,
+                ...res.data, // Usamos la data real que viene de la DB
               }
             : l,
         ),
@@ -90,7 +89,8 @@ export const HomePage = () => {
   };
 
   const handleAction = async (log, comando) => {
-    const res = await processProposal(log, comando, user);
+    // Pasamos el alias directamente: user.alias
+    const res = await processProposal(log, comando, user.alias);
 
     if (res.success) {
       setLogs((prev) =>
@@ -98,10 +98,8 @@ export const HomePage = () => {
           l.id === log.id
             ? {
                 ...l,
-                revisado: true,
-                revisado_por: user.alias,
-                fecha_revision: new Date().toISOString(),
-                }
+                ...res.data, // Usamos la data real que viene de la DB
+              }
             : l,
         ),
       );
