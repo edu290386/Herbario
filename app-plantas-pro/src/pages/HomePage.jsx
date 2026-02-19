@@ -21,6 +21,8 @@ import {
 import { FaRegBell } from "react-icons/fa";
 import { GiCircularSawblade } from "react-icons/gi";
 import { colores } from "../constants/tema";
+import { FaMicroscope } from "react-icons/fa6";
+import { LuMicroscope } from "react-icons/lu";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -139,15 +141,12 @@ export const HomePage = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {tipoPanel === "actividades" ? (
               <>
-                <FaRegBell size={24}/>
+                <FaRegBell size={24} />
                 <h3 style={{ margin: 0 }}>Historial de Actividades</h3>
               </>
             ) : (
               <>
-                <GiCircularSawblade
-                  size={28}
-                  className="icon-spin"
-                />
+                <LuMicroscope size={28} className="icon-spin" />
                 <h3 style={{ margin: 0 }}>Panel de Control</h3>
               </>
             )}
@@ -155,7 +154,12 @@ export const HomePage = () => {
 
           <button
             onClick={() => setIsPanelOpen(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#111111" }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#111111",
+            }}
           >
             <IoCloseOutline size={30} />
           </button>
@@ -206,7 +210,7 @@ export const HomePage = () => {
                 onClick={() => togglePanel("gestion")}
                 className="icon-btn"
               >
-                <GiCircularSaw size={35} color={colores.frondoso}/>
+                <LuMicroscope size={32} color={colores.frondoso} />
               </button>
             )}
             <button onClick={logout} className="icon-btn logout-sep">
