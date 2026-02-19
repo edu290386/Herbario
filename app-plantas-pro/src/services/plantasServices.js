@@ -67,7 +67,12 @@ export const getLogs = async (panelType) => {
     fecha7.setDate(fecha7.getDate() - 7);
 
     return await query
-      .in("tipo_accion", ["nueva_imagen", "nuevo_nombre"])
+      .in("tipo_accion", [
+        "nueva_imagen",
+        "nuevo_nombre",
+        "imagen_rechazada",
+        "imagen_aprobada",
+      ])
       .or(
         `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${fecha7.toISOString()})`,
       );
@@ -129,7 +134,7 @@ export const agregarUbicacion = async (
   alias,
   grupoId,
 ) => {
-  console.log(datos)
+  console.log(datos);
   // 1. Registro en Ubicaciones
   const { data, error } = await supabase
     .from("ubicaciones")
@@ -226,7 +231,7 @@ export const eliminarUbicacionConFoto = async (idUbi, urlFoto) => {
   try {
     // 1. Extraer el Public ID de Cloudinary desde la URL
     // Ejemplo: .../upload/v1234/folder/foto.jpg -> folder/foto
-    
+
     const partes = urlFoto.split("/upload/");
     if (partes.length < 2) throw new Error("URL de foto inválida");
 
@@ -279,52 +284,59 @@ export const agregarDetalleStaff = async (
   return { id: plantaId }; // Retorno mínimo para que el Registro no de error
 };
 
-
 export const processProposal = async (proposal, comando, revisorAlias) => {
   try {
     const { id: logId, contenido } = proposal;
 
-    // Identificamos la acción según el comando del botón
+    // 1. Identificamos la acción según el comando del botón
     const esAprobar = comando === "filtro_operativo_aprobar";
     const esRechazar = comando === "filtro_operativo_rechazar";
     const esAuditoriaAdmin = comando === "auditado_final_admin";
 
     console.log(`🛠️ Procesando Comando: ${comando} | Por: ${revisorAlias}`);
 
-    // Objeto base de actualización
+    // 2. Objeto base de actualización (Campos comunes)
     let updateData = {
       revisado_por: revisorAlias,
       fecha_revision: new Date().toISOString(),
     };
 
-    // CASO 1: APROBAR (Filtro Operativo)
+    // --- LÓGICA DE FILTRO OPERATIVO ---
+
+    // CASO 1: APROBAR
     if (esAprobar) {
-      updateData.revisado = "aprobado"; // Cambia de bool a string
+      updateData.revisado = "aprobado";
+      updateData.tipo_accion = "imagen_aprobada"; // Nuevo estado para trazabilidad
     }
 
-    // CASO 2: RECHAZAR (Filtro Operativo + Limpieza)
+    // CASO 2: RECHAZAR (Con limpieza física y lógica)
     if (esRechazar) {
-      updateData.revisado = "rechazado"; // Cambia de bool a string
+      updateData.revisado = "rechazado";
       updateData.tipo_accion = "imagen_rechazada";
 
+      // Limpieza de contenido: mantenemos la categoría pero quitamos la URL
       const partes = contenido.split("|");
       const categoria = partes[0].trim();
-      updateData.contenido = `${categoria}| Archivo eliminado`;
+      updateData.contenido = `${categoria}| Archivo eliminado físicamente`;
 
+      // Borrado físico en Cloudinary si existe URL
       if (contenido.includes("http")) {
         const urlFoto = partes[1]?.trim();
         if (urlFoto) {
-          console.log("🗑️ Borrando archivo físico de Cloudinary...");
+          console.log("🗑️ Iniciando borrado físico en Cloudinary...");
           await ejecutarEliminarImagenLog(urlFoto);
         }
       }
     }
 
-    // CASO 3: AUDITORÍA (Clic en el Warning - Admin)
+    // --- LÓGICA DE AUDITORÍA ADMIN ---
+
+    // CASO 3: AUDITORÍA (Clic en el Warning)
     if (esAuditoriaAdmin) {
-      updateData.auditado = "revisado"; // Cambia de 'pendiente' a 'revisado'
+      updateData.auditado = "revisado"; // De 'pendiente' a 'revisado'
     }
 
+    // 3. Ejecución de la actualización en Supabase
     const { data, error } = await supabase
       .from("logs")
       .update(updateData)
@@ -333,7 +345,7 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
 
     if (error) throw error;
 
-    console.log("✅ Registro actualizado:", data[0]);
+    console.log("✅ Registro actualizado en DB:", data[0]);
     return { success: true, data: data[0] };
   } catch (err) {
     console.error("🚨 Error en processProposal:", err.message);
@@ -342,27 +354,30 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
 };
 
 /**
- * Función de apoyo para invocar la Edge Function de borrado
+ * Función auxiliar para el borrado físico en Cloudinary
+ * (Asegúrate de tenerla exportada o definida en el mismo archivo)
  */
 export const ejecutarEliminarImagenLog = async (urlFoto) => {
   try {
     const partes = urlFoto.split("/upload/");
     if (partes.length < 2) return;
 
-    // Extraer PublicID: carpeta/subcarpeta/nombre_sin_extension
     const rutaConVersion = partes[1].split("/");
     const publicId = decodeURIComponent(
-      rutaConVersion.slice(1).join("/").split(".")[0]
+      rutaConVersion.slice(1).join("/").split(".")[0],
     );
 
-    const { data, error } = await supabase.functions.invoke("eliminar-imagen-log", {
-      body: { publicId },
-    });
+    const { data, error } = await supabase.functions.invoke(
+      "eliminar-imagen-log",
+      {
+        body: { publicId },
+      },
+    );
 
     if (error) throw error;
     return data;
   } catch (err) {
-    console.error("⚠️ Error en borrado físico (Cloudinary):", err.message);
+    console.error("⚠️ Error en Cloudinary:", err.message);
     return null;
   }
 };
