@@ -264,105 +264,143 @@ export const agregarDetalleStaff = async (
   nuevoNombre,
   paisCodigo,
   user,
+  nombrePlanta
 ) => {
-  // Solo crea el LOG. No toca la tabla 'plantas'.
+  // Guardamos "Nombre|CodigoPais" para que processProposal sepa qué hacer con ambos
   const { error } = await supabase.from("logs").insert([
     {
       planta_id: plantaId,
+      nombre_planta: nombrePlanta,
       usuario_id: user.id,
       alias: user.alias,
       grupo_id: user.grupo_id,
-      tipo_accion: "nuevo_nombre", // Esto activa la lógica en processProposal
-      contenido: nuevoNombre,
-      pais_codigo: paisCodigo,
+      tipo_accion: "nuevo_nombre",
+      contenido: `${nuevoNombre}|${paisCodigo}`,
       revisado: "pendiente",
       auditado: "pendiente",
     },
   ]);
 
   if (error) throw error;
-  return { id: plantaId }; // Retorno mínimo para que el Registro no de error
+  return { id: plantaId };
 };
 
 export const processProposal = async (proposal, comando, revisorAlias) => {
   try {
-    const { id: logId, contenido, planta_id } = proposal;
+    const { id: logId, contenido, planta_id, tipo_accion } = proposal;
 
-    // 1. Identificamos la acción según el comando del botón
     const esAprobar = comando === "filtro_operativo_aprobar";
     const esRechazar = comando === "filtro_operativo_rechazar";
     const esAuditoriaAdmin = comando === "auditado_final_admin";
 
-    console.log(`🛠️ Procesando: ${comando} | Revisor: ${revisorAlias}`);
+    console.log(
+      `🛠️ Procesando: ${comando} | Revisor: ${revisorAlias} | Acción: ${tipo_accion}`,
+    );
 
-    // 2. Objeto base para actualizar la tabla LOGS
     let updateLogData = {
       revisado_por: revisorAlias,
       fecha_revision: new Date().toISOString(),
     };
 
-    // --- CASO 1: APROBAR (Sincronización con Tabla Plantas mediante PUSH) ---
+    // --- CASO 1: APROBAR (Sincronización con Tabla Plantas) ---
     if (esAprobar) {
       updateLogData.revisado = "aprobado";
-      updateLogData.tipo_accion = "imagen_aprobada";
 
-      // Procesamos el contenido del log: "etiqueta|url"
-      const [etiqueta, url] = contenido.split("|").map((s) => s.trim());
+      // A. SI ES IMAGEN TÉCNICA
+      if (tipo_accion === "nueva_imagen") {
+        updateLogData.tipo_accion = "imagen_aprobada";
+        const [etiqueta, url] = contenido.split("|").map((s) => s.trim());
 
-      if (url && planta_id) {
-        const columnaPlanta = `foto_${etiqueta.toLowerCase()}`;
-        console.log(`📸 Iniciando PUSH en columna: ${columnaPlanta}`);
+        if (url && planta_id) {
+          const columna = `foto_${etiqueta.toLowerCase()}`;
+          const { data: p } = await supabase
+            .from("plantas")
+            .select(columna)
+            .eq("id", planta_id)
+            .single();
 
-        // A. Obtenemos el array actual de la planta
-        const { data: plantaActual, error: errorFetch } = await supabase
-          .from("plantas")
-          .select(columnaPlanta)
-          .eq("id", planta_id)
-          .single();
+          const arrayAnterior = p?.[columna] || [];
+          const nuevoArray = [...arrayAnterior, url];
 
-        if (errorFetch)
-          throw new Error("No se pudo obtener la planta para el push");
-
-        // B. Preparamos el nuevo array (mantenemos lo anterior + lo nuevo)
-        const arrayAnterior = plantaActual?.[columnaPlanta] || [];
-        const nuevoArray = [...arrayAnterior, url];
-
-        // C. Actualizamos la tabla plantas sin chancar (sobrescribir) lo viejo
-        const { error: errorPlanta } = await supabase
-          .from("plantas")
-          .update({ [columnaPlanta]: nuevoArray })
-          .eq("id", planta_id);
-
-        if (errorPlanta) throw errorPlanta;
-        console.log("✅ Imagen añadida exitosamente a la planta.");
+          await supabase
+            .from("plantas")
+            .update({ [columna]: nuevoArray })
+            .eq("id", planta_id);
+          console.log(`✅ Imagen (${etiqueta}) añadida a la planta.`);
+        }
       }
-    }
 
-    // --- CASO 2: RECHAZAR (Limpieza de Log + Borrado físico Cloudinary) ---
-    if (esRechazar) {
-      updateLogData.revisado = "rechazado";
-      updateLogData.tipo_accion = "imagen_rechazada";
+      // B. SI ES NUEVO NOMBRE (Doble Push: Nombres y Países)
+      if (tipo_accion === "nuevo_nombre") {
+        updateLogData.tipo_accion = "nombre_aprobado";
 
-      const partes = contenido.split("|");
-      const categoria = partes[0].trim();
-      // Dejamos el log limpio sin la URL rota
-      updateLogData.contenido = `${categoria}| Archivo eliminado físicamente`;
+        // Separamos el "Nombre|CodigoPais" que enviamos desde el service
+        const [nombreExtra, codigoPais] = contenido
+          .split("|")
+          .map((s) => s.trim());
 
-      if (contenido.includes("http")) {
-        const urlFoto = partes[1]?.trim();
-        if (urlFoto) {
-          console.log("🗑️ Ejecutando borrado en Cloudinary...");
-          await ejecutarEliminarImagenLog(urlFoto);
+        if (nombreExtra && planta_id) {
+          // 1. Obtenemos arrays actuales
+          const { data: p } = await supabase
+            .from("plantas")
+            .select("nombres, paises_nombre")
+            .eq("id", planta_id)
+            .single();
+
+          // 2. Preparamos nuevos arrays evitando duplicados
+          const listaNombres = p?.nombres || [];
+          const listaPaises = p?.paises_nombre || [];
+
+          const nuevosNombres = listaNombres.includes(nombreExtra)
+            ? listaNombres
+            : [...listaNombres, nombreExtra];
+
+          const nuevosPaises =
+            codigoPais && !listaPaises.includes(codigoPais)
+              ? [...listaPaises, codigoPais]
+              : listaPaises;
+
+          // 3. Actualizamos tabla plantas
+          await supabase
+            .from("plantas")
+            .update({
+              nombres: nuevosNombres,
+              paises_nombre: nuevosPaises,
+            })
+            .eq("id", planta_id);
+
+          console.log(
+            `✅ Nombre "${nombreExtra}" y País "${codigoPais}" añadidos.`,
+          );
         }
       }
     }
 
-    // --- CASO 3: AUDITORÍA (Marca administrativa) ---
+    // --- CASO 2: RECHAZAR ---
+    if (esRechazar) {
+      updateLogData.revisado = "rechazado";
+
+      if (tipo_accion === "nueva_imagen") {
+        updateLogData.tipo_accion = "imagen_rechazada";
+        const [cat, url] = contenido.split("|");
+        updateLogData.contenido = `${cat}| Archivo eliminado físicamente`;
+        if (url?.includes("http")) await ejecutarEliminarImagenLog(url.trim());
+      }
+
+      if (tipo_accion === "nuevo_nombre") {
+        updateLogData.tipo_accion = "nombre_rechazado";
+        // Limpiamos el contenido del log para que no se vea el pipe | en el historial
+        const [nom] = contenido.split("|");
+        updateLogData.contenido = `${nom} (Propuesta rechazada)`;
+      }
+    }
+
+    // --- CASO 3: AUDITORÍA ---
     if (esAuditoriaAdmin) {
       updateLogData.auditado = "revisado";
     }
 
-    // 3. Ejecución final: Actualizamos el registro en la tabla LOGS
+    // Actualización del Log en Supabase
     const { data, error } = await supabase
       .from("logs")
       .update(updateLogData)
@@ -370,11 +408,9 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
       .select();
 
     if (error) throw error;
-
-    console.log("🚀 Proceso finalizado con éxito para el Log ID:", logId);
     return { success: true, data: data[0] };
   } catch (err) {
-    console.error("🚨 Error crítico en processProposal:", err.message);
+    console.error("🚨 Error en processProposal:", err.message);
     return { success: false, error: err.message };
   }
 };

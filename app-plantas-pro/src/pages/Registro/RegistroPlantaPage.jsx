@@ -112,12 +112,27 @@ export const RegistroPlantaPage = () => {
     );
 
   const formularioInvalido = useMemo(() => {
+    // 1. Si ya estamos procesando o guardamos con éxito, bloqueamos
     if (cargando || guardadoExitoso) return true;
-    if (!tieneFotoReal) return true;
-    if (esNuevaPlanta) return !nombreLocal.trim() || existeCoincidencia;
-    if (esSoloUbicacion) return !gpsListo || validacionDistancia.bloquear;
-    if (esAgregarDetalle) return !nuevoNombreSecundario.trim();
-    if (esImagenTecnica) return false; // Solo requiere foto
+    // 2. FOTO es obligatoria en todos los flujos EXCEPTO en "Agregar Detalle" (Nombres)
+    if (!esAgregarDetalle && !tieneFotoReal) return true;
+    // 3. VALIDACIÓN POR FLUJO ESPECÍFICO
+    if (esNuevaPlanta) {
+      // Requiere nombre y que no exista ya
+      return !nombreLocal.trim() || existeCoincidencia;
+    }
+    if (esSoloUbicacion) {
+      // Requiere GPS listo y estar en zona permitida
+      return !gpsListo || validacionDistancia.bloquear;
+    }
+    if (esAgregarDetalle) {
+      // Solo requiere que el nuevo nombre no esté vacío
+      return !nuevoNombreSecundario.trim();
+    }
+    if (esImagenTecnica) {
+      // Si llegó aquí es porque tieneFotoReal (regla 2), así que es válido
+      return false;
+    }
     return false;
   }, [
     cargando,
@@ -137,15 +152,22 @@ export const RegistroPlantaPage = () => {
   // --- 5. MANEJADOR DE ENVÍO ---
   const manejarEnvio = async (e) => {
     if (e) e.preventDefault();
-    if (formularioInvalido) return;
+
+    // 1. Bloqueo de seguridad: Si el formulario es inválido, no hace nada.
+    if (formularioInvalido) {
+      console.warn("Formulario inválido: faltan campos o requisitos.");
+      return;
+    }
 
     setCargando(true);
+
     try {
       let urlFoto = null;
       let plantaFinal = null;
       let nuevaUbi = null;
 
-      // Subida de imagen
+      // --- A. SUBIDA DE IMAGEN ---
+      // Solo se ejecuta si hay una foto cargada (opcional en agregar nombre)
       if (tieneFotoReal) {
         const nombreCarpetaRaiz = formatearParaDB(nombreLocal);
         const subCarpetaDinamica = esImagenTecnica
@@ -153,46 +175,60 @@ export const RegistroPlantaPage = () => {
           : esSoloUbicacion
             ? "ubicaciones"
             : "perfil";
+
         urlFoto = await uploadImage(
           foto,
           `${nombreCarpetaRaiz}/${subCarpetaDinamica}`,
         );
       }
 
-      // Lógica por flujo
+      // --- B. LÓGICA POR FLUJO ---
+
+      // 1. REGISTRO DE PLANTA TOTALMENTE NUEVA
       if (esNuevaPlanta) {
         plantaFinal = await crearEspecieNueva(
-          formatearParaDB(nombreLocal), // 1. nombre
-          urlFoto, // 2. fotoUrl
-          user?.id, // 3. usuarioId
-          user?.alias, // 4. alias
-          paisSeleccionado, // 5. pais
-          user?.grupo_id, // 6. grupoId (¡NUEVO!)
+          formatearParaDB(nombreLocal),
+          urlFoto,
+          user?.id,
+          user?.alias,
+          paisSeleccionado,
+          user?.grupo_id,
         );
-      } else if (esSoloUbicacion) {
-        const resLugar = await obtenerDireccion(coords.lat, coords.lng);
-        // Buscamos la planta en tu estado para obtener su nombre para el Log
-        const plantaEncontrada = plantas.find((p) => p.id === plantaId);
-        nuevaUbi = await agregarUbicacion(
-          plantaId, // 1. plantaId
-          user?.id, // 2. usuarioId
-          coords, // 3. coords
-          urlFoto, // 4. fotoUrl
-          resLugar, // 5. datosLugar
-          plantaEncontrada?.nombres_planta?.[0] || nombreLocal, // 6. nombrePlanta (¡NUEVO!)
-          user?.alias, // 7. alias
-          user?.grupo_id, // 8. grupoId (¡NUEVO!)
-        );
+      }
 
+      // 2. SOLO AÑADIR UBICACIÓN A PLANTA EXISTENTE
+      else if (esSoloUbicacion) {
+        const resLugar = await obtenerDireccion(coords.lat, coords.lng);
+        const plantaEncontrada = plantas.find((p) => p.id === plantaId);
+
+        nuevaUbi = await agregarUbicacion(
+          plantaId,
+          user?.id,
+          coords,
+          urlFoto,
+          resLugar,
+          plantaEncontrada?.nombres_planta?.[0] || nombreLocal,
+          user?.alias,
+          user?.grupo_id,
+        );
         plantaFinal = plantaEncontrada;
-      } else if (esAgregarDetalle) {
+      }
+
+      // 3. AGREGAR NOMBRE EXTRA (STAFF) - Sin foto obligatoria
+      else if (esAgregarDetalle) {
+        const plantaEncontrada = plantas.find((p) => p.id === plantaId);
+        // Pasamos 'user' completo para que el service extraiga id, alias y grupo_id
         plantaFinal = await agregarDetalleStaff(
           plantaId,
           formatearParaDB(nuevoNombreSecundario),
           paisSeleccionado,
+          user,
+          plantaEncontrada?.nombres_planta?.[0] || nombreLocal,
         );
-      } else if (esImagenTecnica) {
-        // Registro en la tabla de LOGS (No actualiza 'plantas')
+      }
+
+      // 4. IMAGEN TÉCNICA (STAFF) - Va directo a Logs
+      else if (esImagenTecnica) {
         await registrarPropuestaImagen(
           plantaId,
           user.id,
@@ -205,19 +241,24 @@ export const RegistroPlantaPage = () => {
         plantaFinal = plantas.find((p) => p.id === plantaId);
       }
 
-      if (!esImagenTecnica) {
+      // --- C. ACTUALIZACIÓN DE INTERFAZ Y REDIRECCIÓN ---
+
+      // Si no es imagen técnica (que requiere revisión), actualizamos el Contexto local
+      if (!esImagenTecnica && plantaFinal) {
         const dataParaContexto = { ...plantaFinal, ultima_ubicacion: nuevaUbi };
         actualizarPlantasTrasRegistro(dataParaContexto);
       }
 
       setGuardadoExitoso(true);
-      setTimeout(
-        () =>
-          navigate(`/planta/${plantaId || plantaFinal.id}`, { replace: true }),
-        1500,
-      );
+
+      // Esperamos 1.5s para que el usuario vea el éxito y redirigimos
+      setTimeout(() => {
+        const finalId = plantaId || plantaFinal?.id;
+        navigate(`/planta/${finalId}`, { replace: true });
+      }, 1500);
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Error en manejarEnvio:", error);
+      alert("Error al procesar el registro: " + error.message);
     } finally {
       setCargando(false);
     }
@@ -310,27 +351,29 @@ export const RegistroPlantaPage = () => {
           )}
         </div>
 
-        <div className="registro-section">
-          <label className="registro-label">
-            {esSoloUbicacion ? "FOTO DE LA UBICACIÓN" : "FOTO DE REFERENCIA"}
-          </label>
-          <label
-            className={`registro-zona-foto ${tieneFotoReal ? "foto-ok" : ""}`}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFoto(e.target.files[0])}
-              style={{ display: "none" }}
-            />
-            {tieneFotoReal ? (
-              <IoMdCheckmarkCircle size={60} color="var(--color-frondoso)" />
-            ) : (
-              <IoIosCamera size={60} />
-            )}
-            <p>{tieneFotoReal ? "FOTO CARGADA" : "TOCAR PARA CARGAR"}</p>
-          </label>
-        </div>
+        {!esAgregarDetalle && (
+          <div className="registro-section">
+            <label className="registro-label">
+              {esSoloUbicacion ? "FOTO DE LA UBICACIÓN" : "FOTO DE REFERENCIA"}
+            </label>
+            <label
+              className={`registro-zona-foto ${tieneFotoReal ? "foto-ok" : ""}`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFoto(e.target.files[0])}
+                style={{ display: "none" }}
+              />
+              {tieneFotoReal ? (
+                <IoMdCheckmarkCircle size={60} color="var(--color-frondoso)" />
+              ) : (
+                <IoIosCamera size={60} />
+              )}
+              <p>{tieneFotoReal ? "FOTO CARGADA" : "TOCAR PARA CARGAR"}</p>
+            </label>
+          </div>
+        )}
 
         {esSoloUbicacion && (
           <div className="registro-validaciones">
