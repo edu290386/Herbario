@@ -192,19 +192,29 @@ export const registrarPropuestaImagen = async (
   alias,
   grupoId,
 ) => {
-  return await supabase.from("logs").insert([
+  // console.log("Enviando log con:", { plantaId, usuarioId, alias }); // Debug opcional
+
+  const { data, error } = await supabase.from("logs").insert([
     {
       planta_id: parseInt(plantaId),
       usuario_id: usuarioId,
       nombre_planta: nombrePlanta,
-      alias,
+      alias: alias,
       grupo_id: grupoId,
       tipo_accion: "nueva_imagen",
       contenido: `${etiqueta}|${url}`,
       revisado: "pendiente",
       auditado: "pendiente",
+      // IMPORTANTE: Asegúrate de que NO existan columnas viejas como 'veredicto'
     },
   ]);
+
+  if (error) {
+    console.error("🚨 Error real de Supabase:", error.message);
+    console.error("Detalles:", error.details);
+  }
+
+  return { data, error };
 };
 
 /**
