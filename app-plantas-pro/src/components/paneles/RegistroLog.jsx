@@ -14,9 +14,10 @@ export const RegistroLog = ({ log, userRole, panelType, onAction, onReview }) =>
 
   // 1. PROCESAR CONTENIDO (etiqueta|url para imágenes)
   const partes = log.contenido?.split("|") || [];
-  const esNuevaImagen = log.tipo_accion === "nueva_imagen";
-  const etiqueta = esNuevaImagen ? partes[0] : "";
-  const urlOriginal = esNuevaImagen ? partes[1] : log.contenido;
+  const esTipoImagen =
+    log.tipo_accion === "nueva_imagen" || log.tipo_accion === "imagen_aprobada";
+  const etiqueta = esTipoImagen ? partes[0] : "";
+  const urlOriginal = esTipoImagen ? partes[1] : log.contenido;
 
   // OPTIMIZACIÓN CLOUDINARY
   const urlOptimizada =
