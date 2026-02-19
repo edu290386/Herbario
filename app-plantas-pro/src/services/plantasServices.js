@@ -288,71 +288,81 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
   try {
     const { id: logId, contenido, planta_id } = proposal;
 
+    // 1. Identificamos la acción según el comando del botón
     const esAprobar = comando === "filtro_operativo_aprobar";
     const esRechazar = comando === "filtro_operativo_rechazar";
     const esAuditoriaAdmin = comando === "auditado_final_admin";
 
-    console.log(`🛠️ Procesando Comando: ${comando} | Por: ${revisorAlias}`);
+    console.log(`🛠️ Procesando: ${comando} | Revisor: ${revisorAlias}`);
 
-    // 1. Objeto para actualizar LOGS
+    // 2. Objeto base para actualizar la tabla LOGS
     let updateLogData = {
       revisado_por: revisorAlias,
       fecha_revision: new Date().toISOString(),
     };
 
-    // --- CASO 1: APROBAR (Doble actualización: Log + Planta) ---
+    // --- CASO 1: APROBAR (Sincronización con Tabla Plantas mediante PUSH) ---
     if (esAprobar) {
       updateLogData.revisado = "aprobado";
       updateLogData.tipo_accion = "imagen_aprobada";
 
+      // Procesamos el contenido del log: "etiqueta|url"
       const [etiqueta, url] = contenido.split("|").map((s) => s.trim());
 
       if (url && planta_id) {
-        console.log(
-          `📸 Guardando ${etiqueta} como Array en la tabla plantas...`,
-        );
-
-        // Mapeamos la etiqueta a la columna real (ej: foto_hoja)
         const columnaPlanta = `foto_${etiqueta.toLowerCase()}`;
+        console.log(`📸 Iniciando PUSH en columna: ${columnaPlanta}`);
 
-        // SOLUCIÓN: Enviamos [url] para que Supabase lo entienda como Array de Postgres
+        // A. Obtenemos el array actual de la planta
+        const { data: plantaActual, error: errorFetch } = await supabase
+          .from("plantas")
+          .select(columnaPlanta)
+          .eq("id", planta_id)
+          .single();
+
+        if (errorFetch)
+          throw new Error("No se pudo obtener la planta para el push");
+
+        // B. Preparamos el nuevo array (mantenemos lo anterior + lo nuevo)
+        const arrayAnterior = plantaActual?.[columnaPlanta] || [];
+        const nuevoArray = [...arrayAnterior, url];
+
+        // C. Actualizamos la tabla plantas sin chancar (sobrescribir) lo viejo
         const { error: errorPlanta } = await supabase
           .from("plantas")
-          .update({ [columnaPlanta]: [url] }) // <--- Nota los corchetes [ ]
+          .update({ [columnaPlanta]: nuevoArray })
           .eq("id", planta_id);
 
-        if (errorPlanta)
-          console.error(
-            "⚠️ Error actualizando tabla plantas:",
-            errorPlanta.message,
-          );
+        if (errorPlanta) throw errorPlanta;
+        console.log("✅ Imagen añadida exitosamente a la planta.");
       }
     }
 
-    // --- CASO 2: RECHAZAR (Logs + Cloudinary) ---
+    // --- CASO 2: RECHAZAR (Limpieza de Log + Borrado físico Cloudinary) ---
     if (esRechazar) {
       updateLogData.revisado = "rechazado";
       updateLogData.tipo_accion = "imagen_rechazada";
 
       const partes = contenido.split("|");
       const categoria = partes[0].trim();
-      updateLogData.contenido = `${categoria}| Archivo eliminado`;
+      // Dejamos el log limpio sin la URL rota
+      updateLogData.contenido = `${categoria}| Archivo eliminado físicamente`;
 
       if (contenido.includes("http")) {
         const urlFoto = partes[1]?.trim();
         if (urlFoto) {
-          console.log("🗑️ Borrando archivo físico de Cloudinary...");
+          console.log("🗑️ Ejecutando borrado en Cloudinary...");
           await ejecutarEliminarImagenLog(urlFoto);
         }
       }
     }
 
-    // --- CASO 3: AUDITORÍA ---
+    // --- CASO 3: AUDITORÍA (Marca administrativa) ---
     if (esAuditoriaAdmin) {
       updateLogData.auditado = "revisado";
     }
 
-    // 2. Ejecución final en tabla LOGS
+    // 3. Ejecución final: Actualizamos el registro en la tabla LOGS
     const { data, error } = await supabase
       .from("logs")
       .update(updateLogData)
@@ -361,10 +371,10 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
 
     if (error) throw error;
 
-    console.log("✅ Proceso completado con éxito");
+    console.log("🚀 Proceso finalizado con éxito para el Log ID:", logId);
     return { success: true, data: data[0] };
   } catch (err) {
-    console.error("🚨 Error en processProposal:", err.message);
+    console.error("🚨 Error crítico en processProposal:", err.message);
     return { success: false, error: err.message };
   }
 };
