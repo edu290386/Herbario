@@ -1,104 +1,130 @@
-import { FaRegCheckCircle, FaExclamationTriangle } from "react-icons/fa";
-import { colores } from "../../constants/tema";
+import React from "react";
+import {
+  FaRegCheckCircle,
+  FaExclamationTriangle,
+  FaLeaf,
+} from "react-icons/fa";
 
-export const RegistroLog = ({ log, userRole, panelType, onAction, onReview }) => {
-  const esGestion = panelType === "gestion";
-  const isAdmin = userRole === "Administrador";
+const colores = {
+  azul: "#3b82f6",
+  bosque: "#2f4538",
+  frondoso: "#2d8b57",
+  tierra: "#64748b",
+  fondo: "#f8fafc",
+};
 
-  // PUNTO 2: El filtro operativo (Botones) desaparece si el log ya fue REVISADO
-  const mostrarBotones =
-    esGestion && log.revisado !== "aprobado" && log.revisado !== "rechazado";
-
-  // PUNTO 3: El Check Azul
+export const RegistroLog = ({
+  log,
+  userRole,
+  panelType,
+  onAction,
+  onReview,
+}) => {
+  const isAdmin = userRole === "admin";
+  const esGestion = panelType === "control";
   const estaAuditado = log.auditado === "revisado";
+  const mostrarBotones = esGestion && log.revisado === "pendiente";
 
-  // 1. PROCESAR CONTENIDO (etiqueta|url para imágenes)
-  const partes = log.contenido?.split("|") || [];
-  const esTipoImagen =
-    log.tipo_accion === "nueva_imagen" || log.tipo_accion === "imagen_aprobada";
-  const etiqueta = esTipoImagen ? partes[0] : "";
-  const urlOriginal = esTipoImagen ? partes[1] : log.contenido;
-
-  // OPTIMIZACIÓN CLOUDINARY
-  const urlOptimizada =
-    urlOriginal &&
-    typeof urlOriginal === "string" &&
-    urlOriginal.includes("cloudinary")
-      ? urlOriginal.replace("/upload/", "/upload/w_400,f_auto,q_auto/")
-      : urlOriginal;
+  // Lógica para imágenes (se mantiene igual para procesar el pipe si viene ahí)
+  const urlOriginal = log.contenido;
+  const etiqueta =
+    log.tipo_accion === "nueva_imagen" ? log.contenido?.split("|")[0] : null;
+  const urlOptimizada = urlOriginal?.includes("|")
+    ? urlOriginal.split("|")[1]
+    : urlOriginal;
 
   return (
     <div style={styles.card}>
-      {/* 2. FOTO (Solo en Gestión si es imagen) */}
-      {esGestion && urlOriginal?.includes("http") && (
-        <div style={styles.contenedorImagen}>
-          <img
-            src={urlOptimizada}
-            style={styles.imagen}
-            alt="Evidencia"
-            loading="lazy"
-          />
-        </div>
-      )}
+      {/* 1. FOTO (4:5) */}
+      {esGestion &&
+        log.tipo_accion === "nueva_imagen" &&
+        urlOriginal?.includes("http") && (
+          <div style={styles.contenedorImagen}>
+            <img
+              src={urlOptimizada}
+              style={styles.imagen}
+              alt="Evidencia"
+              loading="lazy"
+            />
+            {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
+          </div>
+        )}
 
-      {/* 3. CUERPO DE DATOS */}
+      {/* 2. CUERPO DE DATOS */}
       <div style={styles.cuerpoData}>
         <div style={styles.filaPrincipal}>
-          <div>
+          <div style={styles.infoPlantaContenedor}>
+            <FaLeaf size={12} color={colores.frondoso} />
             <p style={styles.nombrePlanta}>{log.nombre_planta}</p>
-            <p style={styles.alias}>@{log.alias || "usuario"}</p>
           </div>
 
-          {/* ICONO DE AUDITORÍA (PUNTO 3) */}
           <div
             style={{
               ...styles.estadoIcono,
               cursor: isAdmin && !estaAuditado ? "pointer" : "default",
             }}
             onClick={() =>
-              isAdmin &&
-              !estaAuditado &&
-              onReview(log, "auditado_final_admin")
+              isAdmin && !estaAuditado && onReview(log, "auditado_final_admin")
             }
-            title={isAdmin ? "Auditar" : ""}
           >
             {estaAuditado ? (
-              <FaRegCheckCircle size={32} color={colores.azul} />
+              <FaRegCheckCircle size={28} color={colores.frondoso} />
             ) : (
-              <FaExclamationTriangle size={32} color="#cbd5e1" />
+              <FaExclamationTriangle size={28} color="#cbd5e1" />
             )}
           </div>
         </div>
 
+        <p style={styles.alias}>@{log.alias || "usuario"}</p>
+
+        {/* 3. BLOQUE CONDICIONAL: NOMBRE O UBICACIÓN */}
+        {log.tipo_accion?.includes("nombre") && (
+          <div style={styles.contenedorPropuesta}>
+            <span style={styles.propuestaLabel}>NOMBRE Y PAÍS SUGERIDO</span>
+            <p style={styles.propuestaTexto}>{log.contenido}</p>
+          </div>
+        )}
+
+        {log.tipo_accion === "nueva_ubicacion" && (
+          <div style={styles.contenedorPropuestaUbicacion}>
+            <div style={styles.headerUbicacion}>
+              <span style={styles.propuestaLabel}>GRUPO EXCLUSIVO:</span>
+              <span style={styles.tagGrupo}>{log.nombre_grupo || "Sin grupo"}</span>
+            </div>
+            <p style={styles.propuestaTexto}>
+              {log.distrito ? `${log.distrito}, ` : ""}
+              {log.ciudad?.toUpperCase()}
+            </p>
+          </div>
+        )}
+
+        {/* 4. FOOTER DE LA CARD */}
         <div style={styles.filaSecundaria}>
           <div style={styles.badge}>
             <span style={styles.badgeText}>
               {log.tipo_accion?.replace("_", " ")}
-              {etiqueta && ` (${etiqueta})`}
             </span>
           </div>
           <span style={styles.fecha}>
             {new Date(log.created_at).toLocaleDateString()}
           </span>
         </div>
-
-        {/* INFO DE AUDITORÍA (Solo si tú ya lo revisaste) */}
       </div>
 
-      {/* 4. BOTONES DE GESTIÓN (PUNTO 2) */}
+      {/* 5. ACCIONES */}
       {mostrarBotones && (
         <div style={styles.footerAcciones}>
+          <button
+            onClick={() => onAction(log, "filtro_operativo_rechazar")}
+            style={styles.btnRechazar}
+          >
+            DESCARTAR
+          </button>
           <button
             onClick={() => onAction(log, "filtro_operativo_aprobar")}
             style={styles.btnAprobar}
           >
             APROBAR
-          </button>
-          <button
-            onClick={() => onAction(log, "filtro_operativo_rechazar")}
-            style={styles.btnRechazar}
-          >
-            RECHAZAR
           </button>
         </div>
       )}
@@ -112,55 +138,97 @@ const styles = {
     borderRadius: 24,
     marginBottom: 20,
     border: "1px solid #f1f5f9",
-    borderLeft: `12px solid ${colores.azul}`,
     overflow: "hidden",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)",
+    display: "flex",
+    flexDirection: "column",
   },
   contenedorImagen: {
     width: "100%",
     aspectRatio: "4 / 5",
     backgroundColor: "#f8fafc",
+    position: "relative",
   },
   imagen: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
   },
+  floatingTag: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    backgroundColor: "rgba(47, 69, 56, 0.8)",
+    backdropFilter: "blur(4px)",
+    color: "#fff",
+    padding: "4px 10px",
+    borderRadius: 8,
+    fontSize: 10,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
   cuerpoData: {
-    padding: "16px 20px",
+    padding: "20px",
   },
   filaPrincipal: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
   },
+  infoPlantaContenedor: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
   nombrePlanta: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#1e293b",
+    color: colores.bosque,
     margin: 0,
+    letterSpacing: "-0.5px",
   },
   alias: {
     fontSize: 14,
-    color: "#64748b",
-    margin: 0,
+    color: colores.tierra,
+    margin: "2px 0 0 20px",
+    fontWeight: "500",
   },
-  estadoIcono: {
-    padding: "4px",
+  contenedorPropuestaUbicacion: {
+    marginTop: 16,
+    padding: "14px",
+    backgroundColor: "#f0fdf4", // Verde muy suave
+    borderRadius: 16,
+    border: "1px solid #dcfce7",
+    borderLeft: `5px solid ${colores.frondoso}`, // Sello visual de exclusividad
+  },
+  propuestaLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colores.frondoso,
+    display: "block",
+    marginBottom: 4,
+    letterSpacing: "0.5px",
+  },
+  propuestaTexto: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colores.bosque,
+    margin: 0,
+    textTransform: "uppercase",
   },
   filaSecundaria: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 16,
   },
   badge: {
-    padding: "4px 10px",
+    padding: "5px 10px",
     borderRadius: 8,
     backgroundColor: "#f1f5f9",
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: "700",
     color: "#475569",
     textTransform: "uppercase",
@@ -168,17 +236,7 @@ const styles = {
   fecha: {
     fontSize: 12,
     color: "#94a3b8",
-  },
-  auditoria: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTop: "1px dashed #e2e8f0",
-  },
-  auditoriaText: {
-    fontSize: 11,
-    color: "#3b82f6",
-    margin: 0,
-    fontStyle: "italic",
+    fontWeight: "500",
   },
   footerAcciones: {
     padding: "0 20px 20px 20px",
@@ -186,13 +244,13 @@ const styles = {
     gap: 12,
   },
   btnAprobar: {
-    flex: 1,
+    flex: 2,
     padding: "14px",
     borderRadius: 12,
     border: "none",
-    backgroundColor: colores.azul,
+    backgroundColor: colores.bosque,
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 12,
     cursor: "pointer",
   },
@@ -200,11 +258,26 @@ const styles = {
     flex: 1,
     padding: "14px",
     borderRadius: 12,
-    border: "none",
-    backgroundColor: "#f1f5f9",
+    border: "1px solid #e2e8f0",
+    backgroundColor: "#fff",
     color: "#64748b",
-    fontWeight: "bold",
+    fontWeight: "700",
     fontSize: 12,
     cursor: "pointer",
+  },
+  headerUbicacion: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  tagGrupo: {
+    fontSize: 10,
+    fontWeight: "900",
+    backgroundColor: colores.bosque,
+    color: "#fff",
+    padding: "2px 8px",
+    borderRadius: 4,
+    textTransform: "uppercase",
   },
 };

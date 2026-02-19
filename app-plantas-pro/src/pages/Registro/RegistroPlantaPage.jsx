@@ -210,6 +210,7 @@ export const RegistroPlantaPage = () => {
           plantaEncontrada?.nombres_planta?.[0] || nombreLocal,
           user?.alias,
           user?.grupo_id,
+          user?.grupos?.nombre_grupo,
         );
         plantaFinal = plantaEncontrada;
       }

@@ -51,37 +51,50 @@ export const getPlantasBasico = async () => {
 export const getLogs = async (panelType) => {
   const query = supabase
     .from("logs")
-    .select("*")
+    .select("*") 
     .order("created_at", { ascending: false });
 
   if (panelType === "actividades") {
     const fecha30 = new Date();
     fecha30.setDate(fecha30.getDate() - 30);
-    return await query
+
+    const { data, error } = await query
       .or(`tipo_accion.eq.nueva_planta,tipo_accion.eq.nueva_ubicacion`)
       .gte("created_at", fecha30.toISOString());
+
+    if (error) {
+      console.error("Error en getLogs (actividades):", error.message);
+      return { data: [], error };
+    }
+    return { data, error: null };
   }
 
   if (panelType === "gestion") {
     const fecha7 = new Date();
     fecha7.setDate(fecha7.getDate() - 7);
 
-    return await query
+    const { data, error } = await query
       .in("tipo_accion", [
         "nueva_imagen",
         "nuevo_nombre",
+        "nombre_aprobado",
+        "nombre_rechazado",
         "imagen_rechazada",
         "imagen_aprobada",
       ])
       .or(
         `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${fecha7.toISOString()})`,
       );
-  }
-};
 
-/**
- * REGISTROS INICIALES (POST)
- */
+    if (error) {
+      console.error("Error en getLogs (gestion):", error.message);
+      return { data: [], error };
+    }
+    return { data, error: null };
+  }
+
+  return { data: [], error: "Tipo de panel no reconocido" };
+};
 
 // 4. Crear nueva especie
 export const crearEspecieNueva = async (
@@ -133,9 +146,8 @@ export const agregarUbicacion = async (
   nombrePlanta,
   alias,
   grupoId,
+  nombreGrupo
 ) => {
-  console.log(datos);
-  // 1. Registro en Ubicaciones
   const { data, error } = await supabase
     .from("ubicaciones")
     .insert([
@@ -165,15 +177,17 @@ export const agregarUbicacion = async (
       usuario_id: usuarioId,
       alias: alias,
       grupo_id: grupoId,
+      nombre_grupo: nombreGrupo,
       tipo_accion: "nueva_ubicacion",
       contenido: fotoUrl,
+      latitud: coords.lat,
+      longitud: coords.lng,
       ciudad: datos?.ciudad || null,
       distrito: datos?.distrito || null,
-      revisado: true,
+      revisado: "aprobado",
       auditado: "revisado",
       auditado_por: alias,
       revisado_por: alias,
-      // Enviamos la fecha a ambos campos para evitar fallos de visualización
       fecha_revision: ahora,
       fecha_auditado: ahora,
       created_at: ahora,
@@ -334,7 +348,7 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
       if (tipo_accion === "nuevo_nombre") {
         updateLogData.tipo_accion = "nombre_aprobado";
 
-        // Separamos el "Nombre|CodigoPais" que enviamos desde el service
+        // Extraemos los datos del pipe "Nombre|CodigoPais"
         const [nombreExtra, codigoPais] = contenido
           .split("|")
           .map((s) => s.trim());
@@ -369,8 +383,13 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
             })
             .eq("id", planta_id);
 
+          // 4. Formateamos el contenido del LOG para el Panel de Control
+          updateLogData.contenido = codigoPais
+            ? `${nombreExtra.toUpperCase()} (${codigoPais.toUpperCase()})`
+            : nombreExtra.toUpperCase();
+
           console.log(
-            `✅ Nombre "${nombreExtra}" y País "${codigoPais}" añadidos.`,
+            `✅ Nombre "${nombreExtra}" y País "${codigoPais}" añadidos y log actualizado.`,
           );
         }
       }
@@ -389,9 +408,11 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
 
       if (tipo_accion === "nuevo_nombre") {
         updateLogData.tipo_accion = "nombre_rechazado";
-        // Limpiamos el contenido del log para que no se vea el pipe | en el historial
-        const [nom] = contenido.split("|");
-        updateLogData.contenido = `${nom} (Propuesta rechazada)`;
+        // Limpiamos el contenido del log para que se vea legible en el historial
+        const [nom, pais] = contenido.split("|").map((s) => s.trim());
+        updateLogData.contenido = pais
+          ? `${nom.toUpperCase()} (${pais.toUpperCase()})`
+          : `${nom.toUpperCase()}`;
       }
     }
 
@@ -400,7 +421,7 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
       updateLogData.auditado = "revisado";
     }
 
-    // Actualización del Log en Supabase
+    // Actualización final del Log en Supabase
     const { data, error } = await supabase
       .from("logs")
       .update(updateLogData)
