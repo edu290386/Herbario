@@ -20,19 +20,32 @@ export const RegistroLog = ({
   onAction,
   onReview,
 }) => {
-  // --- LÓGICA DE ROLES Y VISIBILIDAD ---
+  // --- DIAGNÓSTICO ---
+  console.log(`🔎 Registro [${log.id}]:`, {
+    tipo_accion: log.tipo_accion,
+    revisado: log.revisado,
+    contenido: log.contenido,
+    longitud_contenido: log.contenido?.length,
+  });
+
   const isAdmin = userRole === "Administrador" || userRole === "admin";
   const isColab = userRole === "Colaborador";
   const esPanelGestion = panelType === "control" || panelType === "gestion";
-
-  // NUEVA LÓGICA:
-  // Los botones SOLO aparecen si el estado es exactamente 'pendiente'.
-  // Si es 'aprobado', la tarjeta se queda pero los botones desaparecen.
-  // Si es 'rechazado', el componente padre debería eliminarlo del array de datos.
   const mostrarBotones =
     esPanelGestion && (isAdmin || isColab) && log.revisado === "pendiente";
 
+  // Limpiamos la URL por si viene con el error [null]
   const urlOriginal = log.contenido;
+
+  // LOG PARA LA IMAGEN ESPECÍFICA
+  if (log.tipo_accion === "nueva_imagen") {
+    console.log("📸 Procesando Imagen:", {
+      urlOriginal,
+      contieneHttp: urlOriginal?.includes("http"),
+      etiquetaDetectada: urlOriginal?.split("|")[0],
+    });
+  }
+
   const etiqueta =
     log.tipo_accion === "nueva_imagen" ? log.contenido?.split("|")[0] : null;
   const urlOptimizada = urlOriginal?.includes("|")
@@ -42,17 +55,19 @@ export const RegistroLog = ({
   return (
     <div style={styles.card}>
       {/* 1. FOTO */}
-      {log.tipo_accion === "nueva_imagen" && urlOriginal?.includes("http") && (
-        <div style={styles.contenedorImagen}>
-          <img
-            src={urlOptimizada}
-            style={styles.imagen}
-            alt="Evidencia"
-            loading="lazy"
-          />
-          {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
-        </div>
-      )}
+      {(log.tipo_accion === "nueva_imagen" ||
+        log.tipo_accion === "imagen_aprobada") &&
+        urlOriginal?.includes("http") && (
+          <div style={styles.contenedorImagen}>
+            <img
+              src={urlOptimizada}
+              style={styles.imagen}
+              alt="Evidencia"
+              loading="lazy"
+            />
+            {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
+          </div>
+        )}
 
       {/* 2. CUERPO DE DATOS */}
       <div style={styles.cuerpoData}>
@@ -88,7 +103,7 @@ export const RegistroLog = ({
         {/* 3. CONTENEDORES VERDES */}
         {log.tipo_accion?.includes("nombre") && (
           <div style={styles.contenedorVerde}>
-            <span style={styles.labelVerde}>NOMBRE Y PAÍS SUGERIDO</span>
+            <span style={styles.labelVerde}>NOMBRE Y LUGAR SUGERIDO</span>
             <p style={styles.textoDestacado}>{log.contenido}</p>
           </div>
         )}
@@ -170,7 +185,7 @@ const styles = {
   },
   contenedorImagen: {
     width: "100%",
-    aspectRatio: "4 / 5",
+    aspectRatio: "3 / 4",
     backgroundColor: "#f8fafc",
     position: "relative",
   },
@@ -181,14 +196,14 @@ const styles = {
   },
   floatingTag: {
     position: "absolute",
-    bottom: 15,
-    right: 15,
+    bottom: 30,
+    right: 20,
     backgroundColor: "rgba(47, 69, 56, 0.85)",
     backdropFilter: "blur(6px)",
     color: "#fff",
     padding: "6px 12px",
     borderRadius: 10,
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "800",
     textTransform: "uppercase",
   },
