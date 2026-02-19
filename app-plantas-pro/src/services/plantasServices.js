@@ -286,66 +286,80 @@ export const agregarDetalleStaff = async (
 
 export const processProposal = async (proposal, comando, revisorAlias) => {
   try {
-    const { id: logId, contenido } = proposal;
+    const { id: logId, contenido, planta_id } = proposal;
 
-    // 1. Identificamos la acción según el comando del botón
     const esAprobar = comando === "filtro_operativo_aprobar";
     const esRechazar = comando === "filtro_operativo_rechazar";
     const esAuditoriaAdmin = comando === "auditado_final_admin";
 
     console.log(`🛠️ Procesando Comando: ${comando} | Por: ${revisorAlias}`);
 
-    // 2. Objeto base de actualización (Campos comunes)
-    let updateData = {
+    // 1. Objeto para actualizar LOGS
+    let updateLogData = {
       revisado_por: revisorAlias,
       fecha_revision: new Date().toISOString(),
     };
 
-    // --- LÓGICA DE FILTRO OPERATIVO ---
-
-    // CASO 1: APROBAR
+    // --- CASO 1: APROBAR (Doble actualización: Log + Planta) ---
     if (esAprobar) {
-      updateData.revisado = "aprobado";
-      updateData.tipo_accion = "imagen_aprobada"; // Nuevo estado para trazabilidad
+      updateLogData.revisado = "aprobado";
+      updateLogData.tipo_accion = "imagen_aprobada";
+
+      // Extraer etiqueta y URL del contenido del log (ej: "hoja|https://...")
+      const [etiqueta, url] = contenido.split("|").map((s) => s.trim());
+
+      if (url && planta_id) {
+        console.log(`📸 Guardando ${etiqueta} en la tabla plantas...`);
+
+        // Mapeamos la etiqueta a la columna real de tu tabla plantas
+        const columnaPlanta = `foto_${etiqueta.toLowerCase()}`; // ej: foto_hoja, foto_flor
+
+        const { error: errorPlanta } = await supabase
+          .from("plantas")
+          .update({ [columnaPlanta]: url }) // Usamos [] para nombre de columna dinámico
+          .eq("id", planta_id);
+
+        if (errorPlanta)
+          console.error(
+            "⚠️ Error actualizando tabla plantas:",
+            errorPlanta.message,
+          );
+      }
     }
 
-    // CASO 2: RECHAZAR (Con limpieza física y lógica)
+    // --- CASO 2: RECHAZAR (Logs + Cloudinary) ---
     if (esRechazar) {
-      updateData.revisado = "rechazado";
-      updateData.tipo_accion = "imagen_rechazada";
+      updateLogData.revisado = "rechazado";
+      updateLogData.tipo_accion = "imagen_rechazada";
 
-      // Limpieza de contenido: mantenemos la categoría pero quitamos la URL
       const partes = contenido.split("|");
       const categoria = partes[0].trim();
-      updateData.contenido = `${categoria}| Archivo eliminado`;
+      updateLogData.contenido = `${categoria}| Archivo eliminado`;
 
-      // Borrado físico en Cloudinary si existe URL
       if (contenido.includes("http")) {
         const urlFoto = partes[1]?.trim();
         if (urlFoto) {
-          console.log("🗑️ Iniciando borrado físico en Cloudinary...");
+          console.log("🗑️ Borrando archivo físico de Cloudinary...");
           await ejecutarEliminarImagenLog(urlFoto);
         }
       }
     }
 
-    // --- LÓGICA DE AUDITORÍA ADMIN ---
-
-    // CASO 3: AUDITORÍA (Clic en el Warning)
+    // --- CASO 3: AUDITORÍA ---
     if (esAuditoriaAdmin) {
-      updateData.auditado = "revisado"; // De 'pendiente' a 'revisado'
+      updateLogData.auditado = "revisado";
     }
 
-    // 3. Ejecución de la actualización en Supabase
+    // 2. Ejecución final en tabla LOGS
     const { data, error } = await supabase
       .from("logs")
-      .update(updateData)
+      .update(updateLogData)
       .eq("id", logId)
       .select();
 
     if (error) throw error;
 
-    console.log("✅ Registro actualizado en DB:", data[0]);
+    console.log("✅ Proceso completado con éxito");
     return { success: true, data: data[0] };
   } catch (err) {
     console.error("🚨 Error en processProposal:", err.message);
