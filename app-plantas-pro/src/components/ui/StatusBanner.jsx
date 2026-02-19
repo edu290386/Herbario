@@ -37,7 +37,7 @@ export const StatusBanner = ({ status = "success", message, icon }) => {
         border: `1px solid ${theme.border}`,
         backgroundColor: theme.bg,
         color: theme.text,
-        marginBottom: "15px",
+        marginBottom: "0px",
         fontWeight: "500",
         transition: "all 0.3s ease",
       }}

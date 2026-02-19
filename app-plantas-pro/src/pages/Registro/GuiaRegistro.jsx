@@ -1,50 +1,67 @@
-import React from "react";
-import {
-  PiPlantFill,
-  PiGlobeHemisphereWestFill,
-  PiCameraFill,
-  PiMapPinFill,
-} from "react-icons/pi";
-import { TbWorld } from "react-icons/tb";
+import { PiPlantFill, PiMapPinFill, PiBookOpenTextFill } from "react-icons/pi";
+import { GiAfrica, GiEarthAmerica } from "react-icons/gi";
 
 export const GuiaRegistro = ({ flujo }) => {
-  // Contenido dinámico según el texto que recibe
   const configuracion = {
     "nueva planta": {
-      bg: "#fff9db",
-      border: "#fcc419",
-      icon: <TbWorld size={24} color="#856404" />,
-      titulo: "Guía: Registro Inicial",
+      bg: "#fdfdfd",
+      border: "var(--color-frondoso)",
+      icon: <PiBookOpenTextFill size={26} color="var(--color-frondoso)" />,
+      titulo: "Instrucciones de Registro",
       pasos: [
         <>
-          Si en tu país se llama{" "}
-          <strong style={{ color: "#e67e22" }}>Palta</strong>, pon el nombre y
-          selecciona <strong>Perú</strong>.
+          <strong>Nombres locales:</strong> Si en tu país se llama{" "}
+          <strong>Aguacate (MX)</strong> o <strong>Palta (PE)</strong>,
+          escríbelo y selecciona su país respectivo.
         </>,
-        "Si es un nombre general, usa 'Mundial (world)'.",
-        "Si es una planta especial, recuerda usar el término 'Sacred'.",
+        <>
+          <strong>Sin fronteras:</strong> Si no sabes el país exacto o es un
+          nombre universal, usa{" "}
+          <span style={{ color: "var(--color-frondoso)", fontWeight: "700" }}>
+            <GiEarthAmerica /> Internacional
+          </span>
+          . No hay problema si desconoces ese dato.
+        </>,
+        <>
+          <strong>Sabiduría Sagrada:</strong> Para nombres religiosos o sagrados
+          como <em style={{ color: "#856404" }}>Ewé Atori</em> (Yoruba),
+          selecciona{" "}
+          <span style={{ color: "#856404", fontWeight: "700" }}>
+            <GiAfrica /> Nombre Sagrado
+          </span>
+          .
+        </>,
+        <>
+          <strong>Ejemplos rápidos:</strong>{" "}
+          <em style={{ opacity: 0.8 }}>Cayena (VE)</em>,{" "}
+          <em style={{ opacity: 0.8 }}>Cucarda (PE)</em>.
+        </>,
+        <>
+          <strong>Sistema Inteligente:</strong> No permitimos duplicados. Si el
+          sistema bloquea tu registro y crees que es un error,{" "}
+          <strong>contacta al administrador</strong> para evaluar tu caso.
+        </>,
       ],
     },
     "solo ubicacion": {
-      bg: "#e7f5ff",
+      bg: "#fdfdfd",
       border: "#339af0",
-      icon: <PiMapPinFill size={24} color="#1864ab" />,
-      titulo: "Guía: Nueva Ubicación",
+      icon: <PiMapPinFill size={26} color="#339af0" />,
+      titulo: "Captura de Ubicación",
       pasos: [
-        "Toca el icono de la cámara para capturar la planta en su sitio.",
-        "Verifica que ambos checks (Foto y GPS) estén en verde.",
-        "Asegúrate de tener buena señal para obtener el distrito/ciudad.",
+        "Toca la cámara para registrar la planta en su entorno real.",
+        "Asegúrate de que los indicadores de Foto y GPS estén en verde.",
+        "Espera unos segundos para que la dirección sea precisa.",
       ],
     },
     "agregar detalle": {
-      bg: "#f3f0ff",
+      bg: "#fdfdfd",
       border: "#845ef7",
-      icon: <PiPlantFill size={24} color="#5f3dc4" />,
-      titulo: "Guía: Enriquecer Ficha",
+      icon: <PiPlantFill size={26} color="#845ef7" />,
+      titulo: "Mejorar Información",
       pasos: [
-        "Puedes añadir un nombre secundario con su país respectivo.",
-        "Sube una foto de alta calidad para el carrusel principal.",
-        "Esta información ayudará a otros a identificar la especie.",
+        "Añade variantes de nombres y fotos de alta calidad.",
+        "Tu contribución ayuda a la comunidad a identificar mejor esta especie.",
       ],
     },
   };
@@ -53,32 +70,25 @@ export const GuiaRegistro = ({ flujo }) => {
   if (!info) return null;
 
   return (
-    <div
-      className="guia-container"
-      style={{
-        backgroundColor: info.bg,
-        borderLeft: `5px solid ${info.border}`,
-      }}
-    >
-      <div className="guia-header">
+    <div className="guia-container-new">
+      <div
+        className="guia-header-new"
+        style={{ borderBottomColor: info.border }}
+      >
         {info.icon}
-        <span className="guia-titulo">{info.titulo}</span>
+        <span className="guia-titulo-new">{info.titulo}</span>
       </div>
-      <ul className="guia-lista">
+      <ul className="guia-lista-new">
         {info.pasos.map((paso, index) => (
-          <li key={index} className="guia-item">
-            {paso}
+          <li key={index} className="guia-item-new">
+            <div
+              className="guia-bullet"
+              style={{ backgroundColor: info.border }}
+            />
+            <div className="guia-texto-paso">{paso}</div>
           </li>
         ))}
       </ul>
-
-      {/* Detalle visual de la plantita Sacred si aplica */}
-      {flujo !== "solo ubicacion" && (
-        <div className="sacred-hint">
-          <PiPlantFill className="sacred-leaf" />
-          <small>Usa "Sacred" para plantas sagradas.</small>
-        </div>
-      )}
     </div>
   );
 };

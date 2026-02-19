@@ -253,7 +253,20 @@ const styles = {
   },
   spinner: {
     fontSize: "8rem",
-    animation: "spin 2s linear infinite",
+    animation: "spin 2.5s linear infinite",
+    filter: "drop-shadow(0 0 15px rgba(45, 106, 79, 0.2))",
     color: colores.frondoso,
   },
 };
+
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
+  styleSheet.innerText = `
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}

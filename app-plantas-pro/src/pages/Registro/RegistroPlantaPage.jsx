@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo } from "react";
+import { useState, useContext, useMemo, useEffect } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 // Contextos, Hooks y Helpers
 import { AuthContext } from "../../context/AuthContext";
@@ -13,12 +13,11 @@ import {
   crearEspecieNueva,
   agregarUbicacion,
   agregarDetalleStaff,
+  registrarPropuestaImagen,
+  checkNombreExistente,
 } from "../../services/plantasServices";
 import { uploadImage } from "../../helpers/cloudinaryHelper";
-import {
-  normalizarParaBusqueda,
-  formatearParaDB,
-} from "../../helpers/textHelper";
+import { formatearParaDB } from "../../helpers/textHelper";
 // UI e Iconos
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
@@ -29,13 +28,13 @@ import {
   IoMdCheckmarkCircle,
   IoMdCloseCircle,
 } from "react-icons/io";
-import { PiPlantFill } from "react-icons/pi";
+import { PiPlantFill, PiGpsFixFill } from "react-icons/pi";
+import { GiEarthAmerica, GiAfrica } from "react-icons/gi";
 import "./Registro.css";
-import { registrarPropuestaImagen } from "../../services/plantasServices";
 
 const OPCIONES_PAISES = [
-  { label: "Mundial (World)", value: "world" },
-  { label: "Sagrado (Sacred)", value: "sacred" },
+  { label: "Nombre global (Internacional)", value: "world" },
+  { label: "Nombre sagrado", value: "sacred" },
   { label: "Perú", value: "PE" },
   { label: "Venezuela", value: "VE" },
   { label: "Cuba", value: "CU" },
@@ -57,34 +56,36 @@ export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { plantas, actualizarPlantasTrasRegistro } = useContext(PlantasContext);
+
+  const { cargarPlantasHome } = useContext(PlantasContext);
   const { coords, cargandoGPS, errorGPS } = useGPS();
 
-  // --- 1. CONFIGURACIÓN DE FLUJOS ---
   const plantaId = state?.plantaId || null;
   const esNuevaPlanta = !plantaId;
   const esStaff = user?.rol === "Administrador" || user?.rol === "Colaborador";
 
-  // Nuevo: Detectar si es el flujo de imagen técnica desde el botón de Detalle
   const esImagenTecnica = !!state?.esImagenTecnica && esStaff;
   const esAgregarDetalle =
     !!state?.esDetalleStaff && esStaff && !esImagenTecnica;
   const esSoloUbicacion = !!plantaId && !esAgregarDetalle && !esImagenTecnica;
 
-  // --- 2. ESTADOS DEL FORMULARIO ---
   const [nombreLocal, setNombreLocal] = useState(
     plantaId
       ? state?.nombres_planta?.[0]
       : state?.nombreComun || state?.busqueda || "",
   );
   const [nuevoNombreSecundario, setNuevoNombreSecundario] = useState("");
-  const [paisSeleccionado, setPaisSeleccionado] = useState("PE");
-  const [etiquetaFoto, setEtiquetaFoto] = useState("hoja"); // Para fotos técnicas
+  const [paisSeleccionado, setPaisSeleccionado] = useState("");
+  const [etiquetaFoto, setEtiquetaFoto] = useState("hoja");
   const [foto, setFoto] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
+  const [nombreDuplicadoDB, setNombreDuplicadoDB] = useState(false);
+  const [validacionNombre, setValidacionNombre] = useState({
+    status: null,
+    message: "",
+  });
 
-  // --- 3. LÓGICA DE GEOLOCALIZACIÓN ---
   const { coordsExistentes } = useUbicacionesPlanta(plantaId);
 
   const validacionDistancia = useMemo(() => {
@@ -98,41 +99,48 @@ export const RegistroPlantaPage = () => {
     };
   }, [coords, coordsExistentes, cargandoGPS]);
 
-  // --- 4. VALIDACIONES ---
+  useEffect(() => {
+    if (!esNuevaPlanta) return;
+    const nombreATestear = nombreLocal.trim();
+    if (nombreATestear.length < 2) {
+      setNombreDuplicadoDB(false);
+      setValidacionNombre({ status: null, message: "" });
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const existe = await checkNombreExistente(nombreATestear);
+        setNombreDuplicadoDB(existe);
+        if (existe) {
+          setValidacionNombre({
+            status: "error",
+            message: "El sistema detectó que esta planta ya existe.",
+          });
+        } else {
+          setValidacionNombre({
+            status: "success",
+            message: "¡Nombre disponible!",
+          });
+        }
+      } catch (error) {
+        console.error("Error en validación:", error);
+      }
+    }, 900);
+    return () => clearTimeout(timeoutId);
+  }, [nombreLocal, esNuevaPlanta]);
+
   const tieneFotoReal = foto instanceof File;
   const gpsListo = coords?.lat && coords?.lng && !cargandoGPS;
 
-  const existeCoincidencia =
-    esNuevaPlanta &&
-    plantas.some((p) =>
-      p.nombres_planta?.some(
-        (n) =>
-          normalizarParaBusqueda(n) === normalizarParaBusqueda(nombreLocal),
-      ),
-    );
-
   const formularioInvalido = useMemo(() => {
-    // 1. Si ya estamos procesando o guardamos con éxito, bloqueamos
     if (cargando || guardadoExitoso) return true;
-    // 2. FOTO es obligatoria en todos los flujos EXCEPTO en "Agregar Detalle" (Nombres)
     if (!esAgregarDetalle && !tieneFotoReal) return true;
-    // 3. VALIDACIÓN POR FLUJO ESPECÍFICO
     if (esNuevaPlanta) {
-      // Requiere nombre y que no exista ya
-      return !nombreLocal.trim() || existeCoincidencia;
+      return nombreLocal.trim().length < 2 || nombreDuplicadoDB;
     }
-    if (esSoloUbicacion) {
-      // Requiere GPS listo y estar en zona permitida
-      return !gpsListo || validacionDistancia.bloquear;
-    }
-    if (esAgregarDetalle) {
-      // Solo requiere que el nuevo nombre no esté vacío
-      return !nuevoNombreSecundario.trim();
-    }
-    if (esImagenTecnica) {
-      // Si llegó aquí es porque tieneFotoReal (regla 2), así que es válido
-      return false;
-    }
+    if (esSoloUbicacion) return !gpsListo || validacionDistancia.bloquear;
+    if (esAgregarDetalle) return !nuevoNombreSecundario.trim();
     return false;
   }, [
     cargando,
@@ -140,34 +148,36 @@ export const RegistroPlantaPage = () => {
     tieneFotoReal,
     esNuevaPlanta,
     nombreLocal,
-    existeCoincidencia,
+    nombreDuplicadoDB,
     esSoloUbicacion,
     gpsListo,
     validacionDistancia.bloquear,
     esAgregarDetalle,
     nuevoNombreSecundario,
-    esImagenTecnica,
   ]);
 
-  // --- 5. MANEJADOR DE ENVÍO ---
   const manejarEnvio = async (e) => {
     if (e) e.preventDefault();
-
-    // 1. Bloqueo de seguridad: Si el formulario es inválido, no hace nada.
-    if (formularioInvalido) {
-      console.warn("Formulario inválido: faltan campos o requisitos.");
-      return;
-    }
-
+    if (formularioInvalido) return;
     setCargando(true);
 
     try {
-      let urlFoto = null;
-      let plantaFinal = null;
-      let nuevaUbi = null;
+      if (esNuevaPlanta) {
+        const checkFinal = await checkNombreExistente(nombreLocal);
+        if (checkFinal) {
+          setNombreDuplicadoDB(true);
+          setValidacionNombre({
+            status: "error",
+            message: "Error: Se acaba de registrar este nombre.",
+          });
+          setCargando(false);
+          return;
+        }
+      }
 
-      // --- A. SUBIDA DE IMAGEN ---
-      // Solo se ejecuta si hay una foto cargada (opcional en agregar nombre)
+      let urlFoto = null;
+      let plantaIdFinal = plantaId;
+
       if (tieneFotoReal) {
         const nombreCarpetaRaiz = formatearParaDB(nombreLocal);
         const subCarpetaDinamica = esImagenTecnica
@@ -175,61 +185,44 @@ export const RegistroPlantaPage = () => {
           : esSoloUbicacion
             ? "ubicaciones"
             : "perfil";
-
         urlFoto = await uploadImage(
           foto,
           `${nombreCarpetaRaiz}/${subCarpetaDinamica}`,
         );
       }
 
-      // --- B. LÓGICA POR FLUJO ---
-
-      // 1. REGISTRO DE PLANTA TOTALMENTE NUEVA
       if (esNuevaPlanta) {
-        plantaFinal = await crearEspecieNueva(
-          formatearParaDB(nombreLocal),
+        const nueva = await crearEspecieNueva(
+          nombreLocal,
           urlFoto,
           user?.id,
           user?.alias,
           paisSeleccionado,
           user?.grupo_id,
         );
-      }
-
-      // 2. SOLO AÑADIR UBICACIÓN A PLANTA EXISTENTE
-      else if (esSoloUbicacion) {
+        plantaIdFinal = nueva.id;
+      } else if (esSoloUbicacion) {
         const resLugar = await obtenerDireccion(coords.lat, coords.lng);
-        const plantaEncontrada = plantas.find((p) => p.id === plantaId);
-
-        nuevaUbi = await agregarUbicacion(
+        await agregarUbicacion(
           plantaId,
           user?.id,
           coords,
           urlFoto,
           resLugar,
-          plantaEncontrada?.nombres_planta?.[0] || nombreLocal,
+          nombreLocal,
           user?.alias,
           user?.grupo_id,
           user?.grupos?.nombre_grupo,
         );
-        plantaFinal = plantaEncontrada;
-      }
-
-      // 3. AGREGAR NOMBRE EXTRA (STAFF) - Sin foto obligatoria
-      else if (esAgregarDetalle) {
-        const plantaEncontrada = plantas.find((p) => p.id === plantaId);
-        // Pasamos 'user' completo para que el service extraiga id, alias y grupo_id
-        plantaFinal = await agregarDetalleStaff(
+      } else if (esAgregarDetalle) {
+        await agregarDetalleStaff(
           plantaId,
           formatearParaDB(nuevoNombreSecundario),
           paisSeleccionado,
           user,
-          plantaEncontrada?.nombres_planta?.[0] || nombreLocal,
+          nombreLocal,
         );
-      }
-
-      // 4. IMAGEN TÉCNICA (STAFF) - Va directo a Logs
-      else if (esImagenTecnica) {
+      } else if (esImagenTecnica) {
         await registrarPropuestaImagen(
           plantaId,
           user.id,
@@ -239,27 +232,16 @@ export const RegistroPlantaPage = () => {
           user?.alias,
           user?.grupo_id,
         );
-        plantaFinal = plantas.find((p) => p.id === plantaId);
       }
 
-      // --- C. ACTUALIZACIÓN DE INTERFAZ Y REDIRECCIÓN ---
-
-      // Si no es imagen técnica (que requiere revisión), actualizamos el Contexto local
-      if (!esImagenTecnica && plantaFinal) {
-        const dataParaContexto = { ...plantaFinal, ultima_ubicacion: nuevaUbi };
-        actualizarPlantasTrasRegistro(dataParaContexto);
-      }
-
+      await cargarPlantasHome();
       setGuardadoExitoso(true);
-
-      // Esperamos 1.5s para que el usuario vea el éxito y redirigimos
-      setTimeout(() => {
-        const finalId = plantaId || plantaFinal?.id;
-        navigate(`/planta/${finalId}`, { replace: true });
-      }, 1500);
+      setTimeout(
+        () => navigate(`/planta/${plantaIdFinal}`, { replace: true }),
+        1500,
+      );
     } catch (error) {
-      console.error("Error en manejarEnvio:", error);
-      alert("Error al procesar el registro: " + error.message);
+      alert("Error: " + error.message);
     } finally {
       setCargando(false);
     }
@@ -300,7 +282,7 @@ export const RegistroPlantaPage = () => {
               </label>
               <input
                 type="text"
-                className="registro-input-text"
+                className={`registro-input-text ${nombreDuplicadoDB ? "input-error" : ""}`}
                 value={esAgregarDetalle ? nuevoNombreSecundario : nombreLocal}
                 onChange={(e) =>
                   esAgregarDetalle
@@ -308,20 +290,60 @@ export const RegistroPlantaPage = () => {
                     : setNombreLocal(e.target.value)
                 }
                 disabled={cargando || guardadoExitoso}
+                placeholder="Ej: Piñón de botija"
               />
-              <div style={{ marginTop: "15px" }}>
-                <label className="registro-label">NOMBRE EN EL PAÍS</label>
+
+              {validacionNombre.status && (
+                <div className="status-banner-wrapper">
+                  <StatusBanner
+                    status={validacionNombre.status}
+                    message={validacionNombre.message}
+                  />
+                </div>
+              )}
+
+              <div className="registro-section">
+                <label className="registro-label">TIPO DE NOMBRE / PAÍS</label>
                 <select
                   className="registro-input-text"
                   value={paisSeleccionado}
                   onChange={(e) => setPaisSeleccionado(e.target.value)}
                 >
+                  <option value="" disabled>
+                    ¿Dónde se usa este nombre?
+                  </option>
                   {OPCIONES_PAISES.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
                     </option>
                   ))}
                 </select>
+
+                {nombreLocal.trim().length > 0 && paisSeleccionado && (
+                  <div className="preview-card">
+                    <div className="preview-icon-box">
+                      {paisSeleccionado === "world" && <GiEarthAmerica />}
+                      {paisSeleccionado === "sacred" && <GiAfrica />}
+                      {!["world", "sacred"].includes(paisSeleccionado) && (
+                        <PiGpsFixFill />
+                      )}
+                    </div>
+
+                    <div className="preview-info">
+                      <div className="preview-header">
+                        <span className="preview-nombre">{nombreLocal}</span>
+                        <span className="preview-tag">VISTA PREVIA</span>
+                      </div>
+                      <div className="preview-label">
+                        {
+                          OPCIONES_PAISES.find(
+                            (op) => op.value === paisSeleccionado,
+                          )?.label
+                        }
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -331,14 +353,14 @@ export const RegistroPlantaPage = () => {
                 {nombreLocal.toUpperCase()}
               </h2>
               {esImagenTecnica && (
-                <div style={{ marginTop: "15px" }}>
+                <div className="registro-section">
                   <label className="registro-label">PARTE DE LA PLANTA</label>
                   <select
                     className="registro-input-text"
                     value={etiquetaFoto}
                     onChange={(e) => setEtiquetaFoto(e.target.value)}
                   >
-                    {TIPOS_FOTO.filter((t) => t.value !== "foto_perfil").map(
+                    {TIPOS_FOTO.filter((t) => t.value !== "perfil").map(
                       (opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
@@ -401,7 +423,7 @@ export const RegistroPlantaPage = () => {
               </span>
             </div>
             {gpsListo && (
-              <div style={{ marginTop: "10px", width: "100%" }}>
+              <div className="status-banner-wrapper">
                 <StatusBanner
                   status={validacionDistancia.status}
                   message={validacionDistancia.message}
@@ -419,7 +441,7 @@ export const RegistroPlantaPage = () => {
             esExitoso={guardadoExitoso}
             disabled={formularioInvalido}
           />
-          <div style={{ marginTop: "12px", width: "100%" }}>
+          <div className="boton-cancelar-wrapper">
             <BotonCancelar />
           </div>
         </div>
