@@ -275,8 +275,8 @@ export const agregarDetalleStaff = async (
       tipo_accion: "nuevo_nombre", // Esto activa la lógica en processProposal
       contenido: nuevoNombre,
       pais_codigo: paisCodigo,
-      revisado: false,
-      auditado: null,
+      revisado: "pendiente",
+      auditado: "pendiente",
     },
   ]);
 
@@ -317,7 +317,7 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
       // Limpieza de contenido: mantenemos la categoría pero quitamos la URL
       const partes = contenido.split("|");
       const categoria = partes[0].trim();
-      updateData.contenido = `${categoria}| Archivo eliminado físicamente`;
+      updateData.contenido = `${categoria}| Archivo eliminado`;
 
       // Borrado físico en Cloudinary si existe URL
       if (contenido.includes("http")) {
