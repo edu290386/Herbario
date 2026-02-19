@@ -305,18 +305,20 @@ export const processProposal = async (proposal, comando, revisorAlias) => {
       updateLogData.revisado = "aprobado";
       updateLogData.tipo_accion = "imagen_aprobada";
 
-      // Extraer etiqueta y URL del contenido del log (ej: "hoja|https://...")
       const [etiqueta, url] = contenido.split("|").map((s) => s.trim());
 
       if (url && planta_id) {
-        console.log(`📸 Guardando ${etiqueta} en la tabla plantas...`);
+        console.log(
+          `📸 Guardando ${etiqueta} como Array en la tabla plantas...`,
+        );
 
-        // Mapeamos la etiqueta a la columna real de tu tabla plantas
-        const columnaPlanta = `foto_${etiqueta.toLowerCase()}`; // ej: foto_hoja, foto_flor
+        // Mapeamos la etiqueta a la columna real (ej: foto_hoja)
+        const columnaPlanta = `foto_${etiqueta.toLowerCase()}`;
 
+        // SOLUCIÓN: Enviamos [url] para que Supabase lo entienda como Array de Postgres
         const { error: errorPlanta } = await supabase
           .from("plantas")
-          .update({ [columnaPlanta]: url }) // Usamos [] para nombre de columna dinámico
+          .update({ [columnaPlanta]: [url] }) // <--- Nota los corchetes [ ]
           .eq("id", planta_id);
 
         if (errorPlanta)
