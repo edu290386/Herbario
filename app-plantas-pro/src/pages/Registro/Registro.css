@@ -10,12 +10,12 @@
 }
 
 .registro-page-container {
-  max-width: 550px; /* Un poco más estrecho para mejorar la lectura */
+  max-width: 550px;
   margin: 0 auto;
-  padding: 30px 20px 120px 20px;
+  padding: 15px 15px 80px 15px; /* Menos padding arriba y a los lados */
   display: flex;
   flex-direction: column;
-  gap: 25px; /* Simetría entre componentes principales */
+  gap: 15px; /* De 25px a 15px */
 }
 
 /* Header Estilizado */
@@ -36,22 +36,22 @@
   letter-spacing: 1.5px;
 }
 
-/* Tarjeta Principal */
+/* Tarjeta más compacta */
 .registro-card {
   background: white;
   border-radius: 24px;
-  padding: 28px;
+  padding: 20px; /* De 28px a 20px: Ganamos mucho espacio aquí */
   box-shadow: var(--sombra-card);
   display: flex;
   flex-direction: column;
-  gap: 22px; /* Gap consistente para simetría interna */
+  gap: 16px; /* De 22px a 16px: Los inputs estarán más cerca */
 }
 
-/* Secciones de Formulario */
+/* Ajuste de secciones internas */
 .registro-section {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Espacio exacto entre label e input */
+  gap: 6px; /* De 8px a 6px */
 }
 
 .registro-label {
@@ -300,4 +300,49 @@ select.registro-input-text {
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+/* Nuevo Contenedor de Información Formada */
+.info-formada-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: var(--color-frondoso-light); /* Fondo menta suave que ya usas */
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--color-frondoso-border);
+}
+
+.info-formada-icon {
+  color: var(--color-frondoso);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-formada-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.info-formada-nombre {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1b4332;
+  text-transform: capitalize;
+}
+
+.info-formada-detalle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-frondoso);
+  opacity: 0.8;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Animación de entrada suave */
+.animation-fadeIn {
+  animation: fadeIn 0.4s ease-out;
 }

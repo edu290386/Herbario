@@ -320,26 +320,34 @@ export const RegistroPlantaPage = () => {
                 </select>
 
                 {nombreLocal.trim().length > 0 && paisSeleccionado && (
-                  <div className="preview-card">
-                    <div className="preview-icon-box">
-                      {paisSeleccionado === "world" && <GiEarthAmerica />}
-                      {paisSeleccionado === "sacred" && <GiAfrica />}
-                      {!["world", "sacred"].includes(paisSeleccionado) && (
-                        <PiGpsFixFill />
-                      )}
-                    </div>
-
-                    <div className="preview-info">
-                      <div className="preview-header">
-                        <span className="preview-nombre">{nombreLocal}</span>
-                        <span className="preview-tag">VISTA PREVIA</span>
+                  <div className="registro-section animation-fadeIn">
+                    <label className="registro-label">
+                      TIP DE NOMBRE / PAÍS
+                    </label>
+                    <div className="info-formada-container">
+                      <div className="info-formada-icon">
+                        {paisSeleccionado === "world" && (
+                          <GiEarthAmerica size={24} />
+                        )}
+                        {paisSeleccionado === "sacred" && (
+                          <GiAfrica size={24} />
+                        )}
+                        {!["world", "sacred"].includes(paisSeleccionado) && (
+                          <PiGpsFixFill size={24} />
+                        )}
                       </div>
-                      <div className="preview-label">
-                        {
-                          OPCIONES_PAISES.find(
-                            (op) => op.value === paisSeleccionado,
-                          )?.label
-                        }
+                      <div className="info-formada-texto">
+                        {/* USAMOS LA FUNCIÓN AQUÍ PARA LA VISTA PREVIA */}
+                        <span className="info-formada-nombre">
+                          {formatearParaDB(nombreLocal)}
+                        </span>
+                        <span className="info-formada-detalle">
+                          {
+                            OPCIONES_PAISES.find(
+                              (op) => op.value === paisSeleccionado,
+                            )?.label
+                          }
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -399,38 +407,46 @@ export const RegistroPlantaPage = () => {
         )}
 
         {esSoloUbicacion && (
-          <div className="registro-validaciones">
-            <div className="val-item">
-              {tieneFotoReal ? (
-                <IoMdCheckmarkCircle color="#2d6a4f" />
-              ) : (
-                <IoMdCloseCircle color="#f44336" />
-              )}
-              <span>Foto obligatoria</span>
+          <>
+            {/* Contenedor de Checklists (Foto y GPS) */}
+            <div className="registro-validaciones">
+              <div className="val-item">
+                {tieneFotoReal ? (
+                  <IoMdCheckmarkCircle color="#2d6a4f" />
+                ) : (
+                  <IoMdCloseCircle color="#f44336" />
+                )}
+                <span>Foto obligatoria</span>
+              </div>
+              <div className="val-item">
+                {gpsListo ? (
+                  <IoMdCheckmarkCircle color="#2d6a4f" />
+                ) : (
+                  <IoMdCloseCircle color="#f44336" />
+                )}
+                <span>
+                  {cargandoGPS
+                    ? "Buscando GPS..."
+                    : gpsListo
+                      ? "GPS listo"
+                      : errorGPS || "GPS requerido"}
+                </span>
+              </div>
             </div>
-            <div className="val-item">
-              {gpsListo ? (
-                <IoMdCheckmarkCircle color="#2d6a4f" />
-              ) : (
-                <IoMdCloseCircle color="#f44336" />
-              )}
-              <span>
-                {cargandoGPS
-                  ? "Buscando GPS..."
-                  : gpsListo
-                    ? "GPS listo"
-                    : errorGPS || "GPS requerido"}
-              </span>
-            </div>
+
+            {/* EL BANNER AHORA VIVE AQUÍ AFUERA */}
             {gpsListo && (
-              <div className="status-banner-wrapper">
+              <div
+                className="status-banner-wrapper"
+                style={{ marginTop: "12px" }}
+              >
                 <StatusBanner
                   status={validacionDistancia.status}
                   message={validacionDistancia.message}
                 />
               </div>
             )}
-          </div>
+          </>
         )}
 
         <div className="registro-botones-footer">

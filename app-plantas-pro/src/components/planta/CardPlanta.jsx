@@ -4,6 +4,7 @@ import { transformarImagen } from "../../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../ui/BotonPrincipal";
 import { PiPlantThin } from "react-icons/pi";
 import { resaltarTexto } from "../../helpers/highLightText";
+import { colores } from "../../constants/tema";
 import "./CardPlanta.css"
 
 export const CardPlanta = ({ planta, busqueda }) => {
@@ -39,7 +40,7 @@ export const CardPlanta = ({ planta, busqueda }) => {
           <div className="card-fallback">
             <PiPlantThin
               size={100}
-              color="var(--color-frondoso)"
+              color= {colores.frondoso}
               strokeWidth={1}
             />
           </div>

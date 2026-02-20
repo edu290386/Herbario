@@ -159,6 +159,16 @@ html, body, #root {
   gap: 30px;
 }
 
+.status-banner-wrapper {
+  width: 100%; 
+  display: flex;
+  justify-content: center;
+}
+
+.status-banner-wrapper > * {
+  width: 100% !important;
+}
+
 .register-button-wrapper {
   width: 370px;
   max-width: 100%;

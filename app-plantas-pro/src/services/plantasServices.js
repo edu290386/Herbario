@@ -136,7 +136,7 @@ export const agregarUbicacion = async (
   if (error) throw error;
 
   const ahora = new Date().toISOString();
-  console.log(data)
+ 
   await supabase.from("logs").insert([
     {
       planta_id: plantaId,
