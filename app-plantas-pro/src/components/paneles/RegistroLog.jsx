@@ -20,14 +20,7 @@ export const RegistroLog = ({
   onAction,
   onReview,
 }) => {
-  // --- DIAGNÓSTICO ---
-  console.log(`🔎 Registro [${log.id}]:`, {
-    tipo_accion: log.tipo_accion,
-    revisado: log.revisado,
-    contenido: log.contenido,
-    longitud_contenido: log.contenido?.length,
-  });
-
+  
   const isAdmin = userRole === "Administrador" || userRole === "admin";
   const isColab = userRole === "Colaborador";
   const esPanelGestion = panelType === "control" || panelType === "gestion";

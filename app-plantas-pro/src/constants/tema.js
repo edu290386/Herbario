@@ -16,6 +16,7 @@ export const colores = {
   azul: "#3b82f6",
   amarillo: "#fbbf24",
   azul_claro: "#eff6ff",
+  lima:"#f0fdf4",
 };
 
 export const ui = {

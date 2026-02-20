@@ -35,7 +35,7 @@ export const PanelUsuario = ({ user }) => {
         <div className="main-user-info">
           <FaCircleUser
             size={45}
-            color="var(--color-frondoso)"
+            color="#2D8B57" /* Gris oscuro sobrio */
             className="main-icon"
           />
           <h2 className="user-alias-center">{user?.alias || "Usuario"}</h2>
@@ -65,7 +65,7 @@ export const PanelUsuario = ({ user }) => {
       {/* BLOQUE 2: COMPARATIVA DE APORTES */}
       <div className="block-stats">
         <div className="stats-header">
-          <FaChartLine size={12}/> ESTADÍSTICA DE REGISTROS
+          <FaChartLine size={12} /> ESTADÍSTICA DE REGISTROS
         </div>
 
         <div className="comparison-layout">
@@ -104,45 +104,43 @@ export const PanelUsuario = ({ user }) => {
       </div>
 
       <style>{`
-        .panel-container { padding: 5px; max-width: 100%; }
+        .panel-container { padding: 5px; max-width: 100%; font-family: sans-serif; }
         
-        /* Bloque de Identidad Centralizado */
         .block-identity-centered { 
           background: white; padding: 25px 20px; border-radius: 20px;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
-          text-align: center; border: 1px solid #f0f0f0;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;
+          text-align: center; border: 1px solid #eee;
         }
         
         .main-user-info { margin-bottom: 5px; }
-        .main-icon { margin-bottom: 0px; }
-        .user-alias-center { margin: 0; font-size: 1.6rem; color: #2d3436; font-weight: 700; }
+        .user-alias-center { margin: 0; font-size: 1.6rem; color: #2F4538; font-weight: 700; }
         
         .details-stack { display: flex; flex-direction: column; gap: 15px; text-align: left; }
-        
         .detail-item { display: flex; flex-direction: column; gap: 5px; }
-        .detail-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #b2bec3; letter-spacing: 0.5px; margin-left: 2px; }
+        .detail-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #b2bec3; letter-spacing: 0.5px; }
         
         .badge { 
           font-size: 0.8rem; padding: 8px 14px; border-radius: 10px; 
           display: flex; align-items: center; gap: 10px; font-weight: 500;
           width: 50%; box-sizing: border-box; justify-content:center;
+          border: 1px solid #dfe6e9;
         }
         
-        .group-badge { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; }
-        .role-badge { background: #f3e5f5; color: #7b1fa2; border: 1px solid #e1bee7; }
+        .group-badge { background: #f0fdf4; color: #00796b; border: 1px solid #4CAF5044; }
+        .role-badge { background: #f0fdf4; color: #00796b; border: 1px solid #4CAF5044; }
 
-        /* Estilos Estadísticas */
         .block-stats { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #eee; }
-        .stats-header { background: #fcfcfc; padding: 12px; text-align: center; font-size: 0.75rem; font-weight: bold; color: #95a5a6; border-bottom: 1px solid #eee; }
+        .stats-header { background: #2D8B57; padding: 12px; text-align: center; font-size: 0.75rem; font-weight: bold; color: white; border-bottom: 1px solid #eee; }
+        
         .comparison-layout { display: grid; grid-template-columns: 1fr 1fr; }
         .stat-col { padding: 20px 10px; }
-        .stat-col h3 { font-size: 0.65rem; text-transform: uppercase; margin-bottom: 15px; text-align: center; color: #bdc3c7; }
-        .individual { border-right: 1px solid #f0f0f0; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem; }
-        .stat-row strong { font-size: 1.1rem; color: var(--color-bosque); }
-        .group strong { color: var(--color-bosque); }
+        .stat-col h3 { font-size: 0.65rem; text-transform: uppercase; margin-bottom: 15px; text-align: center; color: #636e72; font-weight: bold; }
+        .individual { border-right: 1px solid #eee; }
         
-        .loader-msg, .error-msg { padding: 40px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem; color: #636e72; }
+        .stat-row strong { font-size: 1.1rem; color: #1e3a2b; } /* Verde bosque muy oscuro y sobrio */
+        
+        .loader-msg, .error-msg { padding: 40px; text-align: center; color: #636e72; }
       `}</style>
     </div>
   );
