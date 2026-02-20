@@ -1,4 +1,5 @@
 import { IoCloseOutline } from "react-icons/io5";
+import { FaDeleteLeft } from "react-icons/fa6";
 
 export const BaseDrawer = ({
   isOpen,
@@ -20,9 +21,9 @@ export const BaseDrawer = ({
             {Icon && <Icon size={26} />}
             <h3 style={{ margin: 0 }}>{title}</h3>
           </div>
-          <button onClick={onClose} className="icon-btn-close">
-            <IoCloseOutline size={30} />
-          </button>
+          <div onClick={onClose} className="icon-btn-close">
+            <FaDeleteLeft size={30} />
+          </div>
         </div>
 
         <div className="drawer-body">{children}</div>
