@@ -126,6 +126,12 @@ export const LoginScreen = () => {
     return (
       <div style={styles.loadingContainer}>
         <TbCloverFilled style={styles.spinner} />
+        <div style={styles.copyrightContainer}>
+          <p style={styles.empresaText}>Ile Merin Adde SAC</p>
+          <p style={styles.derechosText}>
+            © 2026 Todos los derechos reservados
+          </p>
+        </div>
       </div>
     );
   }
@@ -259,6 +265,23 @@ const styles = {
     animation: "spin 2.5s linear infinite",
     filter: "drop-shadow(0 0 15px rgba(45, 106, 79, 0.2))",
     color: colores.frondoso,
+  },
+  copyrightContainer: {
+    marginTop: "30px",
+    opacity: 0.8,
+  },
+  empresaText: {
+    fontSize: "16px",
+    fontWeight: "700",
+    color: colores.bosque,
+    letterSpacing: "1px",
+    marginBottom: "4px",
+    margin: 0,
+  },
+  derechosText: {
+    fontSize: "12px",
+    color: "#6B7280",
+    margin: 0,
   },
 };
 
