@@ -123,7 +123,7 @@ export const BaseDrawer = ({
         }
 
         .drawer-content-container > * {
-          width: 92% !important;
+          width: 95% !important;
           box-sizing: border-box;
         }
 

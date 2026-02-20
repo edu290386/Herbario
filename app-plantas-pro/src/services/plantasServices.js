@@ -136,6 +136,7 @@ export const agregarUbicacion = async (
   if (error) throw error;
 
   const ahora = new Date().toISOString();
+  console.log(data)
   await supabase.from("logs").insert([
     {
       planta_id: plantaId,
@@ -148,9 +149,15 @@ export const agregarUbicacion = async (
       contenido: fotoUrl,
       latitud: coords.lat,
       longitud: coords.lng,
+      ciudad: datos?.ciudad || null,
+      distrito: datos?.distrito || null,
       revisado: "aprobado",
       revisado_por: alias,
       fecha_revision: ahora,
+      auditado_por: alias,
+      fecha_auditado: ahora,
+      auditado: "aprobado"
+
     },
   ]);
 
