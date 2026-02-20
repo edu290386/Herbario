@@ -132,8 +132,18 @@ export const HomePage = () => {
           {busqueda.length > 0 && (
             <div className="search-feedback-container">
               <StatusBanner
-                status={plantasFiltradas.length > 0 ? "success" : "warning"}
-                message={`${plantasFiltradas.length} coincidencias`}
+                status={
+                  existeCoincidenciaExacta
+                    ? "error"
+                    : plantasFiltradas.length > 0
+                      ? "success"
+                      : "warning"
+                }
+                message={
+                  existeCoincidenciaExacta
+                    ? "Esta planta ya se encuentra registrada"
+                    : `${plantasFiltradas.length} coincidencias`
+                }
               />
               {!existeCoincidenciaExacta && (
                 <BotonPrincipal

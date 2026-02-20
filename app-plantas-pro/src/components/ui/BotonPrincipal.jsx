@@ -30,7 +30,7 @@ export const BotonPrincipal = ({
         fontSize: "16px",
         cursor: estaCargando || esExitoso ? "not-allowed" : "pointer",
         transition: "background-color 0.3s ease",
-        maxWidth: "550px",
+        maxWidth: "370px",
         
       }}
     >
