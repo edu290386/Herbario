@@ -40,18 +40,19 @@
 .registro-card {
   background: white;
   border-radius: 24px;
-  padding: 20px; /* De 28px a 20px: Ganamos mucho espacio aquí */
+  padding: 20px;
   box-shadow: var(--sombra-card);
   display: flex;
   flex-direction: column;
-  gap: 16px; /* De 22px a 16px: Los inputs estarán más cerca */
+  /* El gap controla la separación de TODOS los hijos directamente */
+  gap: 16px; 
 }
 
 /* Ajuste de secciones internas */
 .registro-section {
   display: flex;
   flex-direction: column;
-  gap: 6px; /* De 8px a 6px */
+  gap: 20px; /* De 8px a 6px */
 }
 
 .registro-label {
@@ -135,6 +136,10 @@
   border: 1.5px solid var(--color-frondoso);
   background: white;
   letter-spacing: 0.5px;
+  -webkit-border-radius:;
+  -moz-border-radius:;
+  -ms-border-radius:;
+  -o-border-radius:;
 }
 
 .preview-label {
@@ -148,7 +153,7 @@
 /* Zona de Foto Estilizada */
 .registro-zona-foto {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 15 / 9;
   background: var(--color-gris-suave);
   border: 2px dashed #cbd5e1;
   border-radius: 20px;
@@ -159,7 +164,16 @@
   cursor: pointer;
   transition: all 0.3s ease;
   color: #64748b;
-  gap: 12px;
+  gap: 0px;
+  margin-top: 0px;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  -webkit-border-radius:;
+  -moz-border-radius:;
+  -ms-border-radius:;
+  -o-border-radius:;
 }
 
 .registro-zona-foto:hover {
@@ -182,7 +196,8 @@
 
 /* Validaciones y Footer */
 .status-banner-wrapper {
-  margin-top: 4px;
+  margin-top: 0; 
+  width: 100%;
 }
 
 .registro-validaciones {
@@ -205,10 +220,10 @@
 }
 
 .registro-botones-footer {
-  margin-top: 10px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
-  gap: 14px; /* Espaciado simétrico entre botones */
+  gap: 12px; /* Espaciado simétrico entre botones */
 }
 
 /* Animaciones */
