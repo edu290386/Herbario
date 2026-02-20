@@ -34,9 +34,10 @@ export const PanelUsuario = ({ user }) => {
       <div className="block-identity-centered">
         <div className="main-user-info">
           <FaCircleUser
-            size={45}
-            color="#2D8B57" /* Gris oscuro sobrio */
+            size={50}
+            color="#2D8B57"
             className="main-icon"
+            style={{ marginBottom: "10px" }}
           />
           <h2 className="user-alias-center">{user?.alias || "Usuario"}</h2>
         </div>
@@ -46,7 +47,7 @@ export const PanelUsuario = ({ user }) => {
           <div className="detail-item">
             <span className="detail-label">Grupo</span>
             <div className="badge group-badge">
-              <FaUserGroup size={12} />
+              <FaUserGroup size={14} />
               <span>{user?.grupos?.nombre_grupo || "Sin Grupo"}</span>
             </div>
           </div>
@@ -55,7 +56,7 @@ export const PanelUsuario = ({ user }) => {
           <div className="detail-item">
             <span className="detail-label">Rol</span>
             <div className="badge role-badge">
-              <FaNetworkWired size={12} />
+              <FaNetworkWired size={14} />
               <span>{user?.rol || "Sin Rol"}</span>
             </div>
           </div>
@@ -75,13 +76,13 @@ export const PanelUsuario = ({ user }) => {
               <span>Hoy</span> <strong>{stats.individual.hoy}</strong>
             </div>
             <div className="stat-row">
-              <span>Semanal</span> <strong>{stats.individual.semana}</strong>
+              <span>Semana</span> <strong>{stats.individual.semana}</strong>
             </div>
             <div className="stat-row">
-              <span>Mensual</span> <strong>{stats.individual.mes}</strong>
+              <span>Mes</span> <strong>{stats.individual.mes}</strong>
             </div>
             <div className="stat-row">
-              <span>Anual</span> <strong>{stats.individual.año}</strong>
+              <span>Año</span> <strong>{stats.individual.año}</strong>
             </div>
           </div>
 
@@ -91,56 +92,71 @@ export const PanelUsuario = ({ user }) => {
               <span>Hoy</span> <strong>{stats.grupal.hoy}</strong>
             </div>
             <div className="stat-row">
-              <span>Semanal</span> <strong>{stats.grupal.semana}</strong>
+              <span>Semana</span> <strong>{stats.grupal.semana}</strong>
             </div>
             <div className="stat-row">
-              <span>Mensual</span> <strong>{stats.grupal.mes}</strong>
+              <span>Mes</span> <strong>{stats.grupal.mes}</strong>
             </div>
             <div className="stat-row">
-              <span>Anual</span> <strong>{stats.grupal.año}</strong>
+              <span>Año</span> <strong>{stats.grupal.año}</strong>
             </div>
           </div>
         </div>
       </div>
 
       <style>{`
-        .panel-container { padding: 5px; max-width: 100%; font-family: sans-serif; }
+        .panel-container { 
+          padding: 15px; 
+          max-width: 100%; 
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          box-sizing: border-box;
+        }
         
         .block-identity-centered { 
-          background: white; padding: 25px 20px; border-radius: 20px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;
-          text-align: center; border: 1px solid #eee;
+          background: white; 
+          padding: 20px; 
+          border-radius: 20px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+          margin-bottom: 15px;
+          text-align: center; 
+          border: 1px solid #f0f0f0;
         }
         
-        .main-user-info { margin-bottom: 5px; }
-        .user-alias-center { margin: 0; font-size: 1.6rem; color: #2F4538; font-weight: 700; }
+        .main-user-info { margin-bottom: 15px; }
+        .user-alias-center { margin: 0; font-size: 1.4rem; color: #1e3a2b; font-weight: 700; }
         
-        .details-stack { display: flex; flex-direction: column; gap: 15px; text-align: left; }
-        .detail-item { display: flex; flex-direction: column; gap: 5px; }
-        .detail-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #b2bec3; letter-spacing: 0.5px; }
+        .details-stack { display: flex; flex-direction: column; gap: 12px; }
+        .detail-item { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+        .detail-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #a0a0a0; letter-spacing: 0.8px; }
         
         .badge { 
-          font-size: 0.8rem; padding: 8px 14px; border-radius: 10px; 
-          display: flex; align-items: center; gap: 10px; font-weight: 500;
-          width: 50%; box-sizing: border-box; justify-content:center;
-          border: 1px solid #dfe6e9;
+          font-size: 0.85rem; 
+          padding: 10px 12px; 
+          border-radius: 12px; 
+          display: flex; 
+          align-items: center; 
+          gap: 8px; 
+          font-weight: 600;
+          width: 100%; /* Ajustado para ocupar el ancho disponible */
+          box-sizing: border-box;
+          border: 1px solid #e8e8e8;
         }
         
-        .group-badge { background: #f0fdf4; color: #00796b; border: 1px solid #4CAF5044; }
-        .role-badge { background: #f0fdf4; color: #00796b; border: 1px solid #4CAF5044; }
+        .group-badge { background: #f7fcf9; color: #2d6a4f; border-color: #d8f3dc; }
+        .role-badge { background: #f7fcf9; color: #2d6a4f; border-color: #d8f3dc; }
 
-        .block-stats { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #eee; }
-        .stats-header { background: #2D8B57; padding: 12px; text-align: center; font-size: 0.75rem; font-weight: bold; color: white; border-bottom: 1px solid #eee; }
+        .block-stats { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .stats-header { background: #2D8B57; padding: 10px; text-align: center; font-size: 0.7rem; font-weight: 800; color: white; letter-spacing: 1px; }
         
         .comparison-layout { display: grid; grid-template-columns: 1fr 1fr; }
-        .stat-col { padding: 20px 10px; }
-        .stat-col h3 { font-size: 0.65rem; text-transform: uppercase; margin-bottom: 15px; text-align: center; color: #636e72; font-weight: bold; }
-        .individual { border-right: 1px solid #eee; }
+        .stat-col { padding: 15px 10px; }
+        .stat-col h3 { font-size: 0.6rem; text-transform: uppercase; margin-bottom: 12px; text-align: center; color: #95a5a6; font-weight: 800; }
+        .individual { border-right: 1px solid #f0f0f0; }
         
-        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.85rem; color: #636e72; }
-        .stat-row strong { font-size: 1.1rem; color: #1e3a2b; } /* Verde bosque muy oscuro y sobrio */
+        .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; color: #4a4a4a; }
+        .stat-row strong { font-size: 1rem; color: #2D8B57; }
         
-        .loader-msg, .error-msg { padding: 40px; text-align: center; color: #636e72; }
+        .loader-msg, .error-msg { padding: 40px; text-align: center; color: #636e72; font-size: 0.9rem; }
       `}</style>
     </div>
   );
