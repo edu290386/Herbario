@@ -25,34 +25,35 @@ export const LoginFormView = ({
         style={{ display: "flex", flexDirection: "column", gap: "12px" }}
       >
         {/* BLOQUE DE REGISTRO: Cada campo en su propia fila */}
-        <div style={styles.registroCampos(esRegistro)}>
-          <input
-            name="nombre"
-            placeholder="Nombres"
-            value={form.nombre}
-            onChange={onChange}
-            style={styles.input}
-            required={esRegistro}
-          />
-          <input
-            name="apellido"
-            placeholder="Apellidos"
-            value={form.apellido}
-            onChange={onChange}
-            style={styles.input}
-            required={esRegistro}
-          />
-          <input
-            type="email"
-            name="correo"
-            placeholder="Correo electrónico"
-            value={form.correo}
-            onChange={onChange}
-            style={styles.input}
-            required={esRegistro}
-          />
-        </div>
-
+        {esRegistro && (
+          <div style={styles.registroCampos(true)}>
+            <input
+              name="nombre"
+              placeholder="Nombres"
+              value={form.nombre}
+              onChange={onChange}
+              style={styles.input}
+              required
+            />
+            <input
+              name="apellido"
+              placeholder="Apellidos"
+              value={form.apellido}
+              onChange={onChange}
+              style={styles.input}
+              required
+            />
+            <input
+              type="email"
+              name="correo"
+              placeholder="Correo electrónico"
+              value={form.correo}
+              onChange={onChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        )}
         {/* Bloque de Identificación (Siempre visible) */}
         <div style={styles.row}>
           <select
