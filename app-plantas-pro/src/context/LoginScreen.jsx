@@ -125,12 +125,15 @@ export const LoginScreen = () => {
   if (cargando && !esRegistro) {
     return (
       <div style={styles.loadingContainer}>
-        <TbCloverFilled style={styles.spinner} />
-        <div style={styles.copyrightContainer}>
-          <p style={styles.empresaText}>Ile Merin Adde SAC</p>
-          <p style={styles.derechosText}>
-            © 2026 Todos los derechos reservados
-          </p>
+        <div style={styles.loadingContent}>
+          <TbCloverFilled style={styles.spinner} />
+
+          <div style={styles.copyrightContainer}>
+            <p style={styles.empresaText}>Ile Merin Adde SAC</p>
+            <p style={styles.derechosText}>
+              © 2026 Todos los derechos reservados
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -250,8 +253,9 @@ const styles = {
   },
   loadingContainer: {
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    flexDirection: "column",
+    justifyContent: "center", // Centrado vertical
+    alignItems: "center", // Centrado horizontal
     height: "100vh",
     width: "100vw",
     backgroundColor: colores.fondo,
@@ -260,6 +264,12 @@ const styles = {
     left: 0,
     zIndex: 9999,
   },
+  loadingContent: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "20px", // Espacio entre el spinner y el texto
+  },
   spinner: {
     fontSize: "8rem",
     animation: "spin 2.5s linear infinite",
@@ -267,16 +277,15 @@ const styles = {
     color: colores.frondoso,
   },
   copyrightContainer: {
-    marginTop: "30px",
-    opacity: 0.8,
+    textAlign: "center",
+    opacity: 0.9,
   },
   empresaText: {
-    fontSize: "16px",
-    fontWeight: "700",
+    fontSize: "18px",
+    fontWeight: "bold",
     color: colores.bosque,
-    letterSpacing: "1px",
-    marginBottom: "4px",
-    margin: 0,
+    margin: "0 0 5px 0",
+    letterSpacing: "0.5px",
   },
   derechosText: {
     fontSize: "12px",
