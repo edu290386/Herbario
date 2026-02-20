@@ -91,13 +91,13 @@ export const PanelUsuario = ({ user }) => {
               <span>Hoy</span> <strong>{stats.grupal.hoy}</strong>
             </div>
             <div className="stat-row">
-              <span>Semana</span> <strong>{stats.grupal.semana}</strong>
+              <span>Semanal</span> <strong>{stats.grupal.semana}</strong>
             </div>
             <div className="stat-row">
-              <span>Mes</span> <strong>{stats.grupal.mes}</strong>
+              <span>Mensual</span> <strong>{stats.grupal.mes}</strong>
             </div>
             <div className="stat-row">
-              <span>Año</span> <strong>{stats.grupal.año}</strong>
+              <span>Anual</span> <strong>{stats.grupal.año}</strong>
             </div>
           </div>
         </div>
