@@ -3,7 +3,6 @@
 
 /* 2. VARIABLES DE DISEÑO */
 :root {
-  /* Colores en RGB para inspección fácil */
   --color-bosque: rgb(47, 69, 56);
   --color-hoja: rgb(173, 188, 159);
   --color-retama: rgb(244, 226, 133);
@@ -12,12 +11,9 @@
   --color-frondoso: rgb(45, 139, 87);
   --color-red: rgb(211, 47, 47);
   --color-grisTexto: rgb(102, 102, 102);
-  --color-grisSuave: rgb(240, 240, 240);
-  --color-encendido: rgb(52, 211, 153);
-  --color-claro: rgb(232, 245, 233);
-
   --font-principal: 'Open Sans', sans-serif;
   --margen-maestro: 15px;
+  --shadow-elegant: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* 3. RESET GLOBAL */
@@ -38,30 +34,35 @@ html, body, #root {
 .home-page {
   width: 100%;
   min-height: 100vh;
+  /* Fondo con degradado sutil para dar profundidad */
+  background: radial-gradient(circle at top right, #fdfdfd 0%, var(--color-fondo) 100%);
 }
 
 .home-layout-container {
   width: 100%;
-  max-width: 1510px; /* Límite de 4 cards (350*4 + 20*3) */
+  max-width: 1510px;
   margin: 0 auto;
-  padding: 0 var(--margen-maestro);
-  box-sizing: border-box;
-  padding-bottom: 40px;
+  padding: 0 var(--margen-maestro) 60px;
 }
 
-/* 5. TOP BAR (Avatar y Logout) */
+/* 5. TOP BAR (Avatar y Navegación) */
 .home-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 15px 0px 15px 0px;
+  padding: 25px 0;
+  margin-bottom: 20px;
 }
 
 .user-profile-info {
   display: flex;
   align-items: center;
   gap: 15px;
+  transition: opacity 0.2s;
+}
+
+.user-profile-info:hover {
+  opacity: 0.8;
 }
 
 .user-text-details {
@@ -82,51 +83,46 @@ html, body, #root {
   color: var(--color-grisTexto);
 }
 
-.logout-btn-simple {
-  background: none;
-  border: none;
-  color: var(--color-grisTexto);
-  cursor: pointer;
-  padding: 0px;
+.nav-actions {
   display: flex;
   align-items: center;
-  transition: color 0.2s, transform 0.2s;
-  -webkit-transition: color 0.2s, transform 0.2s;
-  -moz-transition: color 0.2s, transform 0.2s;
-  -ms-transition: color 0.2s, transform 0.2s;
-  -o-transition: color 0.2s, transform 0.2s;
+  gap: 18px;
 }
 
-.logout-btn-simple:hover {
-  color: var(--color-red);
-  transform: scale(1.1);
-  -webkit-transform: scale(1.1);
-  -moz-transform: scale(1.1);
-  -ms-transform: scale(1.1);
-  -o-transform: scale(1.1);
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  /* FUERZA EL COLOR: Aquí evitamos el azul del móvil */
+  color: var(--color-grisTexto); 
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
+.icon-btn:hover {
+  transform: translateY(-2px);
+  /* Color al pasar el mouse */
+  color: var(--color-frondoso); 
+}
 
-.search-section, 
-.search-feedback-container {
+/* El logout específicamente puede ser gris o rojo según tu gusto */
+.logout-sep {
+  border-left: 1px solid rgba(0,0,0,0.1);
+  padding-left: 15px;
+  margin-left: 5px;
+  color: var(--color-grisTexto); /* Aseguramos que sea gris */
+}
+
+.logout-sep:hover {
+  color: var(--color-red); /* Se pone rojo solo al tocarlo */
+}
+
+/* 6. SECCIÓN BUSCADOR Y FEEDBACK (30px de separación) */
+.search-section {
   width: 100%;
-  max-width: 740px; 
+  max-width: 740px;
   margin: 0 auto;
-}
-
-/* Esta es la clave: el contenedor de banner y botón */
-.search-feedback-container {
-  margin-bottom: 30px; 
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Centra el botón respecto al banner */
-  gap: 30px;
-}
-
-.search-feedback-container > * {
-  width: 100% !important;
-  display: flex;
-  justify-content: center;
 }
 
 .search-wrapper {
@@ -135,6 +131,8 @@ html, body, #root {
   align-items: center;
   width: 100%;
   margin-bottom: 30px;
+  /* Capa extra de seguridad para que el icono siempre esté arriba */
+  z-index: 1;
 }
 
 .search-input {
@@ -146,10 +144,13 @@ html, body, #root {
   font-size: 1rem;
   background-color: var(--color-blanco);
   box-sizing: border-box;
-  -webkit-border-radius:;
-  -moz-border-radius:;
-  -ms-border-radius:;
-  -o-border-radius:;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--color-frondoso); /* Sólido al hacer foco */
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(45, 139, 87, 0.1); /* Sutil resplandor */
 }
 
 .search-icon {
@@ -159,166 +160,41 @@ html, body, #root {
   pointer-events: none;
 }
 
+/* El icono se ilumina al 100% cuando el usuario entra al input */
+.search-wrapper:focus-within .search-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.search-feedback-container {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto 30px; /* ESPACIO 3 HACIA LAS CARDS */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px; /* ESPACIO 2 ENTRE BANNER Y BOTÓN */
+}
+
 .status-banner-wrapper {
   width: 100%;
- 
 }
 
 .register-button-wrapper {
-  width: 370px; 
-  max-width: 100%; 
-  display: flex;
-  justify-content: center;
-  
-}
-
-.register-button-wrapper > button {
-  width: 100%;
+  width: 370px;
+  max-width: 100%;
 }
 
 /* 7. GRID DE CARDS */
 .home-grid {
   display: grid;
-  /* Ancho 300px min, 350px max según acuerdo */
   grid-template-columns: repeat(auto-fill, minmax(310px, 360px));
-  gap: 15px;
+  gap: 25px; /* Un poco más de aire entre tarjetas */
   justify-content: center;
-  justify-items: center;   /* Centra la card dentro de su propia columna */
   width: 100%;
-  padding: 0px 0;
-  margin: 0px auto;
 }
 
-/* --- ESTILOS DE LA CARD PLANTA (VALORES FIJOS ACORDADOS) --- */
-.card-planta {
-  background-color: var(--color-blanco);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  width: 100%;
-  max-width: 360px;
-  height: 690px;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease;
-  isolation: isolate;
-  -webkit-transition: transform 0.2s ease;
-  -moz-transition: transform 0.2s ease;
-  -ms-transition: transform 0.2s ease;
-  -o-transition: transform 0.2s ease;
-}
-
-.card-planta:hover {
-  transform: translateY(-5px);
-}
-
-.card-contenedor-img {
-  height: 440px; /* Altura fija que pediste */
-  width: 100%;
-  flex-shrink: 0;
-  background-color: rgb(249, 249, 249);
-  cursor: pointer;
-}
-
-.card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Mantiene la proporción 4:3 sin deformar */
-  display: block;
-}
-
-.card-info {
-  padding: 10px 20px 20px 20px;
-  height: 250px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.card-texto {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  overflow: hidden;
-}
-
-.card-nombre-comun {
-  margin: 0;
-  font-size: 1.4rem;
-  color: var(--color-bosque);
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.card-nombre-cientifico {
-  margin: 0 0 0px 0;
-  font-size: 1rem;
-  color: rgb(136, 136, 136);
-}
-
-.card-fallback {
-  width: 100%;
-  height: 100%;
-  background-color: var(--color-retama);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0.9;
-}
-
-/* El contenedor maestro que ya tenemos en CardPlanta */
-.card-otros-nombres-container {
-  margin-top: 8px;
-  line-height: 1.4;
-  height: auto;
-  overflow: hidden;
-
-  /* ACTIVADORES DE ELIPSIS */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4; /* Aquí defines las 4 líneas */
-  line-clamp: 4;
-  text-overflow: ellipsis;
-}
-
-/* Estilos que antes estaban en el componente */
-.otros-nombres-label {
-  font-weight: 700;
-  font-size: 0.95rem; /* Ajustado para que quepa mejor */
-  color: var(--color-bosque);
-}
-
-.otros-nombres-texto {
-  font-size: 0.95rem;
-  color: var(--color-grisTexto);
-}
-
-/* resaltado de texto en buscador */
-.resaltado-amarillo {
-  background-color: #ffff00; /* Usamos tu color retama */
-  color: var(--color-bosque);
-  padding: 0 2px;
-  border-radius: 4px;
-  font-weight: inherit; /* Mantiene la negrita si el padre la tiene */
-}
-
-/* 8. AJUSTES RESPONSIVOS (Giro y Landscape) */
-@media (orientation: landscape) and (max-height: 500px) {
-  .home-top-bar { padding: 10px 0; }
-  .user-name-text { font-size: 1.1rem; }
-  .search-section { padding-bottom: 10px; }
-}
-/* . Refuerzo específico para Desktop */
-@media (min-width: 1440px) {
-  .home-grid {
-    /* Forzamos las 4 columnas exactas en pantallas de escritorio */
-    grid-template-columns: repeat(4, 350px);
-  }
-}
-
-/* Overlay oscuro de fondo */
+/* 8. DRAWER (Paneles laterales) */
 .drawer-overlay {
   position: fixed;
   top: 0;
@@ -326,76 +202,46 @@ html, body, #root {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.6s ease-in-out, visibility 0.6s;
+  transition: all 0.4s ease;
   z-index: 999;
-  -webkit-transition: all 0.6s ease;
-  -moz-transition: all 0.6s ease;
-  -ms-transition: all 0.6s ease;
-  -o-transition: all 0.6s ease;
 }
+
 .drawer-overlay.active {
   opacity: 1;
   visibility: visible;
 }
 
-/* El Panel Lateral */
 .drawer-panel {
   position: fixed;
   top: 0;
   right: -100%;
-  /*Empiezaescondidoaladerecha*/width: 100%;
+  width: 100%;
   max-width: 450px;
-  /*Anchomóvilenpantallasgrandes*/height: 100vh;
+  height: 100vh;
   background: white;
   z-index: 1000;
-  transition: right 0.6s ease-in-out;
+  transition: right 0.5s cubic-bezier(0.82, 0.08, 0.25, 1);
   display: flex;
   flex-direction: column;
-  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-  -webkit-transition: right 0.6s ease-in-out;
-  -moz-transition: right 0.6s ease-in-out;
-  -ms-transition: right 0.6s ease-in-out;
-  -o-transition: right 0.6s ease-in-out;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.1);
 }
 
 .drawer-panel.open {
-  right: 0; /* Se desliza hacia adentro */
+  right: 0;
 }
 
-.drawer-header {
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
+/* 9. MEDIA QUERIES */
+@media (min-width: 1440px) {
+  .home-grid {
+    grid-template-columns: repeat(4, 350px);
+  }
 }
 
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  background-color: #fcfcfc;
+@media (max-width: 600px) {
+  .user-name-text { font-size: 1.1rem; }
+  .user-role-text { font-size: 0.85rem; }
+  .register-button-wrapper { width: 100%; }
 }
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #444;
-  display: flex;
-  align-items: center;
-  transition: transform 0.2s;
-}
-
-.icon-btn:active { transform: scale(0.9); }
-.logout-sep { border-left: 1px solid #ddd; padding-left: 8px; }

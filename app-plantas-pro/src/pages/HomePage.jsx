@@ -77,6 +77,7 @@ export const HomePage = () => {
       </BaseDrawer>
 
       <div className="home-layout-container">
+        {/* TOP BAR: Ahora con clase glassmorphism */}
         <div className="home-top-bar">
           <div
             className="user-profile-info"
@@ -84,7 +85,7 @@ export const HomePage = () => {
             style={{ cursor: "pointer" }}
           >
             <TbCloverFilled
-              style={{ color: "var(--color-frondoso)", fontSize: "3rem" }}
+              style={{ color: "var(--color-frondoso)", fontSize: "2.8rem" }}
             />
             <div className="user-text-details">
               <span className="user-name-text">{user?.alias}</span>
@@ -99,64 +100,75 @@ export const HomePage = () => {
               onClick={() => abrirPanel("actividades")}
               className="icon-btn"
             >
-              <FaRegBell size={30} color={colores.frondoso} />
+              <FaRegBell size={26} color={colores.frondoso} />
             </button>
             {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
               <button
                 onClick={() => abrirPanel("gestion")}
                 className="icon-btn"
               >
-                <LuMicroscope size={32} color={colores.frondoso} />
+                <LuMicroscope size={28} color={colores.frondoso} />
               </button>
             )}
             <button onClick={logout} className="icon-btn logout-sep">
-              <IoLogOutOutline size={40} />
+              <IoLogOutOutline size={32} />
             </button>
           </div>
         </div>
 
+        {/* BUSCADOR */}
         <header className="search-section">
           <div className="search-wrapper">
-            <IoSearchOutline className="search-icon" size={24} />
+            <IoSearchOutline
+              className="search-icon"
+              size={24}
+              color="var(--color-frondoso)"
+            />
             <input
               type="text"
               className="search-input"
-              placeholder="Buscar planta ..."
+              placeholder="¿Qué planta buscas hoy?"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
         </header>
 
+        {/* FEEDBACK & BOTÓN REGISTRO */}
         <main className="main-content-layout">
           {busqueda.length > 0 && (
             <div className="search-feedback-container">
-              <StatusBanner
-                status={
-                  existeCoincidenciaExacta
-                    ? "error"
-                    : plantasFiltradas.length > 0
-                      ? "success"
-                      : "warning"
-                }
-                message={
-                  existeCoincidenciaExacta
-                    ? "Esta planta ya se encuentra registrada"
-                    : `${plantasFiltradas.length} coincidencias`
-                }
-              />
-              {!existeCoincidenciaExacta && (
-                <BotonPrincipal
-                  texto="REGISTRAR NUEVA PLANTA"
-                  onClick={() =>
-                    navigate("/registro", {
-                      state: {
-                        nombreComun: formatearParaDB(busqueda),
-                        usuarioId: user.id,
-                      },
-                    })
+              <div className="status-banner-wrapper">
+                <StatusBanner
+                  status={
+                    existeCoincidenciaExacta
+                      ? "error"
+                      : plantasFiltradas.length > 0
+                        ? "success"
+                        : "warning"
+                  }
+                  message={
+                    existeCoincidenciaExacta
+                      ? "Esta planta ya se encuentra registrada"
+                      : `${plantasFiltradas.length} coincidencias`
                   }
                 />
+              </div>
+
+              {!existeCoincidenciaExacta && (
+                <div className="register-button-wrapper">
+                  <BotonPrincipal
+                    texto="REGISTRAR NUEVA PLANTA"
+                    onClick={() =>
+                      navigate("/registro", {
+                        state: {
+                          nombreComun: formatearParaDB(busqueda),
+                          usuarioId: user.id,
+                        },
+                      })
+                    }
+                  />
+                </div>
               )}
             </div>
           )}

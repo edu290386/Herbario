@@ -4,6 +4,7 @@ import { transformarImagen } from "../../helpers/cloudinaryHelper";
 import { BotonPrincipal } from "../ui/BotonPrincipal";
 import { PiPlantThin } from "react-icons/pi";
 import { resaltarTexto } from "../../helpers/highLightText";
+import "./CardPlanta.css"
 
 export const CardPlanta = ({ planta, busqueda }) => {
   const navigate = useNavigate();
@@ -80,4 +81,4 @@ export const CardPlanta = ({ planta, busqueda }) => {
       </div>
     </div>
   );
-};;
+};
