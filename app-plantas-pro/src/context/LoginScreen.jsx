@@ -8,9 +8,11 @@ import {
 } from "../services/usuariosServices";
 import { TbCloverFilled } from "react-icons/tb";
 import { obtenerIdentidad } from "../helpers/identidadHelper";
+import { PlantasContext } from "./PlantasContext";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
+  const { cargarPlantasHome} = useContext(PlantasContext);
   const [esRegistro, setEsRegistro] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
@@ -72,9 +74,10 @@ export const LoginScreen = () => {
         }
 
         setCargando(true);
+        cargarPlantasHome();
         setTimeout(() => {
           login(usuario);
-        }, 2000);
+        }, 4000);
       } else {
         // --- FLUJO REGISTRO (ACTIVACIÓN) ---
         if (dbError || !usuario) {
@@ -262,11 +265,12 @@ const styles = {
 if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.type = "text/css";
-  styleSheet.innerText = `
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+ styleSheet.innerText = `
+  @keyframes spin {
+      0% { transform: rotate(0deg); opacity: 0.7; }
+      50% { transform: rotate(180deg); opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 0.7; }
     }
-  `;
+`;
   document.head.appendChild(styleSheet);
 }
