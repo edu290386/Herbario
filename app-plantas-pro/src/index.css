@@ -9,7 +9,7 @@
   --color-fondo: rgb(241, 242, 237);
   --color-blanco: rgb(255, 255, 255);
   --color-frondoso: rgb(45, 139, 87);
-  --color-red: rgb(211, 47, 47);
+  --color-red: ;
   --color-grisTexto: rgb(102, 102, 102);
   --font-principal: 'Open Sans', sans-serif;
   --margen-maestro: 15px;
@@ -50,8 +50,8 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 25px 0;
-  margin-bottom: 20px;
+  padding: 20px 0;
+  margin-bottom: 10px;
 }
 
 .user-profile-info {
@@ -86,7 +86,11 @@ html, body, #root {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 8px; /* Espacio entre botones */
+  background: rgba(255, 255, 255, 0.5); /* Fondo sutil traslúcido */
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.03);
 }
 
 .icon-btn {
