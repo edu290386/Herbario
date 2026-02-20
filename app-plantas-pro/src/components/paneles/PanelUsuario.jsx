@@ -154,7 +154,7 @@ export const PanelUsuario = ({ user }) => {
         .individual { border-right: 1px solid #f0f0f0; }
         
         .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.8rem; color: #4a4a4a; }
-        .stat-row strong { font-size: 1rem; color: #2D8B57; }
+        .stat-row strong { font-size: 1rem; color: #4a4a4a; }
         
         .loader-msg, .error-msg { padding: 40px; text-align: center; color: #636e72; font-size: 0.9rem; }
       `}</style>

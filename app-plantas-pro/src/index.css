@@ -9,11 +9,9 @@
   --color-fondo: rgb(241, 242, 237);
   --color-blanco: rgb(255, 255, 255);
   --color-frondoso: rgb(45, 139, 87);
-  --color-red: ;
   --color-grisTexto: rgb(102, 102, 102);
   --font-principal: 'Open Sans', sans-serif;
   --margen-maestro: 15px;
-  --shadow-elegant: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* 3. RESET GLOBAL */
@@ -25,7 +23,7 @@
 }
 
 html, body, #root {
-  background-color: var(--color-fondo) !important;
+  background-color: var(--color-fondo);
   width: 100%;
   min-height: 100vh;
 }
@@ -34,7 +32,7 @@ html, body, #root {
 .home-page {
   width: 100%;
   min-height: 100vh;
-  /* Fondo con degradado sutil para dar profundidad */
+  /* Mantenemos el degradado pero simplificado */
   background: radial-gradient(circle at top right, #fdfdfd 0%, var(--color-fondo) 100%);
 }
 
@@ -45,7 +43,7 @@ html, body, #root {
   padding: 0 var(--margen-maestro) 60px;
 }
 
-/* 5. TOP BAR (Avatar y Navegación) */
+/* 5. TOP BAR */
 .home-top-bar {
   display: flex;
   justify-content: space-between;
@@ -58,16 +56,14 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 15px;
-  transition: opacity 0.2s;
+  cursor: pointer;
 }
-
-.user-profile-info:hover {
-  opacity: 0.8;
-}
-
+/* ESTA ES LA CLAVE: El contenedor de los textos */
 .user-text-details {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Apila Alias arriba y Rol abajo */
+  align-items: flex-start; /* Alinea ambos a la izquierda */
+  justify-content: center;
 }
 
 .user-name-text {
@@ -81,16 +77,17 @@ html, body, #root {
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-grisTexto);
+  margin: 0;
+  opacity: 0.8;
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 8px; /* Espacio entre botones */
-  background: rgba(255, 255, 255, 0.5); /* Fondo sutil traslúcido */
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.5);
   padding: 6px;
   border-radius: 14px;
-  border: 1px solid rgba(0,0,0,0.03);
 }
 
 .icon-btn {
@@ -99,30 +96,22 @@ html, body, #root {
   cursor: pointer;
   display: flex;
   align-items: center;
-  /* FUERZA EL COLOR: Aquí evitamos el azul del móvil */
-  color: var(--color-grisTexto); 
+  color: var(--color-grisTexto);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .icon-btn:hover {
   transform: translateY(-2px);
-  /* Color al pasar el mouse */
-  color: var(--color-frondoso); 
+  color: var(--color-frondoso);
 }
 
-/* El logout específicamente puede ser gris o rojo según tu gusto */
 .logout-sep {
   border-left: 1px solid rgba(0,0,0,0.1);
   padding-left: 15px;
   margin-left: 5px;
-  color: var(--color-grisTexto); /* Aseguramos que sea gris */
 }
 
-.logout-sep:hover {
-  color: var(--color-red); /* Se pone rojo solo al tocarlo */
-}
-
-/* 6. SECCIÓN BUSCADOR Y FEEDBACK (30px de separación) */
+/* 6. BUSCADOR */
 .search-section {
   width: 100%;
   max-width: 740px;
@@ -135,8 +124,6 @@ html, body, #root {
   align-items: center;
   width: 100%;
   margin-bottom: 30px;
-  /* Capa extra de seguridad para que el icono siempre esté arriba */
-  z-index: 1;
 }
 
 .search-input {
@@ -147,14 +134,12 @@ html, body, #root {
   outline: none;
   font-size: 1rem;
   background-color: var(--color-blanco);
-  box-sizing: border-box;
   transition: all 0.2s ease;
 }
 
 .search-input:focus {
-  border-color: var(--color-frondoso); /* Sólido al hacer foco */
-  background-color: #fff;
-  box-shadow: 0 4px 12px rgba(45, 139, 87, 0.1); /* Sutil resplandor */
+  border-color: var(--color-frondoso);
+  box-shadow: 0 4px 12px rgba(45, 139, 87, 0.1);
 }
 
 .search-icon {
@@ -164,24 +149,14 @@ html, body, #root {
   pointer-events: none;
 }
 
-/* El icono se ilumina al 100% cuando el usuario entra al input */
-.search-wrapper:focus-within .search-icon {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
 .search-feedback-container {
   width: 100%;
   max-width: 740px;
-  margin: 0 auto 30px; /* ESPACIO 3 HACIA LAS CARDS */
+  margin: 0 auto 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px; /* ESPACIO 2 ENTRE BANNER Y BOTÓN */
-}
-
-.status-banner-wrapper {
-  width: 100%;
+  gap: 30px;
 }
 
 .register-button-wrapper {
@@ -192,55 +167,16 @@ html, body, #root {
 /* 7. GRID DE CARDS */
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 360px));
-  gap: 25px; /* Un poco más de aire entre tarjetas */
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 25px;
   justify-content: center;
   width: 100%;
 }
 
-/* 8. DRAWER (Paneles laterales) */
-.drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.4s ease;
-  z-index: 999;
-}
-
-.drawer-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.drawer-panel {
-  position: fixed;
-  top: 0;
-  right: -100%;
-  width: 100%;
-  max-width: 450px;
-  height: 100vh;
-  background: white;
-  z-index: 1000;
-  transition: right 0.5s cubic-bezier(0.82, 0.08, 0.25, 1);
-  display: flex;
-  flex-direction: column;
-  box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-}
-
-.drawer-panel.open {
-  right: 0;
-}
-
-/* 9. MEDIA QUERIES */
+/* 8. MEDIA QUERIES */
 @media (min-width: 1440px) {
   .home-grid {
-    grid-template-columns: repeat(4, 350px);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 

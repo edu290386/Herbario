@@ -1,3 +1,4 @@
+import { useEffect } from "react"; // 1. Añadimos useEffect
 import { FaDeleteLeft } from "react-icons/fa6";
 
 export const BaseDrawer = ({
@@ -7,6 +8,28 @@ export const BaseDrawer = ({
   icon: Icon,
   children,
 }) => {
+  // 2. BLOQUEO DE SCROLL DEL BODY
+  useEffect(() => {
+    if (isOpen) {
+      // Bloqueo total para iOS y Android
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restaurar posición al cerrar
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
+    }
+  }, [isOpen]);
+
   return (
     <>
       <div
@@ -15,18 +38,16 @@ export const BaseDrawer = ({
       ></div>
 
       <aside className={`drawer-panel ${isOpen ? "open" : ""}`}>
-        {/* CABECERA */}
         <div className="drawer-header">
           <div className="drawer-header-left">
             {Icon && <Icon size={24} />}
             <h3>{title}</h3>
           </div>
           <div onClick={onClose} className="icon-btn-close">
-            <FaDeleteLeft size={32} />
+            <FaDeleteLeft size={30} />
           </div>
         </div>
 
-        {/* CUERPO DEL DRAWER */}
         <div className="drawer-body">
           <div className="drawer-content-container">{children}</div>
         </div>
@@ -37,15 +58,15 @@ export const BaseDrawer = ({
           position: fixed;
           top: 0;
           right: -100%;
-          width: 88%; /* Ancho del panel respecto a la pantalla */
-          max-width: 420px;
+          width: 100%; /* Por defecto 100% para móvil */
+          max-width: 400px; /* EN ESCRITORIO NO PASARÁ DE AQUÍ */
           height: 100%;
-          background: #F4F6F8; /* Un gris muy claro para resaltar las tarjetas blancas */
+          background: #F4F6F8;
           z-index: 1000;
           transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           display: flex;
           flex-direction: column;
-          box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+          box-shadow: -10px 0 30px rgba(0,0,0,0.1);
         }
 
         .drawer-panel.open {
@@ -56,9 +77,11 @@ export const BaseDrawer = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 15px;
+          /* Aumentamos el padding superior para despegarlo del borde */
+          padding: 60px 20px 20px 20px; 
           background: white;
           border-bottom: 1px solid #E5E7EB;
+          padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
         }
 
         .drawer-header-left {
@@ -70,8 +93,9 @@ export const BaseDrawer = ({
 
         .drawer-header-left h3 {
           margin: 0;
-          font-size: 1.2rem;
-          font-weight: 700;
+          font-size: 1.4rem; /* Un pelín más grande para que se vea importante */
+          font-weight: 800;
+          letter-spacing: -0.5px;
         }
 
         .icon-btn-close {
@@ -81,29 +105,26 @@ export const BaseDrawer = ({
           align-items: center;
         }
 
-        /* CONTENEDOR DE SCROLL */
         .drawer-body {
           flex: 1;
           overflow-y: auto;
-          padding: 20px 0; /* Solo padding arriba y abajo */
+          padding: 20px 0;
+          /* Evita rebotes raros en iOS */
+          overscroll-behavior: contain; 
           -webkit-overflow-scrolling: touch;
         }
 
-        /* CONTENEDOR DE CONTENIDO (Aquí aplicamos tu 90%) */
         .drawer-content-container {
           display: flex;
           flex-direction: column;
           align-items: center;
           width: 100%;
-          gap: 20px; /* Espacio entre tarjetas */
+          gap: 20px;
         }
 
-        /* ESTA REGLA ASEGURA QUE TODO LO QUE METAS MIDA 90% */
         .drawer-content-container > * {
-          width: 95% !important;
-          max-width: 400px;
+          width: 92% !important;
           box-sizing: border-box;
-          padding-left: 30px;
         }
 
         .drawer-overlay {
@@ -123,6 +144,13 @@ export const BaseDrawer = ({
         .drawer-overlay.active {
           opacity: 1;
           visibility: visible;
+        }
+
+        /* AJUSTE PARA PANTALLAS GRANDES */
+        @media (min-width: 768px) {
+          .drawer-panel {
+            width: 400px; /* Ancho fijo y elegante en escritorio */
+          }
         }
       `}</style>
     </>
