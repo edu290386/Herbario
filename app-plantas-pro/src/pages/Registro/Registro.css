@@ -1,0 +1,399 @@
+/* Registro.css */
+:root {
+  --color-frondoso: #2d6a4f;
+  --color-frondoso-light: #e8f5e9;
+  --color-frondoso-border: #c6f6d5;
+  --color-texto-oscuro: #1a1a1a;
+  --color-gris-suave: #f8fafc;
+  --color-gris-borde: #edf2f7;
+  --sombra-card: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.registro-page-container {
+  max-width: 550px;
+  margin: 0 auto;
+  padding: 15px 15px 80px 15px; /* Menos padding arriba y a los lados */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* De 25px a 15px */
+}
+
+/* Header Estilizado */
+.registro-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.registro-titulo {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--color-texto-oscuro);
+  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* Tarjeta más compacta */
+.registro-card {
+  background: white;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: var(--sombra-card);
+  display: flex;
+  flex-direction: column;
+  /* El gap controla la separación de TODOS los hijos directamente */
+  gap: 16px; 
+}
+
+/* Ajuste de secciones internas */
+.registro-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* De 8px a 6px */
+}
+
+.registro-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8; /* Gris azulado moderno */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 4px;
+}
+
+/* Inputs y Selects Unificados */
+.registro-input-text {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--color-gris-borde);
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--color-gris-suave);
+  color: var(--color-texto-oscuro);
+}
+
+.registro-input-text:focus {
+  outline: none;
+  border-color: var(--color-frondoso);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.08);
+}
+
+.input-error {
+  border-color: #feb2b2 !important;
+  background-color: #fff5f5 !important;
+}
+
+/* Green Card Preview (Estilo RegistroLog) */
+.preview-card {
+  margin-top: 4px;
+  padding: 18px;
+  border-radius: 16px;
+  background-color: var(--color-frondoso-light);
+  border: 1px solid var(--color-frondoso-border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.preview-card svg {
+  font-size: 2rem;
+  color: var(--color-frondoso);
+  flex-shrink: 0;
+}
+
+.preview-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.preview-nombre {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1b4332;
+  text-transform: capitalize;
+}
+
+.preview-tag {
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: var(--color-frondoso);
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-frondoso);
+  background: white;
+  letter-spacing: 0.5px;
+  -webkit-border-radius:;
+  -moz-border-radius:;
+  -ms-border-radius:;
+  -o-border-radius:;
+}
+
+.preview-label {
+  font-size: 0.85rem;
+  color: #2d6a4f;
+  margin-top: 1px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Zona de Foto Estilizada */
+.registro-zona-foto {
+  width: 100%;
+  aspect-ratio: 15 / 9;
+  background: var(--color-gris-suave);
+  border: 2px dashed #cbd5e1;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #64748b;
+  gap: 0px;
+  margin-bottom: 12px;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  -webkit-border-radius:;
+  -moz-border-radius:;
+  -ms-border-radius:;
+  -o-border-radius:;
+}
+
+.registro-zona-foto:hover {
+  border-color: var(--color-frondoso);
+  background: #f1f5f9;
+}
+
+.registro-zona-foto.foto-ok {
+  background: #f0fff4;
+  border-style: solid;
+  border-color: var(--color-frondoso);
+  color: var(--color-frondoso);
+}
+
+.registro-zona-foto p {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+/* Validaciones y Footer */
+.status-banner-wrapper {
+  margin-top: 0; 
+  width: 100%;
+}
+
+.registro-validaciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-gris-suave);
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--color-gris-borde);
+}
+
+.val-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.registro-botones-footer {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Espaciado simétrico entre botones */
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajuste específico para el select (Flecha) */
+select.registro-input-text {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 18px;
+}
+
+/* --- ESTÉTICA GUIA REGISTRO (ACORDEÓN) --- */
+.guia-container-new {
+  background: white;
+  border-radius: 18px;
+  padding: 18px; /* Ligeramente más compacto para móvil */
+  box-shadow: var(--sombra-card);
+  border: 1px solid var(--color-gris-borde);
+  animation: fadeIn 0.5s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.guia-header-new {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  padding-bottom: 5px;
+  cursor: pointer;
+}
+
+.guia-titulo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guia-titulo-new {
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-texto-oscuro);
+}
+
+/* Contenedor de Botón REGLAS/CERRAR */
+.guia-toggle-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.guia-toggle-text {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+}
+
+/* Animación del Icono FaChevronCircleDown */
+.guia-icon-anim {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #94a3b8;
+  -webkit-transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -moz-transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -ms-transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -o-transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estado Abierto */
+.guia-toggle-box.abierto .guia-icon-anim {
+  transform: rotate(180deg);
+}
+
+.guia-toggle-box.abierto .guia-toggle-text {
+  color: var(--color-texto-oscuro);
+}
+
+/* Lista de Pasos */
+.guia-lista-new {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0 0 0; /* Margen superior solo cuando aparece */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 2px solid #f1f5f9; /* Línea divisoria suave al abrir */
+  padding-top: 15px;
+}
+
+.guia-item-new {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.guia-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.guia-texto-paso {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #475569;
+  font-weight: 500;
+}
+
+.guia-texto-paso strong {
+  color: var(--color-texto-oscuro);
+}
+
+/* Nuevo Contenedor de Información Formada */
+.info-formada-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-frondoso-light);
+  /*Fondomentasuavequeyausas*/padding: 10px 15px;
+  border-radius: 14px;
+  border: 1px solid var(--color-frondoso-border);
+  -webkit-border-radius: 14px;
+  -moz-border-radius: 14px;
+  -ms-border-radius: 14px;
+  -o-border-radius: 14px;
+}
+
+.info-formada-icon {
+  color: var(--color-frondoso);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-formada-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  gap:5px;
+}
+
+.info-formada-nombre {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1b4332;
+  text-transform: capitalize;
+}
+
+.info-formada-detalle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-frondoso);
+  opacity: 0.8;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Animación de entrada suave */
+.animation-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}

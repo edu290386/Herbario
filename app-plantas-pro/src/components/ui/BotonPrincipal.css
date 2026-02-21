@@ -1,0 +1,63 @@
+.boton-principal {
+  width: 100%;
+  max-width: 550px;
+  height: 54px;
+  border-radius: 18px;
+  border: none;
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  
+  /* Gradiente Lineal Suave: La diferencia de tono es mínima para que sea sutil */
+  background: linear-gradient(145deg, var(--color-frondoso) 0%, #2a7a50 100%);
+  
+  /* Sombra de apoyo que usa el color del botón para que no se vea gris sucia */
+  box-shadow: 0 6px 15px rgba(45, 139, 87, 0.2), 
+              inset 0 -3px 0 rgba(0, 0, 0, 0.1); /* Sutil relieve interno abajo */
+              
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Efecto de brillo superior */
+.boton-principal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 100%);
+  border-radius: 18px 18px 0 0;
+  pointer-events: none;
+}
+
+.boton-principal:hover:not(:disabled) {
+  /* Al pasar el mouse, el gradiente se ilumina ligeramente */
+  background: linear-gradient(145deg, #359d65 0%, var(--color-frondoso) 100%);
+  box-shadow: 0 10px 25px rgba(45, 139, 87, 0.3);
+  transform: translateY(-1px);
+}
+
+.boton-principal:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(45, 139, 87, 0.2);
+}
+
+.boton-principal:disabled {
+  background: #bdc3c7; /* Gris suave para estado deshabilitado */
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.boton-principal.exitoso {
+  /* Gradiente para éxito: de verde esmeralda a un tono más profundo */
+  background: linear-gradient(145deg, #34d399 0%, #059669 100%);
+  box-shadow: 0 6px 20px rgba(52, 211, 153, 0.3);
+}
