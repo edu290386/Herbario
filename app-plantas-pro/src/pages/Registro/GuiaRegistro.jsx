@@ -10,7 +10,7 @@ export const GuiaRegistro = ({ flujo }) => {
     "nueva planta": {
       bg: "#fdfdfd",
       border: "var(--color-frondoso)",
-      icon: <FaBookReader size={25} color="var(--color-frondoso)" />,
+      icon: <FaBookReader size={25} color="339af0" />,
       titulo: "Registro de Planta",
       pasos: [
         <>
