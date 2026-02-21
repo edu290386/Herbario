@@ -11,7 +11,7 @@ export const GuiaRegistro = ({ flujo }) => {
       bg: "#fdfdfd",
       border: "var(--color-frondoso)",
       icon: <FaBookReader size={25} color="var(--color-frondoso)" />,
-      titulo: "Instrucciones de Registro",
+      titulo: "Registro de Planta",
       pasos: [
         <>
           <strong>Nombres locales:</strong> Si en tu país se llama{" "}
@@ -127,7 +127,7 @@ export const GuiaRegistro = ({ flujo }) => {
         {/* Alineación horizontal: Icono y Texto al costado */}
         <div className={`guia-toggle-box ${abierto ? "abierto" : ""}`}>
           <span className="guia-toggle-text">
-            {abierto ? "CERRAR" : "INSTRUCCIONES"}
+            {abierto ? "CERRAR" : "Orientación"}
           </span>
           <FaChevronCircleDown
             className="guia-icon-anim"
