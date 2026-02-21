@@ -137,10 +137,12 @@ export const RegistroPlantaPage = () => {
     if (cargando || guardadoExitoso) return true;
     if (!esAgregarDetalle && !tieneFotoReal) return true;
     if (esNuevaPlanta) {
-      return nombreLocal.trim().length < 2 || nombreDuplicadoDB;
+      return (
+        nombreLocal.trim().length < 2 || nombreDuplicadoDB || !paisSeleccionado
+      );
     }
     if (esSoloUbicacion) return !gpsListo || validacionDistancia.bloquear;
-    if (esAgregarDetalle) return !nuevoNombreSecundario.trim();
+    if (esAgregarDetalle) return !nuevoNombreSecundario.trim() || !paisSeleccionado;
     return false;
   }, [
     cargando,
@@ -149,6 +151,7 @@ export const RegistroPlantaPage = () => {
     esNuevaPlanta,
     nombreLocal,
     nombreDuplicadoDB,
+    paisSeleccionado,
     esSoloUbicacion,
     gpsListo,
     validacionDistancia.bloquear,
@@ -234,7 +237,7 @@ export const RegistroPlantaPage = () => {
         );
       }
 
-      await cargarPlantasHome();
+      await cargarPlantasHome(true);
       setGuardadoExitoso(true);
       setTimeout(
         () => navigate(`/planta/${plantaIdFinal}`, { replace: true }),

@@ -28,7 +28,7 @@ export const HomePage = () => {
   const [tipoPanel, setTipoPanel] = useState(null);
 
   useEffect(() => {
-    cargarPlantasHome();
+    cargarPlantasHome(true);
   }, [cargarPlantasHome]);
 
   const abrirPanel = (tipo) => {

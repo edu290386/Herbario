@@ -119,7 +119,7 @@ export const BaseDrawer = ({
           flex-direction: column;
           align-items: center;
           width: 100%;
-          gap: 20px;
+          gap: 0px;
         }
 
         .drawer-content-container > * {
