@@ -28,8 +28,7 @@ export const getDashboardStats = async (userId, grupoId) => {
       .in("usuario_id", idsGrupo);
 
     if (errorUbi) throw errorUbi;
-console.log("ID Buscado:", userId);
-console.log("Primer ID en la tabla:", ubicaciones[0]?.user_id);
+
     // --- CÁLCULOS DE TIEMPO (Timestamps) ---
     const ahora = new Date();
     const hoy = new Date(

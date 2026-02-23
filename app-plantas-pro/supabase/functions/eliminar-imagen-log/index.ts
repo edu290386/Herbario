@@ -6,7 +6,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   // 1. Log de conexión inicial
-  console.log("--- NUEVA PETICIÓN RECIBIDA ---");
+
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -16,10 +16,9 @@ Deno.serve(async (req) => {
     const { publicId } = await req.json();
 
     // 2. Log del ID que llega desde React
-    console.log("📦 PublicID recibido de React:", publicId);
+  
 
     if (!publicId) {
-      console.error("❌ Error: No llegó el publicId");
       throw new Error("No se proporcionó el publicId");
     }
 

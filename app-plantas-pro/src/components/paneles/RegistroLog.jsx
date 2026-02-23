@@ -30,15 +30,6 @@ export const RegistroLog = ({
   // Limpiamos la URL por si viene con el error [null]
   const urlOriginal = log.contenido;
 
-  // LOG PARA LA IMAGEN ESPECÍFICA
-  if (log.tipo_accion === "nueva_imagen") {
-    console.log("📸 Procesando Imagen:", {
-      urlOriginal,
-      contieneHttp: urlOriginal?.includes("http"),
-      etiquetaDetectada: urlOriginal?.split("|")[0],
-    });
-  }
-
   const etiqueta =
     log.tipo_accion === "nueva_imagen" ? log.contenido?.split("|")[0] : null;
   const urlOptimizada = urlOriginal?.includes("|")

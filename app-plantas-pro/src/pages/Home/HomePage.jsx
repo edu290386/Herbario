@@ -16,6 +16,7 @@ import { PanelUsuario } from "../../components/paneles/PanelUsuario";
 import { CardPlanta } from "../../components/planta/CardPlanta";
 import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
+import "./Homepage.css";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);

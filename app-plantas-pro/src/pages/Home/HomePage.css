@@ -1,0 +1,179 @@
+/* ESTRUCTURA DE LA PÁGINA */
+.home-page {
+  min-height: 100vh;
+  background-color: var(--color-nieve);
+}
+
+.home-layout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* TOP BAR (User & Nav) */
+.home-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.user-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-text-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name-text {
+  font-weight: 700;
+  color: var(--color-carbon);
+  font-size: 1.1rem;
+}
+
+.user-role-text {
+  font-size: 0.8rem;
+  color: var(--color-frondoso);
+  font-weight: 500;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* BUSCADOR */
+.search-section {
+  width: 100%;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 15px;
+  padding: 0.8rem 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  padding-left: 0.8rem;
+}
+
+/* ÁREA DE CONTENIDO */
+.main-content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.search-feedback-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Aumentamos el espacio entre el banner y el botón */
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-banner-wrapper {
+  width: 100%;
+}
+
+.register-button-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Centramos el botón para que respire mejor */
+  padding-top: 0.5rem;      /* Espacio extra interno si es necesario */
+}
+
+/* GRID DE CARDS (CON FOTO) */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* LISTA MINIMALISTA (SOLO TEXTO - AHORRO CLOUDINARY) */
+.minimalist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.minimalist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid var(--color-frondoso);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.minimalist-item:hover {
+  transform: translateX(8px);
+  background: #fdfdfd;
+}
+
+/* PAGINACIÓN << < 1 de X > >> */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 2rem 0;
+  font-weight: 600;
+}
+
+.pagination-btn {
+  background: white;
+  border: 1.5px solid var(--color-frondoso);
+  color: var(--color-frondoso);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.3;
+  border-color: #ccc;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.pagination-btn:not(:disabled):hover {
+  background: var(--color-frondoso);
+  color: white;
+}
+
+.page-indicator {
+  font-size: 1rem;
+  color: var(--color-carbon);
+  background: #eee;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+}
