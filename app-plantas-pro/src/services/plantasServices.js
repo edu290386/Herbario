@@ -28,7 +28,7 @@ export const getPlantasBasico = async () => {
   const { data, error } = await supabase
     .from("plantas")
     .select(
-      "id, nombres_planta: nombres, paises_nombre, nombre_cientifico, foto_perfil, foto_referencial",
+      "id, nombres_planta: nombres, nombre_cientifico, foto_perfil",
     )
     .order("nombres", { ascending: true });
 

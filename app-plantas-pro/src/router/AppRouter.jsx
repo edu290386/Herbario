@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 // Páginas
-import { HomePage } from "../pages/HomePage";
+import { HomePage } from "../pages/Home/HomePage";
 import { LoginScreen } from "..//context/LoginScreen"; // ✅ Movido de context a pages
 import { DetallePage } from "../pages/Detalle/DetallePage";
 import { RegistroPlantaPage } from "../pages/Registro/RegistroPlantaPage";

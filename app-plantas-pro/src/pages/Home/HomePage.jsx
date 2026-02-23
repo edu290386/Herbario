@@ -1,21 +1,21 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
-import { PlantasContext } from "../context/PlantasContext";
-import { normalizarParaBusqueda, formatearParaDB } from "../helpers/textHelper";
-import { colores } from "../constants/tema";
+import { AuthContext } from "../../context/AuthContext";
+import { PlantasContext } from "../../context/PlantasContext";
+import { normalizarParaBusqueda, formatearParaDB } from "../../helpers/textHelper";
+import { colores } from "../../constants/tema";
 // Iconos y UI
 import { IoLogOutOutline, IoSearchOutline } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
 import { FaRegBell } from "react-icons/fa";
 import { LuMicroscope } from "react-icons/lu";
 // Componentes Refactorizados
-import { BaseDrawer } from "../components/paneles/BaseDrawer";
-import { PanelLogs } from "../components/paneles/PanelLogs";
-import { PanelUsuario } from "../components/paneles/PanelUsuario";
-import { CardPlanta } from "../components/planta/CardPlanta";
-import { StatusBanner } from "../components/ui/StatusBanner";
-import { BotonPrincipal } from "../components/ui/BotonPrincipal";
+import { BaseDrawer } from "../../components/paneles/BaseDrawer";
+import { PanelLogs } from "../../components/paneles/PanelLogs";
+import { PanelUsuario } from "../../components/paneles/PanelUsuario";
+import { CardPlanta } from "../../components/planta/CardPlanta";
+import { StatusBanner } from "../../components/ui/StatusBanner";
+import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
