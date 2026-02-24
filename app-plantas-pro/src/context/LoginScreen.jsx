@@ -31,11 +31,12 @@ export const LoginScreen = () => {
     confirmPassword: "",
   });
 
-  // --- 1. LÓGICA DE REALTIME (EXPULSIÓN) ---
+  // --- 1. ESCUCHA DE SESIÓN EN TIEMPO REAL (REALTIME) ---
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.id) return;
+
     const channel = supabase
-      .channel(`session-${user.id}`)
+      .channel(`user-status-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -46,14 +47,20 @@ export const LoginScreen = () => {
         },
         (payload) => {
           const { session_id, status } = payload.new;
-          // Si el token cambió y no es 'libre', cerramos sesión
-          if (session_id !== "libre" && session_id !== user.session_id)
+
+          // Expulsar si el token cambió (y no es modo libre) o si fue bloqueado
+          if (session_id !== "libre" && session_id !== user.session_id) {
+            console.warn("Sesión invalidada: Acceso desde otro dispositivo.");
             logout();
+          }
           if (status !== "ACTIVO") logout();
         },
       )
       .subscribe();
-    return () => supabase.removeChannel(channel);
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, logout]);
 
   const handleInputChange = ({ target }) =>
@@ -71,7 +78,7 @@ export const LoginScreen = () => {
     const numeroLimpio = form.telefono.replace(/\D/g, "");
     const columnaID = detectarTipoDispositivo();
 
-    // --- 2. GESTIÓN DEL DNI DEL EQUIPO (MARCADO) ---
+    // --- 2. GESTIÓN DEL DNI DIGITAL DEL EQUIPO (UUID) ---
     let deviceID = localStorage.getItem("ozain_device_id");
     if (!deviceID) {
       deviceID = crypto.randomUUID();
@@ -83,7 +90,10 @@ export const LoginScreen = () => {
         await getUsuarioPorTelefono(numeroLimpio);
 
       if (dbError || !usuario) {
-        setBanner({ tipo: "error", msj: "Número no autorizado." });
+        setBanner({
+          tipo: "error",
+          msj: "Número no autorizado por el administrador.",
+        });
         return;
       }
 
@@ -94,7 +104,7 @@ export const LoginScreen = () => {
       ) {
         setBanner({
           tipo: "error",
-          msj: "Suscripción anual vencida. Contacta soporte.",
+          msj: "Suscripción anual vencida. Contacta al administrador.",
         });
         return;
       }
@@ -104,33 +114,37 @@ export const LoginScreen = () => {
         if (usuario.status !== "ACTIVO") {
           setBanner({
             tipo: "info",
-            msj: "Número autorizado. Regístrate para activar.",
+            msj: "Número autorizado. Por favor, regístrate primero.",
           });
           return;
         }
+
         if (usuario.password !== form.password) {
           setBanner({ tipo: "error", msj: "Contraseña incorrecta." });
           return;
         }
 
-        // VALIDAR EQUIPO (DNI MARCADO)
+        // Validación de equipo (Si no es modo libre)
         if (usuario.session_id !== "libre") {
           if (usuario[columnaID] && usuario[columnaID] !== deviceID) {
             setBanner({
               tipo: "error",
-              msj: `Este número ya está vinculado a otro ${columnaID === "id_movil" ? "móvil" : "equipo"}.`,
+              msj: `Acceso denegado. Este número ya está vinculado a otro ${columnaID === "id_movil" ? "móvil" : "computador"}.`,
             });
             return;
           }
         }
 
-        const { data: userUpd, nuevoToken } = await iniciarSesionSegura(
-          numeroLimpio,
-          columnaID,
-          deviceID,
-        );
+        // Iniciar sesión segura y generar nuevo session_id
+        const {
+          data: userUpd,
+          nuevoToken,
+          error: sessionErr,
+        } = await iniciarSesionSegura(numeroLimpio, columnaID, deviceID);
 
-        setBanner({ tipo: "success", msj: "¡Bienvenido!" });
+        if (sessionErr) throw sessionErr;
+
+        setBanner({ tipo: "success", msj: "¡Acceso verificado! Entrando..." });
         setCargando(true);
         cargarPlantasHome();
         setTimeout(() => login({ ...userUpd, session_id: nuevoToken }), 1000);
@@ -139,41 +153,53 @@ export const LoginScreen = () => {
         if (usuario.status === "ACTIVO") {
           setBanner({
             tipo: "info",
-            msj: "Esta cuenta ya está activa. Inicia sesión.",
+            msj: "Esta cuenta ya está activa. Por favor, inicia sesión.",
           });
           return;
         }
+
         if (form.password !== form.confirmPassword) {
           setBanner({ tipo: "error", msj: "Las contraseñas no coinciden." });
           return;
         }
 
         setCargando(true);
+
         const nuevoAlias = obtenerIdentidad({
           nombre: form.primerNombre,
           apellido: form.primerApellido,
           telefono: numeroLimpio,
         });
 
-        const { error: regErr } = await activarUsuario(numeroLimpio, {
+        // Preparamos el paquete de registro
+        const datosRegistro = {
           ...form,
           documento_identidad: form.documento,
           alias: nuevoAlias,
           columnaID,
           deviceID,
-        });
+        };
+
+        const { error: regErr } = await activarUsuario(
+          numeroLimpio,
+          datosRegistro,
+        );
 
         if (regErr) throw regErr;
 
         setBanner({
           tipo: "success",
-          msj: "¡Registro exitoso! Inicia sesión.",
+          msj: "¡Registro completado! Ahora ya puedes iniciar sesión.",
         });
         setEsRegistro(false);
         setCargando(false);
       }
     } catch (err) {
-      setBanner({ tipo: "error", msj: "Error de conexión." });
+      console.error("Error en Login:", err);
+      setBanner({
+        tipo: "error",
+        msj: "Error al procesar la solicitud. Revisa tu conexión.",
+      });
       setCargando(false);
     }
   };
@@ -186,6 +212,7 @@ export const LoginScreen = () => {
         form={form}
         esRegistro={esRegistro}
         banner={banner}
+        cargando={cargando}
         onChange={handleInputChange}
         onSubmit={handleSubmit}
         onToggleMode={() => {

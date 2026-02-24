@@ -18,7 +18,6 @@ export const getUsuarioPorTelefono = async (telefono) => {
 };
 
 export const activarUsuario = async (telefono, datos) => {
-  // Calculamos 365 días de suscripción desde hoy
   const vence = new Date();
   vence.setDate(vence.getDate() + 365);
 
@@ -35,11 +34,12 @@ export const activarUsuario = async (telefono, datos) => {
       alias: datos.alias,
       status: "ACTIVO",
       suscripcion_vence: vence.toISOString(),
-      [datos.columnaID]: datos.deviceID, // Vinculamos el equipo en el registro
+      [datos.columnaID]: datos.deviceID, // Aquí se guarda el UUID en id_movil o id_laptop
       updated_at: new Date().toISOString(),
     })
     .eq("telefono", telefono)
     .select();
+
   return { data, error };
 };
 
