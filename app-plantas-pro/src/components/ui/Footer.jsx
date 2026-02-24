@@ -18,7 +18,7 @@ export const Footer = () => {
             <FaRegCopyright color={colores.bosque} /> {year} • Todos los
             derechos reservados
           </p>
-          <p style={styles.copyright}>v2.2</p>
+          <p style={styles.copyright}> Herbolario v2.3</p>
         </div>
       </div>
     </footer>

@@ -31,12 +31,12 @@ export const LoginScreen = () => {
     confirmPassword: "",
   });
 
-  // --- 1. ESCUCHA DE SESIÓN EN TIEMPO REAL (REALTIME) ---
+  // --- 1. LISTENER DE EXPULSIÓN EN TIEMPO REAL ---
   useEffect(() => {
-    if (!user || !user.id) return;
+    if (!user || !user.id || user.modo_acceso === "libre") return;
 
     const channel = supabase
-      .channel(`user-status-${user.id}`)
+      .channel(`user-session-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -48,9 +48,9 @@ export const LoginScreen = () => {
         (payload) => {
           const { session_id, status } = payload.new;
 
-          // Expulsar si el token cambió (y no es modo libre) o si fue bloqueado
-          if (session_id !== "libre" && session_id !== user.session_id) {
-            console.warn("Sesión invalidada: Acceso desde otro dispositivo.");
+          // Si el UUID de sesión cambió en la DB, expulsamos al anterior
+          if (session_id !== user.session_id) {
+            console.warn("Sesión cerrada: Acceso en otro dispositivo.");
             logout();
           }
           if (status !== "ACTIVO") logout();
@@ -78,7 +78,7 @@ export const LoginScreen = () => {
     const numeroLimpio = form.telefono.replace(/\D/g, "");
     const columnaID = detectarTipoDispositivo();
 
-    // --- 2. GESTIÓN DEL DNI DIGITAL DEL EQUIPO (UUID) ---
+    // DNI Digital del equipo (UUID local)
     let deviceID = localStorage.getItem("ozain_device_id");
     if (!deviceID) {
       deviceID = crypto.randomUUID();
@@ -90,116 +90,118 @@ export const LoginScreen = () => {
         await getUsuarioPorTelefono(numeroLimpio);
 
       if (dbError || !usuario) {
-        setBanner({
-          tipo: "error",
-          msj: "Número no autorizado por el administrador.",
-        });
+        setBanner({ tipo: "error", msj: "Número no autorizado." });
         return;
       }
 
-      // --- 3. VALIDACIÓN DE SUSCRIPCIÓN ---
+      // Validación de Suscripción
       if (
         usuario.suscripcion_vence &&
         new Date() > new Date(usuario.suscripcion_vence)
       ) {
-        setBanner({
-          tipo: "error",
-          msj: "Suscripción anual vencida. Contacta al administrador.",
-        });
+        setBanner({ tipo: "error", msj: "Suscripción anual vencida." });
         return;
       }
 
       if (!esRegistro) {
         // --- MODO LOGIN ---
         if (usuario.status !== "ACTIVO") {
-          setBanner({
-            tipo: "info",
-            msj: "Número autorizado. Por favor, regístrate primero.",
-          });
+          setBanner({ tipo: "info", msj: "Número pendiente de registro." });
           return;
         }
-
         if (usuario.password !== form.password) {
           setBanner({ tipo: "error", msj: "Contraseña incorrecta." });
           return;
         }
 
-        // Validación de equipo (Si no es modo libre)
-        if (usuario.session_id !== "libre") {
-          if (usuario[columnaID] && usuario[columnaID] !== deviceID) {
+        // --- 2. FILTROS DE ACCESO DESCRIPTIVOS ---
+        const plan = usuario.modo_acceso || "solo_movil";
+
+        if (plan !== "libre") {
+          // Bloqueo por tipo de equipo (Negocio)
+          if (plan === "solo_movil" && columnaID !== "id_movil") {
             setBanner({
               tipo: "error",
-              msj: `Acceso denegado. Este número ya está vinculado a otro ${columnaID === "id_movil" ? "móvil" : "computador"}.`,
+              msj: " Plan exclusivo para móviles.",
+            });
+            return;
+          }
+          if (plan === "solo_laptop" && columnaID !== "id_laptop") {
+            setBanner({
+              tipo: "error",
+              msj: " Plan exclusivo para computadores.",
+            });
+            return;
+          }
+
+          // Bloqueo por Vinculación (Seguridad Técnica)
+          // Si el "asiento" (id_movil o id_laptop) ya está ocupado por otro UUID
+          if (usuario[columnaID] && usuario[columnaID] !== deviceID) {
+            const equipoTxt = columnaID === "id_movil" ? "móvil" : "PC";
+            setBanner({
+              tipo: "error",
+              msj: ` Este número ya está vinculado a otro ${equipoTxt}.`,
             });
             return;
           }
         }
 
-        // Iniciar sesión segura y generar nuevo session_id
+        // Iniciar Sesión (Actualiza UUID de sesión y vincula equipo si estaba vacío)
         const {
           data: userUpd,
           nuevoToken,
-          error: sessionErr,
+          error: sErr,
         } = await iniciarSesionSegura(numeroLimpio, columnaID, deviceID);
 
-        if (sessionErr) throw sessionErr;
+        if (sErr) throw sErr;
 
-        setBanner({ tipo: "success", msj: "¡Acceso verificado! Entrando..." });
+        setBanner({ tipo: "success", msj: "¡Acceso concedido! Entrando..." });
         setCargando(true);
-        cargarPlantasHome();
+
+        // El cargarPlantasHome debe ejecutarse antes de entrar para tener datos listos
+        await cargarPlantasHome();
+
+        // Guardamos en el AuthContext el usuario "aplanado" con su nuevo token
         setTimeout(() => login({ ...userUpd, session_id: nuevoToken }), 1000);
       } else {
         // --- MODO REGISTRO ---
         if (usuario.status === "ACTIVO") {
-          setBanner({
-            tipo: "info",
-            msj: "Esta cuenta ya está activa. Por favor, inicia sesión.",
-          });
+          setBanner({ tipo: "info", msj: "Esta cuenta ya está activa." });
           return;
         }
-
         if (form.password !== form.confirmPassword) {
           setBanner({ tipo: "error", msj: "Las contraseñas no coinciden." });
           return;
         }
 
         setCargando(true);
-
         const nuevoAlias = obtenerIdentidad({
           nombre: form.primerNombre,
           apellido: form.primerApellido,
           telefono: numeroLimpio,
         });
 
-        // Preparamos el paquete de registro
-        const datosRegistro = {
+        // Registrar con la columnaID y deviceID actuales
+        const { error: regErr } = await activarUsuario(numeroLimpio, {
           ...form,
           documento_identidad: form.documento,
           alias: nuevoAlias,
           columnaID,
           deviceID,
-        };
-
-        const { error: regErr } = await activarUsuario(
-          numeroLimpio,
-          datosRegistro,
-        );
+        });
 
         if (regErr) throw regErr;
 
         setBanner({
           tipo: "success",
-          msj: "¡Registro completado! Ahora ya puedes iniciar sesión.",
+          msj: "¡Registro exitoso! Ya puedes iniciar sesión.",
         });
         setEsRegistro(false);
         setCargando(false);
       }
     } catch (err) {
-      console.error("Error en Login:", err);
-      setBanner({
-        tipo: "error",
-        msj: "Error al procesar la solicitud. Revisa tu conexión.",
-      });
+      console.error("Login Error:", err);
+      setBanner({ tipo: "error", msj: "Error al conectar con el servidor." });
       setCargando(false);
     }
   };
@@ -212,7 +214,6 @@ export const LoginScreen = () => {
         form={form}
         esRegistro={esRegistro}
         banner={banner}
-        cargando={cargando}
         onChange={handleInputChange}
         onSubmit={handleSubmit}
         onToggleMode={() => {

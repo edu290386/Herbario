@@ -64,32 +64,19 @@ export const vincularDispositivo = async (telefono, columnaID, fingerprint) => {
   }
 };
 
-// services/usuariosServices.js
 export const iniciarSesionSegura = async (telefono, columnaID, deviceID) => {
-  const nuevoToken = crypto.randomUUID();
+  const nuevoToken = crypto.randomUUID(); // <--- Mantenemos tu código aleatorio
 
   const { data, error } = await supabase
     .from("usuarios")
     .update({
-      session_id: nuevoToken,
+      session_id: nuevoToken, // Se guarda el UUID para la expulsión realtime
       [columnaID]: deviceID,
-      updated_at: new Date().toISOString(),
     })
     .eq("telefono", telefono)
-    .select(
-      `
-      *,
-      grupos!fk_usuario_grupo ( 
-        nombre_grupo
-      )
-    `,
-    ) // <--- Importante pedir el grupo aquí también
+    .select(`*, grupos!fk_usuario_grupo(nombre_grupo)`)
     .single();
 
-  // Aplanamos de nuevo
-  if (data && data.grupos) {
-    data.grupo = data.grupos.nombre_grupo;
-  }
-
+  if (data?.grupos) data.grupo = data.grupos.nombre_grupo;
   return { data, nuevoToken, error };
 };

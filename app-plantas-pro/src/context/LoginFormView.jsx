@@ -187,9 +187,10 @@ export const LoginFormView = ({
         <div style={styles.footerLocal}>
           <div style={styles.footerDivider} />
           <span style={styles.footerText}>
-            © {anioActual} El Herbolario de Ozain. <br /> Todos los derechos
+            © {anioActual} Ile Merin Adde SAC <br /> Todos los derechos
             reservados.
           </span>
+          <p style={styles.footerText}>Herbolario v2.3</p>
         </div>
       </div>
     </div>
