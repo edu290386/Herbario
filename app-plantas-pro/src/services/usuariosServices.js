@@ -14,6 +14,12 @@ export const getUsuarioPorTelefono = async (telefono) => {
     .eq("telefono", telefono)
     .single();
 
+  // --- APLANAMOS EL DATO PARA QUE SEA FÁCIL DE USAR ---
+  if (data && data.grupos) {
+    // Creamos una propiedad directa llamada 'grupo'
+    data.grupo = data.grupos.nombre_grupo;
+  }
+
   return { data, error };
 };
 
@@ -62,22 +68,28 @@ export const vincularDispositivo = async (telefono, columnaID, fingerprint) => {
 export const iniciarSesionSegura = async (telefono, columnaID, deviceID) => {
   const nuevoToken = crypto.randomUUID();
 
-  // Preparamos la actualización
-  const updates = {
-    session_id: nuevoToken,
-    updated_at: new Date().toISOString(),
-  };
-
-  // Si la columna del equipo está vacía, lo vinculamos ahora
-  // Si ya tiene un ID, el LoginScreen ya lo validó antes de llamar aquí
-  updates[columnaID] = deviceID;
-
   const { data, error } = await supabase
     .from("usuarios")
-    .update(updates)
+    .update({
+      session_id: nuevoToken,
+      [columnaID]: deviceID,
+      updated_at: new Date().toISOString(),
+    })
     .eq("telefono", telefono)
-    .select()
+    .select(
+      `
+      *,
+      grupos!fk_usuario_grupo ( 
+        nombre_grupo
+      )
+    `,
+    ) // <--- Importante pedir el grupo aquí también
     .single();
+
+  // Aplanamos de nuevo
+  if (data && data.grupos) {
+    data.grupo = data.grupos.nombre_grupo;
+  }
 
   return { data, nuevoToken, error };
 };
