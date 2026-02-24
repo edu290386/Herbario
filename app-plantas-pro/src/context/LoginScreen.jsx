@@ -1,91 +1,179 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { LoginFormView } from "./LoginFormView";
 import {
   getUsuarioPorTelefono,
   activarUsuario,
+  iniciarSesionSegura,
 } from "../services/usuariosServices";
 import { obtenerIdentidad } from "../helpers/identidadHelper";
 import { PlantasContext } from "./PlantasContext";
 import { Spinner } from "../components/ui/Spinner";
+import { supabase } from "../supabaseClient";
 import fondoOzain from "../assets/fondoLogin.jpg";
 
 export const LoginScreen = () => {
-  const { login } = useContext(AuthContext);
+  const { login, logout, user } = useContext(AuthContext);
   const { cargarPlantasHome } = useContext(PlantasContext);
   const [esRegistro, setEsRegistro] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState(null);
+  const [banner, setBanner] = useState({ tipo: "", msj: "" });
 
   const [form, setForm] = useState({
-    nombre: "",
-    apellido: "",
+    primerNombre: "",
+    segundoNombre: "",
+    primerApellido: "",
+    segundoApellido: "",
+    documento: "",
     correo: "",
     telefono: "",
     password: "",
-    confirmPassword: "", // Para la validación de registro
+    confirmPassword: "",
   });
+
+  // --- 1. LÓGICA DE REALTIME (EXPULSIÓN) ---
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`session-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "usuarios",
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          const { session_id, status } = payload.new;
+          // Si el token cambió y no es 'libre', cerramos sesión
+          if (session_id !== "libre" && session_id !== user.session_id)
+            logout();
+          if (status !== "ACTIVO") logout();
+        },
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user, logout]);
 
   const handleInputChange = ({ target }) =>
     setForm({ ...form, [target.name]: target.value });
 
-  const detectarDispositivo = () =>
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  const detectarTipoDispositivo = () => {
+    return /Mobi|Android|iPhone/i.test(navigator.userAgent)
       ? "id_movil"
       : "id_laptop";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    try {
-      const numeroLimpio = form.telefono.replace(/\D/g, "");
-      if (numeroLimpio.length < 8) throw new Error("Número no válido.");
+    setBanner({ tipo: "", msj: "" });
+    const numeroLimpio = form.telefono.replace(/\D/g, "");
+    const columnaID = detectarTipoDispositivo();
 
+    // --- 2. GESTIÓN DEL DNI DEL EQUIPO (MARCADO) ---
+    let deviceID = localStorage.getItem("ozain_device_id");
+    if (!deviceID) {
+      deviceID = crypto.randomUUID();
+      localStorage.setItem("ozain_device_id", deviceID);
+    }
+
+    try {
       const { data: usuario, error: dbError } =
         await getUsuarioPorTelefono(numeroLimpio);
-      if (dbError || !usuario) throw new Error("Número no registrado.");
 
-      const columnaID = detectarDispositivo();
-      const currentFingerprint = navigator.userAgent + navigator.language;
+      if (dbError || !usuario) {
+        setBanner({ tipo: "error", msj: "Número no autorizado." });
+        return;
+      }
+
+      // --- 3. VALIDACIÓN DE SUSCRIPCIÓN ---
+      if (
+        usuario.suscripcion_vence &&
+        new Date() > new Date(usuario.suscripcion_vence)
+      ) {
+        setBanner({
+          tipo: "error",
+          msj: "Suscripción anual vencida. Contacta soporte.",
+        });
+        return;
+      }
 
       if (!esRegistro) {
-        if (usuario[columnaID] && usuario[columnaID] !== currentFingerprint)
-          throw new Error(`Dispositivo no vinculado.`);
-        if (usuario.password !== form.password)
-          throw new Error("Contraseña incorrecta.");
+        // --- MODO LOGIN ---
+        if (usuario.status !== "ACTIVO") {
+          setBanner({
+            tipo: "info",
+            msj: "Número autorizado. Regístrate para activar.",
+          });
+          return;
+        }
+        if (usuario.password !== form.password) {
+          setBanner({ tipo: "error", msj: "Contraseña incorrecta." });
+          return;
+        }
 
+        // VALIDAR EQUIPO (DNI MARCADO)
+        if (usuario.session_id !== "libre") {
+          if (usuario[columnaID] && usuario[columnaID] !== deviceID) {
+            setBanner({
+              tipo: "error",
+              msj: `Este número ya está vinculado a otro ${columnaID === "id_movil" ? "móvil" : "equipo"}.`,
+            });
+            return;
+          }
+        }
+
+        const { data: userUpd, nuevoToken } = await iniciarSesionSegura(
+          numeroLimpio,
+          columnaID,
+          deviceID,
+        );
+
+        setBanner({ tipo: "success", msj: "¡Bienvenido!" });
         setCargando(true);
         cargarPlantasHome();
-        setTimeout(() => login(usuario), 2000);
+        setTimeout(() => login({ ...userUpd, session_id: nuevoToken }), 1000);
       } else {
-        if (usuario.status === "ACTIVO") throw new Error("Ya está activo.");
-        if (form.password !== form.confirmPassword)
-          throw new Error("Las contraseñas no coinciden.");
-        if (!form.correo.includes("@"))
-          throw new Error("Correo electrónico inválido.");
+        // --- MODO REGISTRO ---
+        if (usuario.status === "ACTIVO") {
+          setBanner({
+            tipo: "info",
+            msj: "Esta cuenta ya está activa. Inicia sesión.",
+          });
+          return;
+        }
+        if (form.password !== form.confirmPassword) {
+          setBanner({ tipo: "error", msj: "Las contraseñas no coinciden." });
+          return;
+        }
 
         setCargando(true);
         const nuevoAlias = obtenerIdentidad({
-          ...form,
+          nombre: form.primerNombre,
+          apellido: form.primerApellido,
           telefono: numeroLimpio,
         });
 
-        await activarUsuario(numeroLimpio, {
-          nombre: form.nombre,
-          apellido: form.apellido,
-          correo: form.correo,
-          password: form.password,
+        const { error: regErr } = await activarUsuario(numeroLimpio, {
+          ...form,
+          documento_identidad: form.documento,
           alias: nuevoAlias,
-          [columnaID]: currentFingerprint,
-          status: "ACTIVO",
+          columnaID,
+          deviceID,
         });
 
+        if (regErr) throw regErr;
+
+        setBanner({
+          tipo: "success",
+          msj: "¡Registro exitoso! Inicia sesión.",
+        });
         setEsRegistro(false);
         setCargando(false);
-        alert("¡Cuenta activada!");
       }
     } catch (err) {
-      setError(err.message);
+      setBanner({ tipo: "error", msj: "Error de conexión." });
       setCargando(false);
     }
   };
@@ -97,13 +185,12 @@ export const LoginScreen = () => {
       <LoginFormView
         form={form}
         esRegistro={esRegistro}
-        cargando={cargando}
-        error={error}
+        banner={banner}
         onChange={handleInputChange}
         onSubmit={handleSubmit}
         onToggleMode={() => {
           setEsRegistro(!esRegistro);
-          setError(null);
+          setBanner({ tipo: "", msj: "" });
         }}
       />
     </div>

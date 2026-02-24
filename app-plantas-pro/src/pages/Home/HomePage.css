@@ -3,7 +3,7 @@
    ========================================================================== */
 
 :root {
-  --gap-home: 1.2rem; /* El "latido" de la página, todo respeta este espacio */
+  --gap-home: 1rem; /* El "latido" de la página, todo respeta este espacio */
 }
 
 .home-page {

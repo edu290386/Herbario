@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
-import { Footer } from "../components/ui/Footer";
-import { IoWarningOutline } from "react-icons/io5";
+import { StatusBanner } from "../components/ui/StatusBanner";
 import { TbEye, TbEyeOff, TbCloverFilled } from "react-icons/tb";
 
 export const LoginFormView = ({
   form,
   esRegistro,
   cargando,
-  error,
+  banner,
   onChange,
   onSubmit,
   onToggleMode,
 }) => {
   const [verPass, setVerPass] = useState(false);
   const [verConfirm, setVerConfirm] = useState(false);
+  const anioActual = new Date().getFullYear();
 
   return (
     <div style={styles.formCard}>
@@ -27,42 +27,79 @@ export const LoginFormView = ({
       {/* CABECERA */}
       <div style={styles.header}>
         <TbCloverFilled size={30} color="#2D5A27" className="logo-giratorio" />
-        <h1 style={styles.title}>El Herbario de Ozain</h1>
+        <h1 style={styles.title}>El Herbolario de Ozain</h1>
       </div>
 
-      {/* CONTENIDO UNIFICADO Y SIMÉTRICO */}
       <div style={styles.unifiedContent}>
+        {/* BANNER DINÁMICO SIMÉTRICO */}
+        {banner.msj && (
+          <div style={styles.bannerWrapper}>
+            <StatusBanner status={banner.tipo} message={banner.msj} />
+          </div>
+        )}
+
         <form onSubmit={onSubmit} style={styles.form}>
           {esRegistro && (
-            <div style={styles.registroGroup(true)}>
+            <div style={styles.registroGroup}>
               <div style={styles.field}>
-                <label style={styles.label}>Nombres</label>
+                <label style={styles.label}>Primer Nombre *</label>
                 <input
-                  name="nombre"
-                  placeholder="Juan"
-                  value={form.nombre}
+                  name="primerNombre"
+                  placeholder="Ej: Juan"
+                  value={form.primerNombre}
                   onChange={onChange}
                   style={styles.input}
                   required
                 />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Apellidos</label>
+                <label style={styles.label}>Segundo Nombre</label>
                 <input
-                  name="apellido"
-                  placeholder="Pérez"
-                  value={form.apellido}
+                  name="segundoNombre"
+                  placeholder="Ej: Antonio"
+                  value={form.segundoNombre}
+                  onChange={onChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Primer Apellido *</label>
+                <input
+                  name="primerApellido"
+                  placeholder="Ej: Pérez"
+                  value={form.primerApellido}
                   onChange={onChange}
                   style={styles.input}
                   required
                 />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Correo Electrónico</label>
+                <label style={styles.label}>Segundo Apellido</label>
+                <input
+                  name="segundoApellido"
+                  placeholder="Ej: García"
+                  value={form.segundoApellido}
+                  onChange={onChange}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Documento de Identidad *</label>
+                <input
+                  name="documento"
+                  placeholder="Ej: 45678912"
+                  value={form.documento}
+                  onChange={onChange}
+                  style={styles.input}
+                  required
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Correo Electrónico *</label>
                 <input
                   type="email"
                   name="correo"
-                  placeholder="juan@ejemplo.com"
+                  placeholder="ejemplo@correo.com"
                   value={form.correo}
                   onChange={onChange}
                   style={styles.input}
@@ -73,7 +110,7 @@ export const LoginFormView = ({
           )}
 
           <div style={styles.field}>
-            <label style={styles.label}>Número de Celular</label>
+            <label style={styles.label}>Número de Celular *</label>
             <input
               type="tel"
               name="telefono"
@@ -86,7 +123,7 @@ export const LoginFormView = ({
           </div>
 
           <div style={styles.field}>
-            <label style={styles.label}>Contraseña</label>
+            <label style={styles.label}>Contraseña *</label>
             <div style={styles.passWrapper}>
               <input
                 type={verPass ? "text" : "password"}
@@ -109,7 +146,7 @@ export const LoginFormView = ({
 
           {esRegistro && (
             <div style={styles.field}>
-              <label style={styles.label}>Confirmar Contraseña</label>
+              <label style={styles.label}>Confirmar Contraseña *</label>
               <div style={styles.passWrapper}>
                 <input
                   type={verConfirm ? "text" : "password"}
@@ -131,17 +168,11 @@ export const LoginFormView = ({
             </div>
           )}
 
-          {error && (
-            <div style={styles.errorBox}>
-              <IoWarningOutline size={16} /> {error}
-            </div>
-          )}
-
-          <div style={{ marginTop: "10px", width: "100%" }}>
+          <div style={{ marginTop: "10px" }}>
             <BotonPrincipal
               type="submit"
               estaCargando={cargando}
-              texto={esRegistro ? "Activar Acceso" : "Iniciar Sesión"}
+              texto={esRegistro ? "Completar Registro" : "Iniciar Sesión"}
             />
           </div>
         </form>
@@ -149,12 +180,16 @@ export const LoginFormView = ({
         <button type="button" onClick={onToggleMode} style={styles.switchBtn}>
           {esRegistro
             ? "¿Ya tienes cuenta? Inicia sesión"
-            : "¿No tienes cuenta? Activa tu acceso"}
+            : "¿No tienes cuenta? Regístrate"}
         </button>
 
-        <div style={styles.footerDivider} />
-        <div style={styles.footerContainer}>
-          <Footer />
+        {/* FOOTER LOCAL SIMÉTRICO */}
+        <div style={styles.footerLocal}>
+          <div style={styles.footerDivider} />
+          <span style={styles.footerText}>
+            © {anioActual} El Herbolario de Ozain. <br /> Todos los derechos
+            reservados.
+          </span>
         </div>
       </div>
     </div>
@@ -166,7 +201,7 @@ const styles = {
     width: "100%",
     maxWidth: "420px",
     backgroundColor: "white",
-    padding: "20px 30px 0px 30px",
+    padding: "35px 30px 25px 30px",
     borderRadius: "28px",
     boxShadow: "0 15px 40px rgba(0,0,0,0.12)",
     boxSizing: "border-box",
@@ -178,21 +213,16 @@ const styles = {
     gap: "12px",
     marginBottom: "25px",
   },
-  title: {
-    fontSize: "1.5rem",
-    fontWeight: "800",
-    color: "#1A3A32",
-    margin: 0,
-    letterSpacing: "-0.5px",
-  },
+  title: { fontSize: "1.4rem", fontWeight: "800", color: "#1A3A32", margin: 0 },
   unifiedContent: {
     display: "flex",
     flexDirection: "column",
     width: "100%",
     alignItems: "stretch",
   },
-  form: { display: "flex", flexDirection: "column", gap: "15px" },
-  field: { display: "flex", flexDirection: "column", gap: "4px" },
+  bannerWrapper: { marginBottom: "20px" },
+  form: { display: "flex", flexDirection: "column", gap: "18px" },
+  field: { display: "flex", flexDirection: "column", gap: "6px" },
   label: { fontSize: "0.85rem", fontWeight: "700", color: "#4A5568" },
   input: {
     width: "100%",
@@ -205,7 +235,7 @@ const styles = {
   passWrapper: { position: "relative", width: "100%" },
   eyeBtn: {
     position: "absolute",
-    right: "10px",
+    right: "12px",
     top: "50%",
     transform: "translateY(-50%)",
     background: "none",
@@ -213,18 +243,6 @@ const styles = {
     color: "#A0AEC0",
     cursor: "pointer",
     display: "flex",
-    alignItems: "center",
-  },
-  errorBox: {
-    padding: "10px",
-    backgroundColor: "#FFF5F5",
-    color: "#C53030",
-    borderRadius: "10px",
-    fontSize: "0.85rem",
-    border: "1px solid #FED7D7",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
   },
   switchBtn: {
     background: "none",
@@ -234,23 +252,28 @@ const styles = {
     cursor: "pointer",
     fontSize: "0.9rem",
     textDecoration: "underline",
-    margin: "15px 0",
+    margin: "20px 0",
     alignSelf: "center",
   },
-  footerDivider: {
-    height: "1.5px",
-    backgroundColor: "#F1F5F9",
+  footerLocal: {
     width: "100%",
-    marginBottom: "20px",
-  },
-  footerContainer: { width: "100%", display: "flex", justifyContent: "center" },
-  registroGroup: (visible) => ({
     display: "flex",
     flexDirection: "column",
-    gap: "15px",
-    maxHeight: visible ? "800px" : "0",
-    opacity: visible ? 1 : 0,
-    overflow: "hidden",
-    transition: "0.4s ease",
-  }),
+    alignItems: "center",
+    marginTop: "10px",
+  },
+  footerDivider: {
+    height: "1px",
+    backgroundColor: "#E2E8F0",
+    width: "100%",
+    marginBottom: "15px",
+  },
+  footerText: {
+    fontSize: "0.8rem",
+    color: "#A0AEC0",
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: "1.4",
+  },
+  registroGroup: { display: "flex", flexDirection: "column", gap: "18px" },
 };
