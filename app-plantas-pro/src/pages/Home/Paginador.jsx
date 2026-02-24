@@ -33,7 +33,13 @@ export const Paginador = ({ paginaActual, totalPaginas, alCambiarPagina }) => {
         {/* INDICADOR */}
         <div style={styles.indicator}>
           {paginaActual}{" "}
-          <span style={{ margin: "0 5px", fontWeight: "bold", color: colores.bosque }}>
+          <span
+            style={{
+              margin: "0 5px",
+              fontWeight: "bold",
+              color: colores.bosque,
+            }}
+          >
             de
           </span>{" "}
           {totalPaginas}
@@ -61,28 +67,30 @@ export const Paginador = ({ paginaActual, totalPaginas, alCambiarPagina }) => {
   );
 };
 
-// --- ESTILOS AL FINAL PARA MAYOR CLARIDAD ---
+// --- ESTILOS AJUSTADOS PARA SIMETRÍA ---
 const styles = {
   wrapper: {
     display: "flex",
     justifyContent: "center",
-    padding: "1.2rem 0",
     width: "100%",
+    // Eliminamos el padding vertical para que el gap del HomePage controle la distancia
+    padding: "0.2rem 0",
   },
   container: {
     display: "flex",
     alignItems: "center",
     backgroundColor: "#ffffff",
-    borderRadius: "12px",
-    
+    borderRadius: "15px", // Ajustado a 15px para igualar Top Bar y Buscador
     overflow: "hidden",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    // Agregamos el mismo borde sutil que tienen los otros componentes
+    border: "1px solid rgba(0, 0, 0, 0.05)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
   },
   button: (disabled) => ({
     background: "transparent",
     border: "none",
     color: disabled ? "#ccc" : "var(--color-frondoso)",
-    padding: "0.7rem 1rem",
+    padding: "0.8rem 1.1rem",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -92,16 +100,16 @@ const styles = {
     outline: "none",
   }),
   indicator: {
-    padding: "0 1rem",
+    padding: "0 1.2rem",
     fontWeight: "700",
     fontSize: "0.95rem",
     color: "var(--color-carbon)",
-    borderLeft: "1px solid #eee",
-    borderRight: "1px solid #eee",
-    height: "40px",
+    borderLeft: "1px solid #f0f0f0",
+    borderRight: "1px solid #f0f0f0",
+    height: "46px", // Aumentado ligeramente para que tenga cuerpo frente a las cards
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#fafafa",
     userSelect: "none",
   },
 };

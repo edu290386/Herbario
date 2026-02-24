@@ -10,10 +10,7 @@ import "./HomePage.css";
 import {
   IoLogOutOutline,
   IoSearchOutline,
-  IoChevronBack,
   IoChevronForward,
-  IoArrowBackCircleOutline,
-  IoArrowForwardCircleOutline,
 } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
 import { FaRegBell } from "react-icons/fa";
@@ -34,10 +31,10 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // --- LÓGICA DE URL PARA PAGINACIÓN ---
+  // --- CONFIGURACIÓN DE PAGINACIÓN ---
   const queryParams = new URLSearchParams(location.search);
   const paginaActual = parseInt(queryParams.get("page")) || 1;
-  const itemsPorPagina = 12;
+  const itemsPorPagina = 12; // Puedes subirlo a 20 o 30 según prefieras
 
   const [busqueda, setBusqueda] = useState("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -47,7 +44,7 @@ export const HomePage = () => {
     cargarPlantasHome(true);
   }, [cargarPlantasHome]);
 
-  // --- FILTRADO AVANZADO (Lógica de los 2 caracteres) ---
+  // --- FILTRADO Y BÚSQUEDA ---
   const { filtradas, existeExacta } = useMemo(() => {
     const busquedaNorm = normalizarParaBusqueda(busqueda);
     if (busqueda.length < 2) return { filtradas: plantas, existeExacta: false };
@@ -65,19 +62,27 @@ export const HomePage = () => {
     return { filtradas: resultados, existeExacta: exacta };
   }, [busqueda, plantas]);
 
-  // --- LÓGICA DE PAGINACIÓN ---
+  // --- LÓGICA DE NAVEGACIÓN Y PANELES ---
+  const abrirPanel = (tipo) => {
+    setTipoPanel(tipo);
+    setIsPanelOpen(true);
+  };
+
+  const cambiarPagina = (num) => {
+    navigate(`?page=${num}`);
+    window.scrollTo({ top: 0, behavior: "auto" }); // 'auto' para que no se vea el salto con la animación
+  };
+
+  // --- CÁLCULO DE ÍTEMS A MOSTRAR ---
   const totalPaginas = Math.ceil(filtradas.length / itemsPorPagina);
   const indiceInicio = (paginaActual - 1) * itemsPorPagina;
+
+  // Si busca (>=2 letras), mostramos todo el filtro (minimalista si > 20)
+  // Si no busca, mostramos el slice de la página actual
   const plantasParaMostrar =
     busqueda.length >= 2
       ? filtradas
       : filtradas.slice(indiceInicio, indiceInicio + itemsPorPagina);
-
-  const cambiarPagina = (num) => {
-    navigate(`?page=${num}`);
-    // Opcional: Hacer scroll hacia arriba suavemente al cambiar de página
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // --- FUNCIÓN HIGHLIGHT (Resaltado) ---
   const renderNombreConHighlight = (nombre) => {
@@ -118,14 +123,11 @@ export const HomePage = () => {
       </BaseDrawer>
 
       <div className="home-layout-container">
-        {/* TOP BAR */}
+        {/* 1. TOP BAR */}
         <div className="home-top-bar">
           <div
             className="user-profile-info"
-            onClick={() => {
-              setTipoPanel("usuario");
-              setIsPanelOpen(true);
-            }}
+            onClick={() => abrirPanel("usuario")}
             style={{ cursor: "pointer" }}
           >
             <TbCloverFilled
@@ -140,21 +142,28 @@ export const HomePage = () => {
           </div>
           <div className="nav-actions">
             <button
-              onClick={() => {
-                setTipoPanel("actividades");
-                setIsPanelOpen(true);
-              }}
+              onClick={() => abrirPanel("actividades")}
               className="icon-btn"
             >
               <FaRegBell size={26} color={colores.frondoso} />
             </button>
+
+            {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
+              <button
+                onClick={() => abrirPanel("gestion")}
+                className="icon-btn"
+              >
+                <LuMicroscope size={28} color={colores.frondoso} />
+              </button>
+            )}
+
             <button onClick={logout} className="icon-btn logout-sep">
               <IoLogOutOutline size={32} />
             </button>
           </div>
         </div>
 
-        {/* BUSCADOR */}
+        {/* 2. BUSCADOR */}
         <header className="search-section">
           <div className="search-wrapper">
             <IoSearchOutline size={24} color="var(--color-frondoso)" />
@@ -168,36 +177,46 @@ export const HomePage = () => {
           </div>
         </header>
 
-        {/* FEEDBACK Y BOTÓN DE REGISTRO */}
+        {/* 3. ÁREA PRINCIPAL */}
         <main className="main-content-layout">
-          {busqueda.length >= 2 && (
-            <div className="search-feedback-container">
-              <StatusBanner
-                status={
-                  existeExacta
-                    ? "error"
-                    : filtradas.length > 0
-                      ? "success"
-                      : "warning"
-                }
-                message={
-                  existeExacta
-                    ? "Esta planta ya existe"
-                    : `${filtradas.length} coincidencias encontradas`
-                }
-              />
-              {!existeExacta && (
-                <BotonPrincipal
-                  texto="REGISTRAR PLANTA"
-                  onClick={() =>
-                    navigate("/registro", { state: { nombre: busqueda } })
+          {/* Feedback de Búsqueda y Botón Registro */}
+          <div className="search-feedback-container">
+            {busqueda.length >= 2 && (
+              <>
+                <StatusBanner
+                  status={
+                    existeExacta
+                      ? "error"
+                      : filtradas.length > 0
+                        ? "success"
+                        : "warning"
+                  }
+                  message={
+                    existeExacta
+                      ? "Esta planta ya existe"
+                      : `${filtradas.length} coincidencias encontradas`
                   }
                 />
-              )}
-            </div>
-          )}
+                {!existeExacta && (
+                  <div className="register-button-wrapper">
+                    <BotonPrincipal
+                      texto="REGISTRAR NUEVA PLANTA"
+                      onClick={() =>
+                        navigate("/registro", {
+                          state: {
+                            nombreComun: formatearParaDB(busqueda),
+                            usuarioId: user.id,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-          {/* PAGINACIÓN SUPERIOR */}
+          {/* PAGINACIÓN SUPERIOR (Solo si no hay búsqueda activa) */}
           {busqueda.length < 2 && totalPaginas > 1 && (
             <Paginador
               paginaActual={paginaActual}
@@ -206,13 +225,14 @@ export const HomePage = () => {
             />
           )}
 
-          {/* RENDERIZADO DINÁMICO (Card vs Lista Minimalista) */}
+          {/* GRID O LISTA CON ANIMACIÓN */}
           <div
-            className={
+            key={paginaActual + (busqueda.length >= 2 ? "-search" : "-page")}
+            className={`${
               filtradas.length > 20 && busqueda.length >= 2
                 ? "minimalist-list"
                 : "home-grid"
-            }
+            } grid-transition`}
           >
             {plantasParaMostrar.map((p) =>
               filtradas.length > 20 && busqueda.length >= 2 ? (
@@ -244,7 +264,8 @@ export const HomePage = () => {
               ),
             )}
           </div>
-          {/* PAGINACIÓN INFERIOR */}
+
+          {/* PAGINACIÓN INFERIOR (Solo si no hay búsqueda activa) */}
           {busqueda.length < 2 && totalPaginas > 1 && (
             <Paginador
               paginaActual={paginaActual}

@@ -127,7 +127,7 @@ export const GuiaRegistro = ({ flujo }) => {
         {/* Alineación horizontal: Icono y Texto al costado */}
         <div className={`guia-toggle-box ${abierto ? "abierto" : ""}`}>
           <span className="guia-toggle-text">
-            {abierto ? "CERRAR" : "Orientación"}
+            {abierto ? "CERRAR" : "Indicaciones"}
           </span>
           <FaChevronCircleDown
             className="guia-icon-anim"
