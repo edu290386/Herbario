@@ -6,117 +6,96 @@ import {
   getUsuarioPorTelefono,
   activarUsuario,
 } from "../services/usuariosServices";
-import { TbCloverFilled } from "react-icons/tb";
 import { obtenerIdentidad } from "../helpers/identidadHelper";
 import { PlantasContext } from "./PlantasContext";
-import { FaRegCopyright } from "react-icons/fa";
+import { Spinner } from "../components/ui/Spinner";
+import { Footer } from "../components/ui/Footer";
+import { TbCloverFilled } from "react-icons/tb";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
-  const { cargarPlantasHome} = useContext(PlantasContext);
+  const { cargarPlantasHome } = useContext(PlantasContext);
   const [esRegistro, setEsRegistro] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
-  const year = new Date().getFullYear();
-  
-  // 🚩 Formulario expandido con campos atómicos
+
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
-    alias: "",
-    correo: "",
     telefono: "",
     password: "",
-    confirmPassword: "", // Para validar el match
-    paisCodigo: "51",
+    confirmPassword: "",
   });
 
   const handleInputChange = ({ target }) =>
     setForm({ ...form, [target.name]: target.value });
+
+  // 🛠️ Función para detectar el tipo de dispositivo
+  const detectarDispositivo = () => {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      ? "id_movil"
+      : "id_laptop";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      // --- 1. VALIDACIONES PREVENTIVAS DE REGISTRO ---
-      if (esRegistro) {
-        if (!form.nombre.trim() || !form.apellido.trim()) {
-          throw new Error("Nombre y Apellido son obligatorios.");
-        }
-        if (form.password !== form.confirmPassword) {
-          throw new Error("Las contraseñas no coinciden. Verifícalas.");
-        }
-        if (form.password.length < 5) {
-          throw new Error("La contraseña debe tener al menos 5 caracteres.");
-        }
-      }
+      // 1. Limpieza total del número (solo dígitos para evitar líos con Safari)
+      const numeroLimpio = form.telefono.replace(/\D/g, "");
+      if (numeroLimpio.length < 8)
+        throw new Error("Número de teléfono no válido.");
 
-      const numeroCompleto = `${form.paisCodigo}${form.telefono}`
-        .replace(/\s+/g, "")
-        .trim();
-
-      // --- 2. LÓGICA DE BASE DE DATOS ---
       const { data: usuario, error: dbError } =
-        await getUsuarioPorTelefono(numeroCompleto);
+        await getUsuarioPorTelefono(numeroLimpio);
+      if (dbError || !usuario)
+        throw new Error("Número no registrado. Contacta al administrador.");
+
+      const columnaID = detectarDispositivo();
+      const currentFingerprint = navigator.userAgent + navigator.language; // Fingerprint básica
 
       if (!esRegistro) {
-        // --- FLUJO LOGIN ---
-        if (dbError || !usuario)
-          throw new Error("Número no registrado. Contacta al administrador.");
-
-        if (usuario.status === "PENDIENTE") {
+        // --- VALIDACIÓN DE DISPOSITIVO (SEGURIDAD) ---
+        if (usuario[columnaID] && usuario[columnaID] !== currentFingerprint) {
           throw new Error(
-            "Tu acceso está listo. Haz clic en 'Activa tu acceso' abajo.",
+            `Este usuario ya está vinculado a otro ${columnaID === "id_movil" ? "Celular" : "Laptop"}.`,
           );
         }
 
-        if (usuario.password !== form.password) {
+        if (usuario.password !== form.password)
           throw new Error("Contraseña incorrecta.");
+
+        // Si la ranura está vacía, la llenamos (auto-registro de dispositivo)
+        if (!usuario[columnaID]) {
+          // Aquí llamarías a una función para actualizar el id_movil o id_laptop en Supabase
         }
 
         setCargando(true);
         cargarPlantasHome();
-        setTimeout(() => {
-          login(usuario);
-        }, 4000);
+        setTimeout(() => login(usuario), 3000);
       } else {
-        // --- FLUJO REGISTRO (ACTIVACIÓN) ---
-        if (dbError || !usuario) {
-          throw new Error(
-            "No tienes una invitación activa. Solicítala al administrador.",
-          );
-        }
-        if (usuario.status === "ACTIVO") {
-          throw new Error("Este número ya está activo. Inicia sesión.");
-        }
+        // --- REGISTRO / ACTIVACIÓN ---
+        if (usuario.status === "ACTIVO")
+          throw new Error("Este número ya está activo.");
 
         setCargando(true);
-
-        // Limpiamos espacios antes de guardar
-        const datosParaEnviar = {
+        const nuevoAlias = obtenerIdentidad({
           ...form,
-          nombre: form.nombre.trim(),
-          apellido: form.apellido.trim(),
-          alias: obtenerIdentidad({
-            nombre: form.nombre,
-            apellido: form.apellido,
-          }),
+          telefono: numeroLimpio,
+        });
+
+        const datosActivacion = {
+          ...form,
+          alias: nuevoAlias,
+          [columnaID]: currentFingerprint, // Registramos su primer dispositivo
+          status: "ACTIVO",
         };
 
-        const { error: updateError } = await activarUsuario(
-          numeroCompleto,
-          datosParaEnviar,
-        );
-
-        if (updateError) throw new Error("Error técnico al activar.");
-
-        setTimeout(() => {
-          setEsRegistro(false);
-          setCargando(false);
-          setForm((prev) => ({ ...prev, password: "", confirmPassword: "" }));
-          alert("¡Cuenta activada con éxito! Ahora puedes entrar.");
-        }, 1500);
+        await activarUsuario(numeroLimpio, datosActivacion);
+        setEsRegistro(false);
+        setCargando(false);
+        alert("¡Cuenta activada con éxito!");
       }
     } catch (err) {
       setError(err.message);
@@ -124,187 +103,140 @@ export const LoginScreen = () => {
     }
   };
 
-  if (cargando && !esRegistro) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.loadingContent}>
-          <TbCloverFilled style={styles.spinner} />
-
-          <div style={styles.copyrightContainer}>
-            <p style={styles.empresaText}>Ile Merin Adde SAC</p>
-            <p style={styles.derechosText}>
-               <FaRegCopyright color={colores.bosque} /> {year} • Todos los derechos reservados
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (cargando && !esRegistro) return <Spinner />;
 
   return (
-    <div style={styles.container}>
-      <h1
-        style={{
-          color: colores.bosque,
-          marginBottom: "20px",
-          textAlign: "center",
-        }}
-      >
-        {esRegistro ? "Crear Perfil" : "Acceso a la Plataforma"}
-      </h1>
-      <LoginFormView
-        form={form}
-        esRegistro={esRegistro}
-        cargando={cargando}
-        error={error}
-        onChange={handleInputChange}
-        onSubmit={handleSubmit}
-        styles={styles}
-        onToggleMode={() => {
-          setEsRegistro(!esRegistro);
-          setError(null);
-        }}
-      />
+    <div style={styles.pageWrapper}>
+      <style>{`
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .logo-giratorio { animation: spin-slow 10s linear infinite; }
+      `}</style>
+
+      <div style={styles.mainContent}>
+        <div style={styles.brandContainer}>
+          <div style={styles.logoTextWrapper}>
+            <TbCloverFilled
+              size={45}
+              color={colores.frondoso}
+              className="logo-giratorio"
+            />
+            <h1 style={styles.mainTitle}>Herbario Digital</h1>
+          </div>
+          <div style={styles.fullSeparator} />
+        </div>
+
+        <LoginFormView
+          form={form}
+          esRegistro={esRegistro}
+          cargando={cargando}
+          error={error}
+          onChange={handleInputChange}
+          onSubmit={handleSubmit}
+          styles={styles}
+          onToggleMode={() => {
+            setEsRegistro(!esRegistro);
+            setError(null);
+          }}
+        />
+      </div>
+      <Footer />
     </div>
   );
 };
 
-// --- ESTILOS AJUSTADOS PARA EL NUEVO FORMULARIO ---
 const styles = {
-  container: {
+  pageWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100vh",
+    backgroundColor: "#F4F7F5",
+  },
+  mainContent: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: "100vh",
-    padding: "20px",
-    backgroundColor: "#F3F4F6",
+    padding: "40px 20px",
+  },
+  brandContainer: { display: "inline-block", marginBottom: "40px" },
+  logoTextWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    marginBottom: "10px",
+  },
+  mainTitle: {
+    color: colores.bosque,
+    fontSize: "2.5rem",
+    fontWeight: "800",
+    margin: 0,
+    letterSpacing: "-1px",
+  },
+  fullSeparator: {
+    width: "100%",
+    height: "4px",
+    backgroundColor: colores.frondoso,
+    borderRadius: "2px",
   },
   formCard: {
     width: "100%",
-    maxWidth: "360px",
+    maxWidth: "420px",
     backgroundColor: "white",
-    padding: "25px",
-    borderRadius: "15px",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    padding: "40px",
+    borderRadius: "20px",
+    boxShadow: "0 15px 35px rgba(0,0,0,0.05)",
   },
-  row: { display: "flex", gap: "10px", width: "100%" },
+  formElement: { display: "flex", flexDirection: "column", gap: "20px" },
+  fieldGroup: { display: "flex", flexDirection: "column", gap: "8px" },
+  label: { fontSize: "0.9rem", fontWeight: "700", color: "#4A5568" },
   input: {
-    padding: "14px",
-    borderRadius: "8px",
-    border: "1px solid #D1D5DB",
-    fontSize: "15px",
     width: "100%",
-    boxSizing: "border-box",
+    padding: "15px",
+    borderRadius: "12px",
+    border: "1.5px solid #E2E8F0",
+    fontSize: "16px",
   },
-  select: {
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #D1D5DB",
-    backgroundColor: "white",
-  },
-  errorContainer: {
-    minHeight: "40px",
-    margin: "5px 0",
-  },
-  errorBanner: {
-    backgroundColor: "#FEF2F2",
-    color: "#991B1B",
-    padding: "10px",
-    borderRadius: "8px",
-    fontSize: "13px",
-    fontWeight: "600",
-    border: "1px solid #FEE2E2",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  },
-  linkButton: {
-    marginTop: "20px",
-    background: "none",
-    border: "none",
-    color: colores.bosque,
-    cursor: "pointer",
-    textDecoration: "underline",
-    fontSize: "14px",
-    width: "100%",
-  },
-  registroCampos: (visible) => ({
-    maxHeight: visible ? "350px" : "0px",
-    opacity: visible ? 1 : 0,
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-    transition: "all 0.5s ease",
-  }),
+  inputRelative: { position: "relative" },
   botonOjo: {
     position: "absolute",
-    right: "12px",
+    right: "15px",
     top: "50%",
     transform: "translateY(-50%)",
     background: "none",
     border: "none",
-    color: "#9CA3AF",
+    color: "#A0AEC0",
     cursor: "pointer",
-    padding: "8px",
-    zIndex: 10,
+  },
+  errorBanner: {
+    backgroundColor: "#FFF5F5",
+    color: "#C53030",
+    padding: "12px",
+    borderRadius: "10px",
+    fontSize: "0.85rem",
+    fontWeight: "600",
+    border: "1px solid #FED7D7",
     display: "flex",
     alignItems: "center",
+    gap: "8px",
   },
-  loadingContainer: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center", // Centrado vertical
-    alignItems: "center", // Centrado horizontal
-    height: "100vh",
-    width: "100vw",
-    backgroundColor: colores.fondo,
-    position: "fixed",
-    top: 0,
-    left: 0,
-    zIndex: 9999,
-  },
-  loadingContent: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "20px", // Espacio entre el spinner y el texto
-  },
-  spinner: {
-    fontSize: "8rem",
-    animation: "spin 2.5s linear infinite",
-    filter: "drop-shadow(0 0 15px rgba(45, 106, 79, 0.2))",
-    color: colores.frondoso,
-  },
-  copyrightContainer: {
-    textAlign: "center",
-    opacity: 0.9,
-  },
-  empresaText: {
-    fontSize: "18px",
-    fontWeight: "bold",
+  linkButton: {
+    marginTop: "25px",
+    background: "none",
+    border: "none",
     color: colores.bosque,
-    margin: "0 0 5px 0",
-    letterSpacing: "0.5px",
+    fontWeight: "700",
+    cursor: "pointer",
+    textDecoration: "underline",
+    width: "100%",
   },
-  derechosText: {
-    fontSize: "12px",
-    color: "#6B7280",
-    margin: 0,
-  },
+  registroCampos: (visible) => ({
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+    maxHeight: visible ? "600px" : "0",
+    opacity: visible ? 1 : 0,
+    overflow: "hidden",
+    transition: "all 0.4s",
+  }),
 };
-
-if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.type = "text/css";
- styleSheet.innerText = `
-  @keyframes spin {
-      0% { transform: rotate(0deg); opacity: 0.7; }
-      50% { transform: rotate(180deg); opacity: 1; }
-      100% { transform: rotate(360deg); opacity: 0.7; }
-    }
-`;
-  document.head.appendChild(styleSheet);
-}

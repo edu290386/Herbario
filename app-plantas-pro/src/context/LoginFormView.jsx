@@ -14,118 +14,105 @@ export const LoginFormView = ({
   onToggleMode,
   styles,
 }) => {
-  // Estados para controlar la visibilidad de cada contraseña por separado
   const [verPass, setVerPass] = useState(false);
   const [verConfirm, setVerConfirm] = useState(false);
 
   return (
     <div style={styles.formCard}>
-      <form
-        onSubmit={onSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-      >
-        {/* BLOQUE DE REGISTRO: Cada campo en su propia fila */}
+      <form onSubmit={onSubmit} style={styles.formElement}>
         {esRegistro && (
           <div style={styles.registroCampos(true)}>
-            <input
-              name="nombre"
-              placeholder="Nombres"
-              value={form.nombre}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-            <input
-              name="apellido"
-              placeholder="Apellidos"
-              value={form.apellido}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-            <input
-              type="email"
-              name="correo"
-              placeholder="Correo electrónico"
-              value={form.correo}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Nombres</label>
+              <input
+                name="nombre"
+                placeholder="Juan"
+                value={form.nombre}
+                onChange={onChange}
+                style={styles.input}
+                required
+              />
+            </div>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Apellidos</label>
+              <input
+                name="apellido"
+                placeholder="Pérez"
+                value={form.apellido}
+                onChange={onChange}
+                style={styles.input}
+                required
+              />
+            </div>
           </div>
         )}
-        {/* Bloque de Identificación (Siempre visible) */}
-        <div style={styles.row}>
-          <select
-            name="paisCodigo"
-            value={form.paisCodigo}
-            onChange={onChange}
-            style={styles.select}
-          >
-            <option value="51">🇵🇪 +51</option>
-            <option value="57">🇨🇴 +57</option>
-            <option value="58">🇻🇪 +58</option>
-          </select>
+
+        {/* ✅ INPUT ÚNICO: Amigable con Safari/Google Auto-fill */}
+        <div style={styles.fieldGroup}>
+          <label style={styles.label}>
+            Número de Celular (con código de país)
+          </label>
           <input
             type="tel"
             name="telefono"
-            autocomplete="tel"
-            placeholder="Celular"
+            placeholder="Ej: 51999888777"
             value={form.telefono}
             onChange={onChange}
-            style={{ ...styles.input, flex: 1 }}
+            style={styles.input}
             required
           />
         </div>
 
-        {/* CONTRASEÑA PRINCIPAL CON OJO */}
-        <div style={{ position: "relative" }}>
-          <input
-            type={verPass ? "text" : "password"}
-            name="password"
-            placeholder="Contraseña"
-            autocomplete="current-password"
-            value={form.password}
-            onChange={onChange}
-            style={{ ...styles.input, paddingRight: "45px" }}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setVerPass(!verPass)}
-            style={styles.botonOjo}
-          >
-            {verPass ? <TbEyeOff size={20} /> : <TbEye size={20} />}
-          </button>
-        </div>
-
-        {/* CONFIRMAR CONTRASEÑA CON SU PROPIO OJO (Solo en registro) */}
-        {esRegistro && (
-          <div style={{ position: "relative" }}>
+        <div style={styles.fieldGroup}>
+          <label style={styles.label}>Contraseña</label>
+          <div style={styles.inputRelative}>
             <input
-              type={verConfirm ? "text" : "password"}
-              name="confirmPassword"
-              placeholder="Confirmar Contraseña"
-              value={form.confirmPassword}
+              type={verPass ? "text" : "password"}
+              name="password"
+              placeholder="••••••••"
+              value={form.password}
               onChange={onChange}
-              style={{ ...styles.input, paddingRight: "45px" }}
+              style={{ ...styles.input, paddingRight: "50px" }}
               required
             />
             <button
               type="button"
-              onClick={() => setVerConfirm(!verConfirm)}
+              onClick={() => setVerPass(!verPass)}
               style={styles.botonOjo}
             >
-              {verConfirm ? <TbEyeOff size={20} /> : <TbEye size={20} />}
+              {verPass ? <TbEyeOff size={22} /> : <TbEye size={22} />}
             </button>
+          </div>
+        </div>
+
+        {esRegistro && (
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Confirmar Contraseña</label>
+            <div style={styles.inputRelative}>
+              <input
+                type={verConfirm ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="••••••••"
+                value={form.confirmPassword}
+                onChange={onChange}
+                style={{ ...styles.input, paddingRight: "50px" }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setVerConfirm(!verConfirm)}
+                style={styles.botonOjo}
+              >
+                {verConfirm ? <TbEyeOff size={22} /> : <TbEye size={22} />}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Banner de Error */}
         <div style={styles.errorContainer}>
           {error && (
             <div style={styles.errorBanner}>
-              <IoWarningOutline size={20} />
+              <IoWarningOutline size={18} />
               {error}
             </div>
           )}
@@ -135,9 +122,7 @@ export const LoginFormView = ({
           type="submit"
           estaCargando={cargando}
           esExitoso={exito}
-          texto={esRegistro ? "Registrarme" : "Entrar"}
-          textoCargando={esRegistro ? "Guardando..." : "Autenticando..."}
-          textoExitoso={esRegistro ? "¡Registro Exitoso!" : "¡Bienvenido!"}
+          texto={esRegistro ? "Activar Acceso" : "Entrar al Herbario"}
         />
       </form>
 

@@ -15,9 +15,10 @@ export const Footer = () => {
 
         <div style={styles.info}>
           <p style={styles.copyright}>
-            <FaRegCopyright color={colores.bosque} /> {year} • Todos los derechos reservados
+            <FaRegCopyright color={colores.bosque} /> {year} • Todos los
+            derechos reservados
           </p>
-          <p style={styles.version}>v2.1</p>
+          <p style={styles.copyright}>v2.2</p>
         </div>
       </div>
     </footer>
@@ -31,6 +32,7 @@ const styles = {
     paddingBottom: "2rem", // Espacio al final de la pantalla
     display: "flex",
     justifyContent: "center", // Centra el container si la pantalla es muy ancha
+    paddingTop:"30px",
   },
   container: {
     // ESTA ES LA CLAVE DE LA SIMETRÍA:
