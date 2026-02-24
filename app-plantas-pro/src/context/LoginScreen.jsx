@@ -9,6 +9,7 @@ import {
 import { TbCloverFilled } from "react-icons/tb";
 import { obtenerIdentidad } from "../helpers/identidadHelper";
 import { PlantasContext } from "./PlantasContext";
+import { FaRegCopyright } from "react-icons/fa";
 
 export const LoginScreen = () => {
   const { login } = useContext(AuthContext);
@@ -16,7 +17,8 @@ export const LoginScreen = () => {
   const [esRegistro, setEsRegistro] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
-
+  const year = new Date().getFullYear();
+  
   // 🚩 Formulario expandido con campos atómicos
   const [form, setForm] = useState({
     nombre: "",
@@ -131,7 +133,7 @@ export const LoginScreen = () => {
           <div style={styles.copyrightContainer}>
             <p style={styles.empresaText}>Ile Merin Adde SAC</p>
             <p style={styles.derechosText}>
-              © 2026 Todos los derechos reservados
+               <FaRegCopyright color={colores.bosque} /> {year} • Todos los derechos reservados
             </p>
           </div>
         </div>
