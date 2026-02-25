@@ -13,7 +13,7 @@ import {
   IoChevronForward,
 } from "react-icons/io5";
 import { TbCloverFilled } from "react-icons/tb";
-import { FaRegBell } from "react-icons/fa";
+import { FaRegBell, FaRegUserCircle } from "react-icons/fa";
 import { LuMicroscope } from "react-icons/lu";
 
 // Componentes
@@ -24,6 +24,7 @@ import { CardPlanta } from "../../components/planta/CardPlanta";
 import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { Paginador } from "./Paginador";
+import { ControlAccesos } from "../../components/paneles/Accesos/ControlAccesos";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -112,27 +113,43 @@ export const HomePage = () => {
       <BaseDrawer
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
-        title={tipoPanel === "usuario" ? "Mi Perfil" : "Control"}
-        icon={TbCloverFilled}
+        title={
+          tipoPanel === "usuario"
+            ? "Mi Perfil"
+            : tipoPanel === "accesos"
+              ? "Control de Accesos"
+              : tipoPanel === "actividades"
+                ? "Historial de Actividades"
+                : tipoPanel === "gestion"
+                  ? "Control de Aportes"
+                  : "Panel"
+        }
+        icon={
+          tipoPanel === "accesos"
+            ? FaRegUserCircle
+            : tipoPanel === "actividades"
+              ? FaRegBell
+              : tipoPanel === "gestion"
+                ? LuMicroscope
+                : TbCloverFilled
+        }
       >
-        {tipoPanel === "usuario" ? (
-          <PanelUsuario user={user} />
-        ) : (
+        {tipoPanel === "usuario" && <PanelUsuario user={user} />}
+        {tipoPanel === "accesos" && <ControlAccesos admin={user} />}
+        {(tipoPanel === "actividades" || tipoPanel === "gestion") && (
           <PanelLogs tipo={tipoPanel} user={user} />
         )}
       </BaseDrawer>
 
       <div className="home-layout-container">
-        {/* 1. TOP BAR */}
+        {/* 1. TOP BAR OPTIMIZADA */}
         <div className="home-top-bar">
           <div
             className="user-profile-info"
             onClick={() => abrirPanel("usuario")}
             style={{ cursor: "pointer" }}
           >
-            <TbCloverFilled
-              style={{ color: "var(--color-frondoso)", fontSize: "2.8rem" }}
-            />
+            <TbCloverFilled className="top-bar-clover" size={30} color={colores.frondoso}/>
             <div className="user-text-details">
               <span className="user-name-text">{user?.alias}</span>
               <span className="user-role-text">
@@ -140,25 +157,38 @@ export const HomePage = () => {
               </span>
             </div>
           </div>
+
           <div className="nav-actions">
+            {/* CONTROL DE ACCESOS (Solo Administrador) */}
+            {user?.rol === "Administrador" && (
+              <button
+                onClick={() => abrirPanel("accesos")}
+                className="icon-btn"
+              >
+                <FaRegUserCircle size={22} color={colores.frondoso} />
+              </button>
+            )}
+
+            {/* HISTORIAL (Todos) */}
             <button
               onClick={() => abrirPanel("actividades")}
               className="icon-btn"
             >
-              <FaRegBell size={26} color={colores.frondoso} />
+              <FaRegBell size={20} color={colores.frondoso} />
             </button>
 
+            {/* CONTROL DE APORTES (Admin y Colab) */}
             {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
               <button
                 onClick={() => abrirPanel("gestion")}
                 className="icon-btn"
               >
-                <LuMicroscope size={28} color={colores.frondoso} />
+                <LuMicroscope size={22} color={colores.frondoso} />
               </button>
             )}
 
             <button onClick={logout} className="icon-btn logout-sep">
-              <IoLogOutOutline size={32} />
+              <IoLogOutOutline size={26} />
             </button>
           </div>
         </div>

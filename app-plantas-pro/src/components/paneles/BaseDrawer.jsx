@@ -94,7 +94,7 @@ export const BaseDrawer = ({
         .drawer-header-left h3 {
           margin: 0;
           font-size: 1.4rem; /* Un pelín más grande para que se vea importante */
-          font-weight: 800;
+          font-weight: 700;
           letter-spacing: -0.5px;
         }
 

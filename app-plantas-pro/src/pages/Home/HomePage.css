@@ -3,7 +3,7 @@
    ========================================================================== */
 
 :root {
-  --gap-home: 1rem; /* El "latido" de la página, todo respeta este espacio */
+  --gap-home: 1rem; /* El "latido" de la página */
 }
 
 .home-page {
@@ -20,22 +20,15 @@
   gap: var(--gap-home);
 }
 
-.main-content-layout {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-home);
-}
-
 /* ==========================================================================
-   COMPONENTES DE CABECERA (TOP BAR & SEARCH)
+   COMPONENTES DE CABECERA (TOP BAR & SEARCH) - OPTIMIZADO MÓVIL
    ========================================================================== */
 
-/* Unificamos estilos para que ambos se vean hermanos */
 .home-top-bar, 
 .search-wrapper {
   background: white;
   border-radius: 15px;
-  padding: 0.8rem 1.2rem;
+  padding: 0.7rem 1rem; /* Ligeramente más compacto para ganar aire vertical */
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
@@ -44,35 +37,48 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem; /* Evita que los bloques choquen sin espacio */
 }
 
+/* Identidad del usuario: Prioridad de espacio y elástico */
 .user-profile-info {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex: 1; /* Esto empuja los iconos a la derecha y se queda con el resto */
+  min-width: 0; /* Obligatorio para que el truncado de texto funcione en flex */
 }
 
 .user-text-details {
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Evita desbordes de texto */
 }
 
 .user-name-text {
   font-weight: 700;
   color: var(--color-carbon);
-  font-size: 1.1rem;
+  font-size: 1.05rem; /* Un pelín más pequeño para pantallas 360px */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Pone "..." si el nombre es gigante */
 }
 
 .user-role-text {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--color-frondoso);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Contenedor de iconos: Compacto y firme */
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem; /* Espaciado ajustado para que quepan 4 botones */
+  flex-shrink: 0; /* Impide que los iconos se aplasten */
 }
 
 /* Buscador */
@@ -98,7 +104,6 @@
    FEEDBACK Y BOTONES
    ========================================================================== */
 
-/* Este contenedor permite que el gap del padre maneje la simetría */
 .search-feedback-container {
   display: contents; 
 }
@@ -107,7 +112,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 0.2rem 0; /* Un pequeño respiro interno sin romper el gap */
+  padding: 0.2rem 0;
 }
 
 /* ==========================================================================
@@ -145,32 +150,7 @@
 }
 
 /* ==========================================================================
-   ANIMACIONES Y TRANSICIONES
-   ========================================================================== */
-
-.grid-transition {
-  animation: slideUpFade 0.35s ease-out forwards;
-}
-
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.highlight-text {
-  background-color: rgba(45, 90, 39, 0.1);
-  padding: 0 2px;
-  border-radius: 4px;
-}
-
-/* ==========================================================================
-   UTILIDADES
+   UTILIDADES Y BOTONES DE ICONO
    ========================================================================== */
 
 .icon-btn {
@@ -180,7 +160,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: 0.4rem; /* Reducido para que quepan todos en móvil */
   transition: opacity 0.2s;
 }
 
@@ -189,7 +169,20 @@
 }
 
 .logout-sep {
-  margin-left: 0.5rem;
-  padding-left: 0.8rem;
+  margin-left: 0.3rem;
+  padding-left: 0.6rem;
   border-left: 1px solid #eee;
+}
+
+/* ==========================================================================
+   ANIMACIONES
+   ========================================================================== */
+
+.grid-transition {
+  animation: slideUpFade 0.35s ease-out forwards;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
