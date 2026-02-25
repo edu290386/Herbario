@@ -3,20 +3,17 @@ import { supabase } from "../supabaseClient";
 export const getUsuarioPorTelefono = async (telefono) => {
   const { data, error } = await supabase
     .from("usuarios")
-    .select(
-      `
+    .select(`
       *,
       grupos!fk_usuario_grupo ( 
         nombre_grupo
       )
-    `,
-    )
+    `)
     .eq("telefono", telefono)
     .single();
 
-  // --- APLANAMOS EL DATO PARA QUE SEA FÁCIL DE USAR ---
+  // Aplanamos el dato para la Home
   if (data && data.grupos) {
-    // Creamos una propiedad directa llamada 'grupo'
     data.grupo = data.grupos.nombre_grupo;
   }
 
@@ -31,17 +28,15 @@ export const activarUsuario = async (telefono, datos) => {
     .from("usuarios")
     .update({
       nombre: datos.primerNombre,
-      segundo_nombre: datos.segundoNombre,
       apellido: datos.primerApellido,
-      segundo_apellido: datos.segundoApellido,
-      documento_identidad: datos.documento_identidad,
-      email: datos.correo,
       password: datos.password,
       alias: datos.alias,
       status: "ACTIVO",
       suscripcion_vence: vence.toISOString(),
-      [datos.columnaID]: datos.deviceID, // Aquí se guarda el UUID en id_movil o id_laptop
+      [datos.columnaID]: datos.deviceID, // id_movil o id_laptop
       updated_at: new Date().toISOString(),
+      // IMPORTANTE: Al activar, también inicializamos el modo por defecto
+      modo_acceso: "solo_movil" 
     })
     .eq("telefono", telefono)
     .select();
@@ -49,34 +44,51 @@ export const activarUsuario = async (telefono, datos) => {
   return { data, error };
 };
 
-export const vincularDispositivo = async (telefono, columnaID, fingerprint) => {
+export const iniciarSesionSegura = async (
+  telefono,
+  columnaID,
+  deviceID,
+  nuevoTokenPateador
+) => {
   try {
+    // 1. Actualización de seguridad y vinculación
+    // Usamos el nombre de la relación explícita para evitar errores de servidor
     const { data, error } = await supabase
       .from("usuarios")
-      .update({ [columnaID]: fingerprint })
+      .update({
+        [columnaID]: deviceID,
+        session_id: crypto.randomUUID(), 
+        login_token: nuevoTokenPateador, // El que patea
+        status: "ACTIVO",
+      })
       .eq("telefono", telefono)
-      .select();
+      .select(`
+        *,
+        grupos!fk_usuario_grupo (
+          nombre_grupo
+        )
+      `)
+      .single();
 
     if (error) throw error;
+
+    // 2. Aplanado del grupo (para la Home)
+    if (data && data.grupos) {
+      data.grupo = data.grupos.nombre_grupo;
+    }
+
     return { data, error: null };
   } catch (error) {
+    console.error("Error en iniciarSesionSegura:", error);
     return { data: null, error };
   }
 };
 
-export const iniciarSesionSegura = async (telefono, columnaID, deviceID) => {
-  const nuevoToken = crypto.randomUUID(); // <--- Mantenemos tu código aleatorio
-
+export const vincularDispositivo = async (telefono, columnaID, fingerprint) => {
   const { data, error } = await supabase
     .from("usuarios")
-    .update({
-      session_id: nuevoToken, // Se guarda el UUID para la expulsión realtime
-      [columnaID]: deviceID,
-    })
+    .update({ [columnaID]: fingerprint })
     .eq("telefono", telefono)
-    .select(`*, grupos!fk_usuario_grupo(nombre_grupo)`)
-    .single();
-
-  if (data?.grupos) data.grupo = data.grupos.nombre_grupo;
-  return { data, nuevoToken, error };
+    .select();
+  return { data, error };
 };
