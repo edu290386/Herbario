@@ -15,3 +15,18 @@ export const formatearParaDB = (texto) => {
   // Pone la primera letra en mayúscula: "piñon" -> "Piñon"
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
+
+
+export const cleanNumeric = (value) => {
+  if (!value) return "";
+  // El Regex \D busca cualquier caracter que NO sea un dígito y lo elimina
+  return value.replace(/\D/g, "");
+};
+
+/**
+ * Valida si un teléfono tiene una longitud mínima razonable
+ */
+export const isValidPhone = (phone) => {
+  const clean = cleanNumeric(phone);
+  return clean.length >= 8 && clean.length <= 15;
+};

@@ -1,5 +1,4 @@
-import { GoCheckCircleFill, GoAlert } from "react-icons/go";
-import { TfiAlert } from "react-icons/tfi";
+import { GoCheckCircleFill, GoAlert, GoXCircleFill } from "react-icons/go";
 import { IoInformationCircle } from "react-icons/io5";
 
 export const StatusBanner = ({ status = "success", message, icon }) => {
@@ -21,7 +20,7 @@ export const StatusBanner = ({ status = "success", message, icon }) => {
       bg: "#fff5f5",
       border: "#feb2b2",
       text: "#d32f2f",
-      defaultIcon: <TfiAlert size={22} />,
+      defaultIcon: <GoXCircleFill size={22} />,
     },
     info: {
       bg: "#EBF8FF",

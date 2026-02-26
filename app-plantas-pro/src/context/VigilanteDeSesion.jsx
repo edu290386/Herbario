@@ -11,17 +11,11 @@ export const VigilanteDeSesion = ({ children }) => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // 1. Log de rastro inicial
-    console.log("📍 Navegando a:", pathname);
-
+   
     if (!logged || !user) {
       console.log("ℹ️ Vigilante: No hay usuario logueado, ignorando...");
       return;
     }
-
-    // 2. Log de estado de tokens
-    console.log("🔑 Mi Token Local:", user.login_token);
-    console.log("👤 Mi ID:", user.id);
 
     // Verificamos si la ruta es crítica
     // Usamos exactitud o startsWith para rutas con ID como /planta/123
@@ -30,10 +24,7 @@ export const VigilanteDeSesion = ({ children }) => {
     );
 
     if (esRutaCritica) {
-      console.log(
-        `🛡️ Punto de control ACTIVADO en: ${pathname}. Consultando DB...`,
-      );
-
+     
       // Llamamos a la función del Provider
       verificarSesion().then((esValido) => {
         if (!esValido) {
