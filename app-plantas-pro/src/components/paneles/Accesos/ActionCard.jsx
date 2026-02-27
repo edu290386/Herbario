@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   FaEraser,
   FaPhoneAlt,
+  FaUsers,
   FaUserPlus,
   FaMicrochip,
   FaUserLock,
@@ -27,6 +28,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
     hardReset: false,
     modoAcceso: "",
     rol: "",
+    groupId: "",
   });
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
       hardReset: false,
       modoAcceso: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
       rol: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
+      groupId: "",
     });
 
     // 3. Limpiamos estados de éxito anteriores
@@ -68,6 +71,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
           status: "PENDIENTE",
           modo_acceso: config.modoAcceso || "solo_movil",
           suscripcion_vence: fechaVence.toISOString(),
+          grupo_id: config.groupId.trim() || null,
         };
 
         const { error } = await supabase
@@ -81,6 +85,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
           rol: nuevoUsuario.rol,
           plan: "7 días (Prueba)",
           acceso: "Solo móvil",
+          grupo: nuevoUsuario.grupo_id || "Sin grupo",
         };
       } else {
         // --- 2. CASO: ACTUALIZACIÓN (Solo lo modificado) ---
@@ -103,6 +108,12 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
           v.setDate(v.getDate() + parseInt(config.diasASumar));
           cambios.suscripcion_vence = v.toISOString();
           infoResumen.plan = `+ ${config.diasASumar} Días`;
+        }
+
+        // 🆕 Lógica para actualizar Grupo
+        if (config.groupId && config.groupId !== usuario.grupo_id) {
+          cambios.grupo_id = config.groupId.trim();
+          infoResumen.grupo = config.groupId.trim();
         }
 
         // D. Hardware & Sesión (HARD RESET)
@@ -223,9 +234,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                   <option value="solo_movil">(1 móvil)</option>
                   <option value="solo_laptop">(1 laptop)</option>
                   <option value="sesion_unica">(1 Sesión Única)</option>
-                  <option value="doble_dispositivo">
-                    (2 Sesiones)
-                  </option>
+                  <option value="doble_dispositivo">(2 Sesiones)</option>
                   <option value="libre">Libre</option>
                 </select>
               </Section>
@@ -248,6 +257,16 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                     <b>Hard Reset</b>
                   </label>
                 </div>
+              </Section>
+              <Section icon={<FaUsers />} label="ID de Grupo">
+                <input
+                  style={styles.input}
+                  placeholder="Asignar código de grupo..."
+                  value={config.groupId}
+                  onChange={(e) =>
+                    setConfig({ ...config, groupId: e.target.value })
+                  }
+                />
               </Section>
             </>
           )}

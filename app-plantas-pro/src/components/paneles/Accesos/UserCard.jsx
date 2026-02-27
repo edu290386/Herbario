@@ -78,7 +78,7 @@ export const UserCard = ({
         />
 
         <div
-          style={styles.infoRow}
+          style={{...styles.infoRow, cursor: "pointer"}}
           onClick={() => copiarAlPortapapeles(usuario.grupo_id)}
         >
           <div style={styles.iconCircle}>
