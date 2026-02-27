@@ -4,9 +4,9 @@ export * from "./ui/BotonPrincipal";
 export * from "./ui/BotonCancelar";
 
 // --- Carpeta Planta (Lógica de la base de datos de plantas) ---
-export * from "./planta/SeccionInformacion";
+export * from "../pages/Detalle/SeccionInformacion";
 export * from "./planta/BloqueIdentidad";
-export * from "./planta/AcordeonInformacion";
+
 export * from "./planta/CardPlanta";
 export * from "./planta/OtrosNombres";
 

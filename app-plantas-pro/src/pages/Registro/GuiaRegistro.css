@@ -1,0 +1,120 @@
+/* Contenedor de la Guía */
+.guia-container-new {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #edf2f7;
+  overflow: hidden;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.guia-container-new.guia-abierta {
+  border-color: #339af0;
+  box-shadow: 0 10px 25px rgba(51, 154, 240, 0.1);
+}
+
+/* Header: Título y Botón en la misma fila */
+.guia-header-new {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; 
+  gap: 12px;
+  padding: 15px 20px;
+  cursor: pointer;
+}
+
+.guia-titulo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.guia-titulo-new {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #1b4332;
+  text-transform: uppercase;
+}
+
+/* Botón de Indicaciones (Pill) */
+.guia-toggle-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f7ff;
+  padding: 5px 14px;
+  border-radius: 50px;
+  border: 1px solid #d0e7ff;
+  transition: all 0.3s ease;
+}
+
+.guia-toggle-text {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #339af0;
+  white-space: nowrap;
+}
+
+/* --- LÓGICA DE SUAVIZACIÓN (EL ACORDEÓN) --- */
+.guia-acordeon-wrapper {
+  display: grid;
+  grid-template-rows: 0fr; /* Altura 0 */
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guia-acordeon-wrapper.expandido {
+  grid-template-rows: 1fr; /* Altura automática */
+}
+
+.guia-content-inner {
+  overflow: hidden; /* Clave para ocultar el texto mientras se abre */
+}
+
+.guia-lista-new {
+  list-style: none;
+  padding: 0 20px 20px 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.guia-item-new {
+  display: flex;
+  gap: 12px;
+  text-align: justify; /* Justificado */
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+}
+
+.guia-acordeon-wrapper.expandido .guia-item-new {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.1s;
+}
+
+.guia-bullet {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.guia-texto-paso {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.guia-icon-anim {
+  transition: transform 0.4s ease;
+}
+
+.guia-toggle-box.abierto .guia-icon-anim {
+  transform: rotate(180deg);
+}

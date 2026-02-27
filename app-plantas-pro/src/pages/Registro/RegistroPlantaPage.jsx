@@ -142,7 +142,8 @@ export const RegistroPlantaPage = () => {
       );
     }
     if (esSoloUbicacion) return !gpsListo || validacionDistancia.bloquear;
-    if (esAgregarDetalle) return !nuevoNombreSecundario.trim() || !paisSeleccionado;
+    if (esAgregarDetalle)
+      return !nuevoNombreSecundario.trim() || !paisSeleccionado;
     return false;
   }, [
     cargando,

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PiPlantFill, PiMapPinFill, PiBookOpenTextFill } from "react-icons/pi";
 import { GiAfrica, GiEarthAmerica } from "react-icons/gi";
 import { FaBookReader, FaChevronCircleDown } from "react-icons/fa";
+import "./GuiaRegistro.css"
 
 export const GuiaRegistro = ({ flujo }) => {
   const [abierto, setAbierto] = useState(false); // Empieza cerrado
@@ -124,32 +125,30 @@ export const GuiaRegistro = ({ flujo }) => {
           <span className="guia-titulo-new">{info.titulo}</span>
         </div>
 
-        {/* Alineación horizontal: Icono y Texto al costado */}
         <div className={`guia-toggle-box ${abierto ? "abierto" : ""}`}>
           <span className="guia-toggle-text">
-            {abierto ? "CERRAR" : "Indicaciones"}
+            {abierto ? "Cerrar" : "Indicaciones"}
           </span>
-          <FaChevronCircleDown
-            className="guia-icon-anim"
-            size={18}
-            color="#339af0"
-          />
+          <FaChevronCircleDown className="guia-icon-anim" size={14} color={"#339af0"}/>
         </div>
       </div>
 
-      {abierto && (
-        <ul className="guia-lista-new animation-fadeIn">
-          {info.pasos.map((paso, index) => (
-            <li key={index} className="guia-item-new">
-              <div
-                className="guia-bullet"
-                style={{ backgroundColor: info.border }}
-              />
-              <div className="guia-texto-paso">{paso}</div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* WRAPPER PARA LA SUAVIZACIÓN (Sin el condicional {abierto && ...}) */}
+      <div className={`guia-acordeon-wrapper ${abierto ? "expandido" : ""}`}>
+        <div className="guia-content-inner">
+          <ul className="guia-lista-new">
+            {info.pasos.map((paso, index) => (
+              <li key={index} className="guia-item-new">
+                <div
+                  className="guia-bullet"
+                  style={{ backgroundColor: info.border }}
+                />
+                <div className="guia-texto-paso">{paso}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };
