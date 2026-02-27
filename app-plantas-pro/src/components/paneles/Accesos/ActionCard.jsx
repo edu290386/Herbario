@@ -5,13 +5,14 @@ import {
   FaUserPlus,
   FaMicrochip,
   FaUserLock,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { BsCalendar2Check } from "react-icons/bs";
 import { supabase } from "../../../supabaseClient";
 import { BotonPrincipal } from "../../ui/BotonPrincipal";
 import { ResumenCard } from "./ResumenCard";
 import { isValidPhone } from "../../../helpers/textHelper";
-import { formatearFechaLocal } from "../../../helpers/timeHelper";
+
 
 export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
   const [loading, setLoading] = useState(false);
@@ -25,25 +26,30 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
     resetLaptop: false,
     hardReset: false,
     modoAcceso: "",
-    rol:"",
+    rol: "",
   });
 
   useEffect(() => {
-    if (usuario?.id) {
-      setConfig({
-        telefono: usuario.telefono || "",
-        modoAcceso: usuario.modo_acceso || "",
-        rol: usuario.rol || "",
-        diasASumar: 0,
-        resetMovil: false,
-        resetLaptop: false,
-        hardReset: false,
-      });
-    }
-  }, [usuario]);
+    // 1. Si acabamos de guardar con éxito, no tocamos nada para ver el Resumen.
+    if (success) return;
+
+    // 2. Si hay un usuario (Edición) o si es nuevo (Registro):
+    // Inicializamos TODO en vacío para obligar al administrador a configurar.
+    setConfig({
+      telefono: usuario?.telefono || "", // El teléfono es lo único que mantenemos para saber a quién editamos
+      diasASumar: 0,
+      hardReset: false,
+      modoAcceso: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
+      rol: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
+    });
+
+    // 3. Limpiamos estados de éxito anteriores
+    setSuccess(false);
+    setDatosResumen(null);
+  }, [usuario?.id, usuario?.telefono, success]);
+
 
   const aplicarGatilloMaestro = async () => {
-    // Validación silenciosa: si no es válido, no hace nada (o puedes usar un alert simple)
     if (!isValidPhone(config.telefono)) return;
 
     setLoading(true);
@@ -51,71 +57,90 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
       let infoResumen = { telefono: config.telefono.trim() };
       let cambios = {};
 
+      // --- 1. CASO: REGISTRO NUEVO ---
       if (!usuario?.id) {
-        // --- REGISTRO NUEVO ---
         const fechaVence = new Date();
-        fechaVence.setDate(fechaVence.getDate() + 7);
-        const { error } = await supabase.from("usuarios").insert([
-          {
-            telefono: config.telefono.trim(),
-            rol: "Usuario",
-            status: "PENDIENTE",
-            modo_acceso: "solo_movil",
-            suscripcion_vence: fechaVence.toISOString(),
-          },
-        ]);
+        fechaVence.setDate(fechaVence.getDate() + 7); // 7 días de prueba por defecto
+
+        const nuevoUsuario = {
+          telefono: config.telefono.trim(),
+          rol: config.rol || "Usuario",
+          status: "PENDIENTE",
+          modo_acceso: config.modoAcceso || "solo_movil",
+          suscripcion_vence: fechaVence.toISOString(),
+        };
+
+        const { error } = await supabase
+          .from("usuarios")
+          .insert([nuevoUsuario]);
         if (error) throw error;
 
+        // Preparamos resumen de bienvenida
         infoResumen = {
           ...infoResumen,
-          status: "PENDIENTE",
-          plan: "7 días",
-          vence: formatearFechaLocal(fechaVence),
-          acceso: "solo_movil",
+          rol: nuevoUsuario.rol,
+          plan: "7 días (Prueba)",
+          acceso: "Solo móvil",
         };
       } else {
-        // --- ACTUALIZACIÓN (Manual Deletion Structure) ---
-        if (config.hardReset) {
-          cambios = {
-            id_movil: null,
-            id_laptop: null,
-            sesion_id: null,
-            login_token: null,
-          };
-          infoResumen.hardware = "HARD RESET";
-        } else {
-          if (config.resetMovil) cambios.id_movil = null;
-          if (config.resetLaptop) cambios.id_laptop = null;
-          if (config.resetMovil || config.resetLaptop)
-            infoResumen.hardware = "Reset Parcial";
+        // --- 2. CASO: ACTUALIZACIÓN (Solo lo modificado) ---
+
+        // A. Cambio de Rol
+        if (config.rol && config.rol !== usuario.rol) {
+          cambios.rol = config.rol;
+          infoResumen.rol = config.rol;
         }
 
+        // B. Cambio de Modo de Acceso
         if (config.modoAcceso && config.modoAcceso !== usuario.modo_acceso) {
           cambios.modo_acceso = config.modoAcceso;
           infoResumen.acceso = config.modoAcceso;
         }
 
+        // C. Tiempo (Suscripción)
         if (config.diasASumar > 0) {
           const v = new Date(usuario.suscripcion_vence || new Date());
           v.setDate(v.getDate() + parseInt(config.diasASumar));
           cambios.suscripcion_vence = v.toISOString();
-          infoResumen.plan = `+${config.diasASumar} Días`;
-          infoResumen.vence = formatearFechaLocal(v);
+          infoResumen.plan = `+ ${config.diasASumar} Días`;
         }
 
-        const { error } = await supabase
-          .from("usuarios")
-          .update(cambios)
-          .eq("id", usuario.id);
-        if (error) throw error;
-        infoResumen.status = "ACTUALIZADO";
+        // D. Hardware & Sesión (HARD RESET)
+        // Se activa si marcaste el checkbox O si hubo cambios arriba (para forzar refresh)
+        if (config.hardReset || Object.keys(cambios).length > 0) {
+          cambios.session_id = null;
+          cambios.login_token = null;
+
+          // Si específicamente es por cambio de equipo (Checkbox), limpiamos IDs físicos
+          if (config.hardReset) {
+            cambios.id_movil = null;
+            cambios.id_laptop = null;
+            infoResumen.hardware = "Reseteo de equipos vinculados";
+          }
+        }
+
+        // Ejecutar Update si hay cambios detectados
+        if (Object.keys(cambios).length > 0) {
+          const { error } = await supabase
+            .from("usuarios")
+            .update(cambios)
+            .eq("id", usuario.id);
+
+          if (error) throw error;
+        } else {
+          infoResumen.status = "SIN CAMBIOS REALIZADOS";
+        }
       }
 
+      // --- 3. FINALIZACIÓN ---
       setDatosResumen(infoResumen);
       setSuccess(true);
-      if (onRefresh) onRefresh();
+
+      // Refresco silencioso para que UserCard vea los cambios sin cerrar el Resumen
+      if (onRefresh) onRefresh(null, true);
     } catch (err) {
-      console.error("Error en operación:", err.message);
+      console.error("Error en Operación:", err.message);
+      alert("Error al procesar: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -150,6 +175,22 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
             </Section>
           ) : (
             <>
+              {/* SELECT DE ROL TRANSPARENTE */}
+              <Section icon={<FaShieldAlt />} label="Rol de Usuario">
+                <select
+                  style={styles.input}
+                  value={config.rol}
+                  onChange={(e) =>
+                    setConfig({ ...config, rol: e.target.value })
+                  }
+                >
+                  <option value="">Escoger rol</option>
+                  <option value="Usuario">Usuario</option>
+                  <option value="Colaborador">Colaborador</option>
+                  <option value="Administrador">Administrador</option>
+                </select>
+              </Section>
+
               <Section
                 icon={<BsCalendar2Check />}
                 label="Extender Subscripción"
@@ -161,12 +202,12 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                     setConfig({ ...config, diasASumar: e.target.value })
                   }
                 >
-                  <option value="7">Periodo de prueba (+7 Días)</option>
-                  <option value="30">Plan Mensual (+30 Días)</option>
-                  <option value="60">Plan Bimestral (+60 Días)</option>
-                  <option value="90">Plan Trimestral (+90 Días)</option>
-                  <option value="180">Plan Semestral (+180 Días)</option>
-                  <option value="365">Plan Anual (+365 Días)</option>
+                  <option value="0">Escoger plan</option>
+                  <option value="7">Periodo de prueba +7 Días</option>
+                  <option value="30">Plan Mensual +30 Días</option>
+                  <option value="60">Plan Bimestral +60 Días</option>
+                  <option value="90">Plan Trimestral +90 Días</option>
+                  <option value="365">Plan Anual +365 Días</option>
                 </select>
               </Section>
 
@@ -178,40 +219,19 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                     setConfig({ ...config, modoAcceso: e.target.value })
                   }
                 >
-                  <option value="solo_movil">solo_movil (1 móvil)</option>
-                  <option value="solo_laptop">solo_laptop (1 laptop)</option>
-                  <option value="sesion_unica">sesion_unica (1S)</option>
+                  <option value="">Escoger modo de acceso</option>
+                  <option value="solo_movil">(1 móvil)</option>
+                  <option value="solo_laptop">(1 laptop)</option>
+                  <option value="sesion_unica">(1 Sesión Única)</option>
                   <option value="doble_dispositivo">
-                    doble_dispositivo (2S)
+                    (2 Sesiones)
                   </option>
-                  <option value="libre">libre</option>
+                  <option value="libre">Libre</option>
                 </select>
               </Section>
 
               <Section icon={<FaMicrochip />} label="Hardware Reset">
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
-                  <label style={styles.check}>
-                    <input
-                      type="checkbox"
-                      checked={config.resetMovil}
-                      disabled={config.hardReset}
-                      onChange={(e) =>
-                        setConfig({ ...config, resetMovil: e.target.checked })
-                      }
-                    />{" "}
-                    Móvil
-                  </label>
-                  <label style={styles.check}>
-                    <input
-                      type="checkbox"
-                      checked={config.resetLaptop}
-                      disabled={config.hardReset}
-                      onChange={(e) =>
-                        setConfig({ ...config, resetLaptop: e.target.checked })
-                      }
-                    />{" "}
-                    Laptop
-                  </label>
                   <label style={{ ...styles.check, color: "#C62828" }}>
                     <input
                       type="checkbox"
@@ -225,7 +245,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                         })
                       }
                     />{" "}
-                    <b>HARD RESET</b>
+                    <b>Hard Reset</b>
                   </label>
                 </div>
               </Section>

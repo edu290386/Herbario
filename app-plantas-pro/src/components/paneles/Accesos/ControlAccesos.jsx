@@ -25,11 +25,15 @@ export const ControlAccesos = () => {
     navigator.clipboard.writeText(texto);
   };
 
-  const buscarUsuario = async (e) => {
-    if (e) e.preventDefault();
+  const buscarUsuario = async (e, silencioso = false) => {
+    if (e && e.preventDefault) e.preventDefault();
 
     // 1. Validar que no esté vacío
     if (!telefonoBusqueda) return;
+    // Solo limpiamos si NO es un refresco (es una búsqueda nueva)
+    if (!silencioso) {
+      setUsuarioEncontrado(null);
+    }
     // 2. Validación de seguridad (Longitud y Formato)
     if (!isValidPhone(telefonoBusqueda)) {
       setUsuarioEncontrado(null); // Limpiamos cualquier resultado previo
@@ -84,7 +88,7 @@ export const ControlAccesos = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };;
 
   return (
     <div style={styles.container}>

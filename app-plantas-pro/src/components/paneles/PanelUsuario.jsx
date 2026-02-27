@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   FaCircleUser,
   FaUserGroup,
@@ -6,10 +6,18 @@ import {
   FaChartLine,
 } from "react-icons/fa6";
 import { getDashboardStats } from "./getDashboardStats";
+import { AuthContext } from "../../context/AuthContext";
 
 export const PanelUsuario = ({ user }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { verificarSesion } = useContext(AuthContext)
+
+  useEffect(() => {
+    verificarSesion();
+    // Si el Admin te quitó el token o cambió tu rol,
+    // esta función ejecutará el logout y el panel desaparecerá junto con toda la app.
+  }, [verificarSesion]);
 
   useEffect(() => {
     const cargarTodo = async () => {

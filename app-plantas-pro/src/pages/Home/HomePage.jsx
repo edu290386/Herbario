@@ -142,14 +142,17 @@ export const HomePage = () => {
       </BaseDrawer>
 
       <div className="home-layout-container">
-        {/* 1. TOP BAR OPTIMIZADA */}
+        {/* 1. TOP BAR */}
         <div className="home-top-bar">
           <div
             className="user-profile-info"
             onClick={() => abrirPanel("usuario")}
-            style={{ cursor: "pointer" }}
           >
-            <TbCloverFilled className="top-bar-clover" size={30} color={colores.frondoso}/>
+            <TbCloverFilled
+              className="top-bar-clover"
+              size={30}
+              color={colores.frondoso}
+            />
             <div className="user-text-details">
               <span className="user-name-text">{user?.alias}</span>
               <span className="user-role-text">
@@ -159,7 +162,6 @@ export const HomePage = () => {
           </div>
 
           <div className="nav-actions">
-            {/* CONTROL DE ACCESOS (Solo Administrador) */}
             {user?.rol === "Administrador" && (
               <button
                 onClick={() => abrirPanel("accesos")}
@@ -168,16 +170,12 @@ export const HomePage = () => {
                 <FaRegUserCircle size={22} color={colores.frondoso} />
               </button>
             )}
-
-            {/* HISTORIAL (Todos) */}
             <button
               onClick={() => abrirPanel("actividades")}
               className="icon-btn"
             >
               <FaRegBell size={20} color={colores.frondoso} />
             </button>
-
-            {/* CONTROL DE APORTES (Admin y Colab) */}
             {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
               <button
                 onClick={() => abrirPanel("gestion")}
@@ -186,7 +184,6 @@ export const HomePage = () => {
                 <LuMicroscope size={22} color={colores.frondoso} />
               </button>
             )}
-
             <button onClick={logout} className="icon-btn logout-sep">
               <IoLogOutOutline size={26} />
             </button>
@@ -209,71 +206,62 @@ export const HomePage = () => {
 
         {/* 3. ÁREA PRINCIPAL */}
         <main className="main-content-layout">
-          {/* Feedback de Búsqueda y Botón Registro */}
-          <div className="search-feedback-container">
-            {busqueda.length >= 2 && (
-              <>
-                <StatusBanner
-                  status={
-                    existeExacta
-                      ? "error"
-                      : filtradas.length > 0
-                        ? "success"
-                        : "warning"
-                  }
-                  message={
-                    existeExacta
-                      ? "Esta planta ya existe"
-                      : `${filtradas.length} coincidencias encontradas`
-                  }
-                />
-                {!existeExacta && (
-                  <div className="register-button-wrapper">
-                    <BotonPrincipal
-                      texto="REGISTRAR NUEVA PLANTA"
-                      onClick={() =>
-                        navigate("/registro", {
-                          state: {
-                            nombreComun: formatearParaDB(busqueda),
-                            usuarioId: user.id,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* PAGINACIÓN SUPERIOR (Solo si no hay búsqueda activa) */}
-          {busqueda.length < 2 && totalPaginas > 1 && (
-            <Paginador
-              paginaActual={paginaActual}
-              totalPaginas={totalPaginas}
-              alCambiarPagina={cambiarPagina}
-            />
+          {/* Feedback de Búsqueda */}
+          {busqueda.length >= 2 && (
+            <div className="search-feedback-container">
+              <StatusBanner
+                status={
+                  existeExacta
+                    ? "error"
+                    : filtradas.length > 0
+                      ? "success"
+                      : "warning"
+                }
+                message={
+                  existeExacta
+                    ? "Esta planta ya existe"
+                    : `${filtradas.length} coincidencias`
+                }
+              />
+              {!existeExacta && (
+                <div className="register-button-wrapper">
+                  <BotonPrincipal
+                    texto="REGISTRAR NUEVA PLANTA"
+                    onClick={() =>
+                      navigate("/registro", {
+                        state: {
+                          nombreComun: formatearParaDB(busqueda),
+                          usuarioId: user.id,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </div>
           )}
 
-          {/* GRID O LISTA CON ANIMACIÓN */}
+          {/* Paginación Superior */}
+          {busqueda.length < 2 && totalPaginas > 1 && (
+            <div className="pagination-wrapper">
+              <Paginador
+                paginaActual={paginaActual}
+                totalPaginas={totalPaginas}
+                alCambiarPagina={cambiarPagina}
+              />
+            </div>
+          )}
+
+          {/* Grid de Cards */}
           <div
-            key={paginaActual + (busqueda.length >= 2 ? "-search" : "-page")}
-            className={`${
-              filtradas.length > 20 && busqueda.length >= 2
-                ? "minimalist-list"
-                : "home-grid"
-            } grid-transition`}
+            className={`${filtradas.length > 20 && busqueda.length >= 2 ? "minimalist-list" : "home-grid"} grid-transition`}
           >
             {plantasParaMostrar.map((p) =>
               filtradas.length > 20 && busqueda.length >= 2 ? (
                 <div
                   key={p.id}
                   className="minimalist-item"
-                  onClick={() =>
-                    navigate(`/detalle/${p.id}`, {
-                      state: { fromPage: paginaActual },
-                    })
-                  }
+                  onClick={() => navigate(`/detalle/${p.id}`)}
                 >
                   <div>
                     <strong>
@@ -295,13 +283,15 @@ export const HomePage = () => {
             )}
           </div>
 
-          {/* PAGINACIÓN INFERIOR (Solo si no hay búsqueda activa) */}
+          {/* Paginación Inferior */}
           {busqueda.length < 2 && totalPaginas > 1 && (
-            <Paginador
-              paginaActual={paginaActual}
-              totalPaginas={totalPaginas}
-              alCambiarPagina={cambiarPagina}
-            />
+            <div className="pagination-wrapper">
+              <Paginador
+                paginaActual={paginaActual}
+                totalPaginas={totalPaginas}
+                alCambiarPagina={cambiarPagina}
+              />
+            </div>
           )}
         </main>
       </div>

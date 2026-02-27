@@ -1,9 +1,9 @@
 /* ==========================================================================
-   ESTRUCTURA Y LAYOUT (SIMETRÍA UNIFICADA)
+   VARIABLES Y LAYOUT BASE
    ========================================================================== */
-
 :root {
-  --gap-home: 1rem; /* El "latido" de la página */
+  /* La variable maestra: si cambias esto, toda la página respira igual */
+  --gap-home: 1rem; 
 }
 
 .home-page {
@@ -11,6 +11,7 @@
   background-color: var(--color-nieve);
 }
 
+/* Contenedor principal: Separa TopBar, Search y Main */
 .home-layout-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -20,15 +21,21 @@
   gap: var(--gap-home);
 }
 
-/* ==========================================================================
-   COMPONENTES DE CABECERA (TOP BAR & SEARCH) - OPTIMIZADO MÓVIL
-   ========================================================================== */
+/* ÁREA PRINCIPAL: Separa Banner, Paginadores y Grid de forma idéntica */
+.main-content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-home);
+}
 
+/* ==========================================================================
+   COMPONENTES DE CABECERA (TOP BAR & SEARCH)
+   ========================================================================== */
 .home-top-bar, 
 .search-wrapper {
   background: white;
   border-radius: 15px;
-  padding: 0.7rem 1rem; /* Ligeramente más compacto para ganar aire vertical */
+  padding: 0.8rem 1rem;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
@@ -37,48 +44,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem; /* Evita que los bloques choquen sin espacio */
 }
 
-/* Identidad del usuario: Prioridad de espacio y elástico */
 .user-profile-info {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  flex: 1; /* Esto empuja los iconos a la derecha y se queda con el resto */
-  min-width: 0; /* Obligatorio para que el truncado de texto funcione en flex */
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
 }
 
 .user-text-details {
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Evita desbordes de texto */
+  overflow: hidden;
 }
 
 .user-name-text {
   font-weight: 700;
   color: var(--color-carbon);
-  font-size: 1.05rem; /* Un pelín más pequeño para pantallas 360px */
+  font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Pone "..." si el nombre es gigante */
+  text-overflow: ellipsis;
 }
 
 .user-role-text {
   font-size: 0.75rem;
   color: var(--color-frondoso);
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Contenedor de iconos: Compacto y firme */
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.3rem; /* Espaciado ajustado para que quepan 4 botones */
-  flex-shrink: 0; /* Impide que los iconos se aplasten */
+  gap: 0.2rem;
+  flex-shrink: 0;
 }
 
 /* Buscador */
@@ -103,22 +105,30 @@
 /* ==========================================================================
    FEEDBACK Y BOTONES
    ========================================================================== */
-
 .search-feedback-container {
-  display: contents; 
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Espacio interno entre Banner y Botón más cerrado */
+  width: 100%;
+  /* Eliminamos margin-bottom manual: el gap del main-content se encarga */
 }
 
 .register-button-wrapper {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 0.2rem 0;
+}
+
+/* Contenedor para los paginadores */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 /* ==========================================================================
    VISUALIZACIÓN DE DATOS (GRID Y LISTA)
    ========================================================================== */
-
 .home-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -146,13 +156,11 @@
 
 .minimalist-item:hover {
   transform: translateX(8px);
-  background: #fdfdfd;
 }
 
 /* ==========================================================================
-   UTILIDADES Y BOTONES DE ICONO
+   BOTONES DE ICONO
    ========================================================================== */
-
 .icon-btn {
   background: transparent;
   border: none;
@@ -160,7 +168,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem; /* Reducido para que quepan todos en móvil */
+  padding: 0.5rem;
   transition: opacity 0.2s;
 }
 
@@ -175,14 +183,24 @@
 }
 
 /* ==========================================================================
-   ANIMACIONES
+   ANIMACIONES Y RESPONSIVE
    ========================================================================== */
-
 .grid-transition {
-  animation: slideUpFade 0.35s ease-out forwards;
+  animation: slideUpFade 0.3s ease-out forwards;
 }
 
 @keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(15px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajuste fino para móviles pequeños */
+@media (max-width: 480px) {
+  :root {
+    --gap-home: 1rem;
+  }
+  
+  .home-top-bar {
+    padding: 0.6rem 0.8rem;
+  }
 }

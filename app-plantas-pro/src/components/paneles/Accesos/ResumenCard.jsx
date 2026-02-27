@@ -43,38 +43,38 @@ export const ResumenCard = ({ data, onLimpiar }) => {
 
   return (
     <div style={styles.container}>
+      {/* Título fijo: Indica que la operación terminó, sin ensuciar la lista */}
       <div style={styles.header}>
-        <span style={styles.title}>RESUMEN DE OPERACIÓN EXITOSA</span>
+        <span style={styles.title}>OPERACIÓN COMPLETADA CON ÉXITO</span>
       </div>
+
       <div style={styles.row}>
         <FaPhoneAlt size={10} color="#2D5A27" />
         <span style={styles.text}>
           <b>Teléfono:</b> {data.telefono}
         </span>
       </div>
+
       <hr style={styles.separator} />
+
+      {/* 2. Mapeo atómico: Solo se renderiza lo que venga en el objeto 'data' */}
       {Object.entries(camposConfig).map(
         ([key, config]) =>
           data[key] && (
             <div key={key} style={styles.row}>
-              <span
-                style={{
-                  color: config.color,
-                  display: "flex",
-                  fontSize: "12px",
-                }}
-              >
+              <span style={{ color: config.color, display: "flex", fontSize: "12px" }}>
                 {config.icono}
               </span>
               <span style={styles.text}>
-                <b>{config.etiqueta}:</b> {data[key]}{" "}
+                <b>{config.etiqueta}:</b> {data[key]}
                 {key === "plan" && data.vence && (
                   <span style={styles.subText}> (Vence: {data.vence})</span>
                 )}
               </span>
             </div>
-          ),
+          )
       )}
+
       <button onClick={onLimpiar} style={styles.btnRed}>
         <FaEraser /> LIMPIAR
       </button>

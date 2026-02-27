@@ -100,7 +100,7 @@ export const UserCard = ({
           label="SUBSCRIPCIÓN"
           value={
             usuario.suscripcion_vence
-              ? `${formatearFecha(usuario.suscripcion_vence)} (${diasRestantes} días)`
+              ? `${formatearFecha(usuario.suscripcion_vence)}  (${diasRestantes} días)`
               : "Sin suscripción activa"
           }
           valueStyle={{ color: diasRestantes > 5 ? "#2D5A27" : "#C62828" }}

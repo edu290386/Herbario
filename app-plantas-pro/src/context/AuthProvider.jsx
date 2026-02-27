@@ -31,45 +31,72 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ USAMOS useCallback para que la referencia no cambie
   // y pueda usarse en dependencias de useEffect sin problemas.
- const verificarSesion = useCallback(async () => {
-   // ✅ Agregamos doble_dispositivo a la lista blanca de no-validación
-   const modo = auth.user?.modo_acceso;
-   if (!auth.user?.id || modo === "libre" || modo === "doble_dispositivo") {
-     return true;
-   }
+const verificarSesion = useCallback(async () => {
+  // Si no hay ID, no hay nada que vigilar
+  if (!auth.user?.id) return true;
 
-   try {
-     const { data, error } = await supabase
-       .from("usuarios")
-       .select("login_token")
-       .eq("id", auth.user.id)
-       .single();
+  try {
+    // 1. Traemos el Token y el Rol actual de la DB
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("login_token, rol")
+      .eq("id", auth.user.id)
+      .single();
 
-     if (error) throw error;
+    if (error) throw error;
 
-     if (data && data.login_token !== auth.user.login_token) {
-       console.warn("🚫 Sesión duplicada. Expulsando...");
-       logout();
-       return false;
-     }
-     return true;
-   } catch (error) {
-      console.log(error)
-     return true;
-   }
- }, [auth.user?.id, auth.user?.login_token, auth.user?.modo_acceso, logout]);
+    // 2. VERIFICACIÓN DE TOKEN (Hard Reset o Sesión Duplicada)
+    // Si el token es null (Hard Reset) o diferente al actual (Sesión en otro lado)
+    // EXCEPTO para modo 'libre' o 'doble_dispositivo' (aquí solo validamos si es null)
+    const esTokenNull = data.login_token === null;
+    const esTokenDiferente = data.login_token !== auth.user.login_token;
+    const modoRestringido = !["libre", "doble_dispositivo"].includes(
+      auth.user.modo_acceso,
+    );
 
-  const authValue = useMemo(
-    () => ({
-      ...auth,
-      login,
-      logout,
-      verificarSesion,
-    }),
-    [auth, login, logout, verificarSesion], // Ahora todas las dependencias están incluidas
-  );
+    if (esTokenNull || (modoRestringido && esTokenDiferente)) {
+      console.warn("🚫 Sesión invalidada por el Administrador. Expulsando...");
+      logout();
+      return false;
+    }
 
-  return (
-    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
-  );
+    // 3. VERIFICACIÓN DE ROL (Sincronización instantánea)
+    if (data.rol !== auth.user.rol) {
+      console.log("🔄 Cambio de Rol detectado. Actualizando perfil...");
+      // Aquí podrías llamar a una función que actualice el estado 'auth'
+      // con el nuevo rol sin cerrar sesión, o simplemente forzar logout
+      // para que entre con los nuevos privilegios:
+      logout();
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error en Vigilante:", error.message);
+    return true; // En caso de error de red, no expulsamos al usuario
+  }
+}, [
+  auth.user?.id,
+  auth.user?.login_token,
+  auth.user?.rol,
+  auth.user?.modo_acceso,
+  logout,
+]);
+
+  // Este bloque expone todo el arsenal de autenticación a tu App
+const authValue = useMemo(
+  () => ({
+    ...auth,           // Aquí viajan: user (con su rol, id, etc), logged, loading
+    login,             // Función para entrar
+    logout,            // Función para salir (el "hachazo" final)
+    verificarSesion,   // El "Vigilante" que ahora detecta NULLs y cambios de Rol
+  }),
+  [auth, login, logout, verificarSesion] 
+);
+
+return (
+  <AuthContext.Provider value={authValue}>
+    {children}
+  </AuthContext.Provider>
+);
 };
