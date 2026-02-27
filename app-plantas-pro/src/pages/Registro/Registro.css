@@ -9,13 +9,19 @@
   --sombra-card: 0 10px 25px rgba(0,0,0,0.05);
 }
 
+.registro-card, .registro-card * {
+  box-sizing: border-box;
+}
+
 .registro-page-container {
   max-width: 550px;
+  width: 100%; /* Asegura que tome el ancho disponible */
   margin: 0 auto;
-  padding: 15px 15px 80px 15px; /* Menos padding arriba y a los lados */
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* De 25px a 15px */
+  gap: 15px;
+  align-items: stretch; /* ESTO ES CLAVE: estira las cards al ancho del padre */
 }
 
 /* Header Estilizado */
@@ -136,10 +142,6 @@
   border: 1.5px solid var(--color-frondoso);
   background: white;
   letter-spacing: 0.5px;
-  -webkit-border-radius:;
-  -moz-border-radius:;
-  -ms-border-radius:;
-  -o-border-radius:;
 }
 
 .preview-label {
@@ -170,10 +172,6 @@
   -moz-transition: all 0.3s ease;
   -ms-transition: all 0.3s ease;
   -o-transition: all 0.3s ease;
-  -webkit-border-radius:;
-  -moz-border-radius:;
-  -ms-border-radius:;
-  -o-border-radius:;
 }
 
 .registro-zona-foto:hover {
