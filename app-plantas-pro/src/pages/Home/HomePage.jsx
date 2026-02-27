@@ -19,7 +19,7 @@ import { LuMicroscope } from "react-icons/lu";
 // Componentes
 import { BaseDrawer } from "../../components/paneles/BaseDrawer";
 import { PanelLogs } from "../../components/paneles/PanelLogs";
-import { PanelUsuario } from "../../components/paneles/PanelUsuario";
+import { PanelUsuario } from "../../components/paneles/Perfil/PanelUsuario";
 import { CardPlanta } from "../../components/planta/CardPlanta";
 import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
