@@ -1,42 +1,90 @@
 import { useContext, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { supabase } from "../supabaseClient";
 
-// ✅ Definimos las rutas fuera del componente.
-// Al ser una constante estática, no necesita estar en el arreglo de dependencias.
-const RUTAS_CRITICAS = ["/", "/registro", "/planta"];
+const RUTAS_CRITICAS = ["/", "/home", "/registro", "/planta", "/panel"];
 
 export const VigilanteDeSesion = ({ children }) => {
-  const { verificarSesion, user, logged } = useContext(AuthContext);
+  const { verificarSesion, user, logged, logout } = useContext(AuthContext);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-   
-    if (!logged || !user) {
-      console.log("ℹ️ Vigilante: No hay usuario logueado, ignorando...");
-      return;
-    }
+    // Si no hay sesión, no hay nada que vigilar
+    if (!logged || !user) return;
 
-    // Verificamos si la ruta es crítica
-    // Usamos exactitud o startsWith para rutas con ID como /planta/123
-    const esRutaCritica = RUTAS_CRITICAS.some(
-      (ruta) => pathname === ruta || pathname.startsWith(ruta + "/"),
-    );
+    // Evitar bucles: si ya estamos en la página de pago, no hacemos nada
+    if (pathname === "/perfil") return;
 
-    if (esRutaCritica) {
-     
-      // Llamamos a la función del Provider
-      verificarSesion().then((esValido) => {
-        if (!esValido) {
-          console.log("❌ Resultado: Sesión inválida, logout ejecutado.");
-        } else {
-          console.log("✅ Resultado: Sesión válida.");
+    const revisarAcceso = async () => {
+      const esRutaCritica = RUTAS_CRITICAS.some(
+        (ruta) => pathname === ruta || pathname.startsWith(ruta + "/"),
+      );
+
+      if (esRutaCritica) {
+        const ahora = new Date();
+        const vencimiento = new Date(user.suscripcion_vence);
+
+        // --- 1. LÓGICA DE AUTO-REPARACIÓN (Vencimiento manda) ---
+
+        // Caso A: TIENE TIEMPO pero el status dice SUSPENDIDO -> Reactivamos
+        if (vencimiento > ahora && user.status !== "ACTIVO") {
+          console.log(
+            "♻️ Vigilante: Días válidos detectados. Reactivando status...",
+          );
+          try {
+            await supabase
+              .from("usuarios")
+              .update({ status: "ACTIVO" })
+              .eq("id", user.id);
+
+            // Forzamos la actualización del estado global de la app
+            await verificarSesion();
+            return;
+          } catch (e) {
+            console.error("Error al auto-activar:", e);
+          }
         }
-      });
-    } else {
-      console.log("⚪ Ruta no crítica, saltando validación.");
-    }
-  }, [pathname, verificarSesion, user, logged]);
+
+        // Caso B: NO TIENE TIEMPO pero el status dice ACTIVO -> Suspendemos
+        if (vencimiento <= ahora && user.status !== "SUSPENDIDO") {
+          console.log(
+            "⚠️ Vigilante: Suscripción vencida. Cambiando a SUSPENDIDO...",
+          );
+          try {
+            await supabase
+              .from("usuarios")
+              .update({ status: "SUSPENDIDO" })
+              .eq("id", user.id);
+
+            await verificarSesion();
+          } catch (e) {
+            console.error("Error al auto-suspender:", e);
+          }
+          navigate("/perfil");
+          return;
+        }
+
+        // --- 2. VALIDACIÓN FINAL DE ACCESO ---
+        if (user.status === "SUSPENDIDO" || user.status === "PENDIENTE") {
+          navigate("/perfil");
+          return;
+        }
+
+        // --- 3. INTEGRIDAD DE HARDWARE ---
+        const esValido = await verificarSesion();
+        if (!esValido) {
+          logout();
+          navigate("/login");
+        }
+      }
+    };
+
+    revisarAcceso();
+
+    // ✅ Se agregaron todas las dependencias necesarias para evitar el warning de React
+  }, [pathname, logged, user, navigate, logout, verificarSesion]);
 
   return children;
 };

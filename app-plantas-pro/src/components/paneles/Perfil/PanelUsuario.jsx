@@ -2,8 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import {
   FaLaptop,
   FaMobileAlt,
-  FaPhoneAlt,
-  FaIdCard,
+  FaUser,
   FaLayerGroup,
   FaClock,
   FaUserLock,
@@ -17,10 +16,6 @@ import { BsCalendar2Check } from "react-icons/bs";
 import { getDashboardStats } from "./getDashboardStats";
 import { AuthContext } from "../../../context/AuthContext";
 import { formatearFechaLocal } from "../../../helpers/timeHelper";
-import {
-  detectarTipoCampo,
-  getCleanHardwareName,
-} from "../../../helpers/hardwareHelper";
 import "./PanelUsuario.css";
 
 export const PanelUsuario = ({ user }) => {
@@ -28,27 +23,23 @@ export const PanelUsuario = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const { verificarSesion } = useContext(AuthContext);
 
-  // 1. Obtenemos la info real del equipo donde el usuario está parado
-  const tipoActual = detectarTipoCampo(); 
-  const nombreRealActual = getCleanHardwareName();
-
-  useEffect(() => {
-    if (verificarSesion) verificarSesion();
-  }, [verificarSesion]);
-
   useEffect(() => {
     const cargarTodo = async () => {
+      // 1. Intentamos obtener el ID del grupo si existe
       const gId = user?.grupo_id || user?.id_grupo || user?.grupos?.id;
-      if (user?.id && gId) {
-        const data = await getDashboardStats(user.id, gId);
+
+      // 2. CAMBIO CLAVE: Quitamos la obligación de tener gId para consultar
+      if (user?.id) {
+        // Si no hay gId, pasamos null. getDashboardStats debe manejarlo.
+        const data = await getDashboardStats(user.id, gId || null);
         setStats(data);
       }
       setLoading(false);
     };
     if (user) cargarTodo();
-  }, [user]);
+    if (verificarSesion) verificarSesion();
+  }, [user, verificarSesion]);
 
-  // ... (tus lógicas de díasRestantes, renderMedal y getEstilosSuscripcion se mantienen igual)
   const diasRestantes = user?.suscripcion_vence
     ? Math.max(
         0,
@@ -60,16 +51,10 @@ export const PanelUsuario = ({ user }) => {
     : 0;
 
   const renderMedal = (pct, total) => {
-    if (pct >= 50)
-      return <FaMedal title="Primer Aportante" style={{ color: "#FFD700" }} />;
-    if (pct >= 30)
-      return <FaMedal title="Segundo Aportante" style={{ color: "#C0C0C0" }} />;
-    if (pct >= 15)
-      return <FaMedal title="Tercer Aportante" style={{ color: "#CD7F32" }} />;
-    if (total > 5)
-      return (
-        <PiMedal title="Explorador Constante" style={{ color: "#52b788" }} />
-      );
+    if (pct >= 50) return <FaMedal style={{ color: "#FFD700" }} />;
+    if (pct >= 30) return <FaMedal style={{ color: "#C0C0C0" }} />;
+    if (pct >= 15) return <FaMedal style={{ color: "#CD7F32" }} />;
+    if (total > 5) return <PiMedal style={{ color: "#52b788" }} />;
     return null;
   };
 
@@ -82,17 +67,16 @@ export const PanelUsuario = ({ user }) => {
 
   const estilos = getEstilosSuscripcion(diasRestantes);
 
-  if (loading && !user)
-    return <div className="loader-msg">Cargando perfil...</div>;
-
+  if (loading && !user) return <div className="loader-msg">Cargando...</div>;
+console.log(user)
   return (
     <div className="panel-custom-font">
       <div className="panel-container">
-        {/* ... HEADER e IMPACTO GRUPAL (Igual que antes) ... */}
+        {/* HEADER */}
         <div className="card-mirror profile-header-v3">
           <div className="avatar-wrapper-v3">
             <div className="avatar-circle">
-              {user?.nombre?.charAt(0).toUpperCase()}
+              {user?.nombre?.charAt(0).toUpperCase() || "U"}
             </div>
             <div className="medal-badge-v3">
               {stats &&
@@ -103,28 +87,31 @@ export const PanelUsuario = ({ user }) => {
             </div>
           </div>
           <div className="header-info-v3">
-            <h2>{user?.alias || "Usuario"}</h2>
-            <div className="status-tag-v3">
-              <FaCheckCircle /> {user?.status}
-            </div>
+            <h2>{user?.alias || "Socio"}</h2>
           </div>
         </div>
 
+        {/* ESTADÍSTICAS: Adaptables si hay grupo o no */}
         {stats && (
           <div className="card-mirror">
             <h3 className="section-title-v3">
-              <FaChartLine /> Impacto Grupal
+              <FaChartLine />{" "}
+              {user?.grupo_id ? "Impacto Grupal" : "Mi Actividad Personal"}
             </h3>
             <div className="chart-center-v3">
               <div
                 className="donut-chart-v3"
                 style={{
-                  background: `conic-gradient(#2d6a4f ${stats.participacion.porcentaje * 3.6}deg, #f1f5f9 0deg)`,
+                  // Si no hay grupo, el aporte es 100% (360deg)
+                  background: `conic-gradient(#2d6a4f ${
+                    (user?.grupo_id ? stats.participacion.porcentaje : 100) *
+                    3.6
+                  }deg, #f1f5f9 0deg)`,
                 }}
               >
                 <div className="donut-inner-v3">
                   <span className="pct-v3">
-                    {stats.participacion.porcentaje}%
+                    {user?.grupo_id ? stats.participacion.porcentaje : 100}%
                   </span>
                   <span className="label-v3">Aporte</span>
                 </div>
@@ -134,84 +121,99 @@ export const PanelUsuario = ({ user }) => {
               <BarGrid
                 label="Hoy"
                 u={stats.individual.hoy}
-                g={stats.grupal.hoy}
+                g={user?.grupo_id ? stats.grupal.hoy : stats.individual.hoy}
               />
               <BarGrid
                 label="Semana"
                 u={stats.individual.semana}
-                g={stats.grupal.semana}
+                g={
+                  user?.grupo_id ? stats.grupal.semana : stats.individual.semana
+                }
               />
               <BarGrid
                 label="Mes"
                 u={stats.individual.mes}
-                g={stats.grupal.mes}
+                g={user?.grupo_id ? stats.grupal.mes : stats.individual.mes}
+              />
+              <BarGrid
+                label="Total"
+                u={stats.individual.total}
+                g={user?.grupo_id ? stats.grupal.total : stats.individual.total}
               />
             </div>
           </div>
         )}
 
-        {/* CUENTA */}
+        {/* DETALLES DE CUENTA */}
         <div className="card-mirror">
           <h3 className="section-title-v3">
             <BsCalendar2Check /> Detalles de la cuenta
           </h3>
           <div className="data-stack-v3">
             <DetailItem
-              icon={<FaPhoneAlt />}
-              label="Contacto"
-              value={user?.telefono}
+              icon={<FaUser />}
+              label="Nombre"
+              value={`${user?.nombre || ""} ${user?.apellido || ""}`}
             />
+            <DetailItem
+              icon={<FaCheckCircle />}
+              label="Status"
+              value={user?.status}
+            />
+            <DetailItem icon={<FaShieldAlt />} label="Rol" value={user?.rol} />
             <DetailItem
               icon={<FaLayerGroup />}
               label="Grupo"
-              value={user?.grupo}
+              value={user?.grupos.nombre_grupo || user?.grupo_id || "Uso Individual"}
             />
             <DetailItem
               icon={<FaClock />}
-              label="Expira"
+              label="Suscripción"
               value={formatearFechaLocal(user?.suscripcion_vence)}
             />
+
             <div
               className="expiry-alert-v3"
               style={{
                 backgroundColor: estilos.bg,
-                borderLeftColor: estilos.border,
                 color: estilos.text,
               }}
             >
-              Vencimiento en: <strong>{diasRestantes} días</strong>
+              <span>Tiempo restante:</span>
+              <strong>{diasRestantes} días</strong>
             </div>
           </div>
         </div>
 
         {/* SEGURIDAD DE ACCESO */}
         <div className="card-mirror">
-          <h3 className="section-title-v3"><FaUserLock /> Seguridad de Acceso</h3>
-          <div className="security-wrap-v3">
-            <div className="sec-mode-v3">
-              <FaShieldAlt /> Modo: <strong>{user?.modo_acceso?.replace("_", " ")}</strong>
-            </div>
-            <div className="device-info-v3">
-              <p className="device-label-v3">Dispositivos Vinculados:</p>
-              
-              <DeviceItem
-                icon={<FaMobileAlt />}
-                title="Móvil"
-                desc={user?.id_movil || "No vinculado"}
-                active={user?.id_movil}
-                isCurrent={tipoActual === "id_movil"} // Usamos la variable definida arriba
-                isMatch={user?.id_movil === nombreRealActual}
-              />
+          <h3 className="section-title-v3">
+            <FaUserLock /> Seguridad de Acceso
+          </h3>
+          <div className="sec-mode-v3" style={{ marginBottom: 0 }}>
+            <FaShieldAlt /> Modo:{" "}
+            <strong>{user?.modo_acceso?.replace("_", " ")}</strong>
+          </div>
+        </div>
 
-              <DeviceItem
-                icon={<FaLaptop />}
-                title="Laptop"
-                desc={user?.id_laptop || "No vinculado"}
-                active={user?.id_laptop}
-                isCurrent={tipoActual === "id_laptop"} // Usamos la variable definida arriba
-                isMatch={user?.id_laptop === nombreRealActual}
-              />
-            </div>
+        {/* DISPOSITIVOS ASOCIADOS */}
+        <div className="card-mirror">
+          <h3 className="section-title-v3">
+            <FaLaptop /> Dispositivos Asociados
+          </h3>
+          <div className="device-info-v3">
+            <DeviceItem
+              icon={<FaMobileAlt />}
+              title="Móvil"
+              desc={user?.id_movil || "No vinculado"}
+              active={!!user?.id_movil}
+            />
+            <DeviceItem
+              icon={<FaLaptop />}
+              title="Laptop"
+              desc={user?.id_laptop || "No vinculado"}
+              active={!!user?.id_laptop}
+            />
           </div>
         </div>
       </div>
@@ -219,35 +221,23 @@ export const PanelUsuario = ({ user }) => {
   );
 };
 
-// COMPONENTES AUXILIARES
-const DeviceItem = ({ icon, title, desc, active, isCurrent, isMatch }) => (
-  <div className={`device-card-v3 ${active ? "active" : ""} ${isCurrent ? "current" : ""}`}>
+const DeviceItem = ({ icon, title, desc, active }) => (
+  <div className={`device-card-v3 ${active ? "active" : ""}`}>
     {icon}
-    <div>
-      <strong>
-        {title} 
-        {isCurrent && <span className="current-badge">En uso</span>}
-      </strong>
-      <p>
-        {desc}
-        {isCurrent && active && !isMatch && (
-          <span style={{ color: "#f59e0b", display: "block", fontSize: "10px", marginTop: "4px" }}>
-            ⚠️ El nombre no coincide con el registro original.
-          </span>
-        )}
-      </p>
+    <div style={{ flex: 1 }}>
+      <strong>{title}</strong>
+      <p style={{ marginTop: "2px" }}>{desc}</p>
     </div>
   </div>
 );
 
-// ... (BarGrid y DetailItem se mantienen igual)
 const BarGrid = ({ label, u, g }) => (
   <div className="bar-grid-v3">
     <span className="bar-tag-v3">{label}</span>
     <div className="bar-rail-v3">
       <div
         className="bar-progress-v3"
-        style={{ width: `${(u / g) * 100 || 0}%` }}
+        style={{ width: `${(u / (g || 1)) * 100}%` }}
       ></div>
     </div>
     <span className="bar-numbers-v3">

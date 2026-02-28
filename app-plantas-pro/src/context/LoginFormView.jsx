@@ -1,168 +1,176 @@
 import { useState } from "react";
+import {
+  TbCloverFilled,
+  TbLock,
+  TbPhone,
+  TbUser,
+  TbId,
+  TbMail,
+  TbEye,
+  TbEyeOff,
+} from "react-icons/tb";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { StatusBanner } from "../components/ui/StatusBanner";
-import { TbEye, TbEyeOff, TbCloverFilled } from "react-icons/tb";
+import fondoOzain from "../assets/fondoLogin.jpg";
+import "./LoginStyles.css";
 
 export const LoginFormView = ({
+  modo,
+  setModo,
   form,
-  esRegistro,
-  cargando,
   banner,
   onChange,
   onSubmit,
-  onToggleMode,
+  cargando,
 }) => {
-  const [verPass, setVerPass] = useState(false);
-  const [verConfirm, setVerConfirm] = useState(false);
-  const anioActual = new Date().getFullYear();
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   return (
-    <div style={styles.formCard}>
-      <style>{`
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .logo-giratorio { animation: spin-slow 15s linear infinite; }
-        input::placeholder { color: #CBD5E0; }
-      `}</style>
+    <div
+      className="oz-login-main"
+      style={{ backgroundImage: `url(${fondoOzain})` }}
+    >
+      <div className="oz-glass-card">
+        <header className="oz-brand">
+          <TbCloverFilled className="oz-logo" size={45} />
+          <h1>Herbolario de Ozain</h1>
+          <p>
+            {modo === "login" ? "Acceso Protegido" : "Formulario de Activación"}
+          </p>
+        </header>
 
-      {/* CABECERA */}
-      <div style={styles.header}>
-        <TbCloverFilled size={30} color="#2D5A27" className="logo-giratorio" />
-        <h1 style={styles.title}>El Herbolario de Ozain</h1>
-      </div>
+        <nav className="oz-nav-tabs">
+          <button
+            className={modo === "login" ? "active" : ""}
+            onClick={() => setModo("login")}
+          >
+            LOGIN
+          </button>
+          <button
+            className={modo === "activar" ? "active" : ""}
+            onClick={() => setModo("activar")}
+          >
+            ACTIVAR
+          </button>
+        </nav>
 
-      <div style={styles.unifiedContent}>
-        {/* BANNER DINÁMICO SIMÉTRICO */}
+        {/* CONTENEDOR DE BANNER CON MARGEN CORREGIDO */}
         {banner.msj && (
-          <div style={styles.bannerWrapper}>
+          <div style={{ marginBottom: "25px" }}>
             <StatusBanner status={banner.tipo} message={banner.msj} />
           </div>
         )}
 
-        <form onSubmit={onSubmit} style={styles.form}>
-          {esRegistro && (
-            <div style={styles.registroGroup}>
-              <div style={styles.field}>
-                <label style={styles.label}>Primer Nombre *</label>
+        <form onSubmit={onSubmit} className="oz-form-body">
+          <div className="oz-field">
+            <label>
+              <TbPhone /> CELULAR AUTORIZADO
+            </label>
+            <input
+              name="telefono"
+              type="tel"
+              value={form.telefono}
+              onChange={onChange}
+              placeholder="51999888777"
+              required
+            />
+          </div>
+
+          {modo === "activar" && (
+            <div
+              className="oz-animate"
+              style={{ display: "flex", flexDirection: "column", gap: "22px" }}
+            >
+              <div className="oz-field">
+                <label>
+                  <TbUser /> PRIMER NOMBRE *
+                </label>
                 <input
                   name="primerNombre"
-                  placeholder="Ej: Juan"
                   value={form.primerNombre}
                   onChange={onChange}
-                  style={styles.input}
                   required
                 />
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Segundo Nombre</label>
-                <input
-                  name="segundoNombre"
-                  placeholder="Ej: Antonio"
-                  value={form.segundoNombre}
-                  onChange={onChange}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Primer Apellido *</label>
+              <div className="oz-field">
+                <label>
+                  <TbUser /> PRIMER APELLIDO *
+                </label>
                 <input
                   name="primerApellido"
-                  placeholder="Ej: Pérez"
                   value={form.primerApellido}
                   onChange={onChange}
-                  style={styles.input}
                   required
                 />
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Segundo Apellido</label>
+              <div className="oz-field">
+                <label>
+                  <TbId /> DOCUMENTO IDENTIDAD *
+                </label>
                 <input
-                  name="segundoApellido"
-                  placeholder="Ej: García"
-                  value={form.segundoApellido}
+                  name="documento_identidad"
+                  value={form.documento_identidad}
                   onChange={onChange}
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Documento de Identidad *</label>
-                <input
-                  name="documento"
-                  placeholder="Ej: 45678912"
-                  value={form.documento}
-                  onChange={onChange}
-                  style={styles.input}
                   required
                 />
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Correo Electrónico *</label>
+              <div className="oz-field">
+                <label>
+                  <TbMail /> CORREO ELECTRÓNICO *
+                </label>
                 <input
+                  name="email"
                   type="email"
-                  name="correo"
-                  placeholder="ejemplo@correo.com"
-                  value={form.correo}
+                  value={form.email}
                   onChange={onChange}
-                  style={styles.input}
                   required
                 />
               </div>
             </div>
           )}
 
-          <div style={styles.field}>
-            <label style={styles.label}>Número de Celular *</label>
-            <input
-              type="tel"
-              name="telefono"
-              placeholder="51999888777"
-              value={form.telefono}
-              onChange={onChange}
-              style={styles.input}
-              required
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Contraseña *</label>
-            <div style={styles.passWrapper}>
+          <div className="oz-field">
+            <label>
+              <TbLock /> {modo === "login" ? "CONTRASEÑA" : "CREAR CONTRASEÑA"}
+            </label>
+            <div className="oz-input-wrapper">
               <input
-                type={verPass ? "text" : "password"}
                 name="password"
-                placeholder="••••••••"
+                type={showPass ? "text" : "password"}
                 value={form.password}
                 onChange={onChange}
-                style={styles.input}
                 required
               />
               <button
                 type="button"
-                onClick={() => setVerPass(!verPass)}
-                style={styles.eyeBtn}
+                className="oz-eye"
+                onClick={() => setShowPass(!showPass)}
               >
-                {verPass ? <TbEyeOff size={20} /> : <TbEye size={20} />}
+                {showPass ? <TbEyeOff /> : <TbEye />}
               </button>
             </div>
           </div>
 
-          {esRegistro && (
-            <div style={styles.field}>
-              <label style={styles.label}>Confirmar Contraseña *</label>
-              <div style={styles.passWrapper}>
+          {modo === "activar" && (
+            <div className="oz-field oz-animate">
+              <label>
+                <TbLock /> CONFIRMAR CONTRASEÑA
+              </label>
+              <div className="oz-input-wrapper">
                 <input
-                  type={verConfirm ? "text" : "password"}
                   name="confirmPassword"
-                  placeholder="••••••••"
+                  type={showConfirm ? "text" : "password"}
                   value={form.confirmPassword}
                   onChange={onChange}
-                  style={styles.input}
                   required
                 />
                 <button
                   type="button"
-                  onClick={() => setVerConfirm(!verConfirm)}
-                  style={styles.eyeBtn}
+                  className="oz-eye"
+                  onClick={() => setShowConfirm(!showConfirm)}
                 >
-                  {verConfirm ? <TbEyeOff size={20} /> : <TbEye size={20} />}
+                  {showConfirm ? <TbEyeOff /> : <TbEye />}
                 </button>
               </div>
             </div>
@@ -170,111 +178,20 @@ export const LoginFormView = ({
 
           <div style={{ marginTop: "10px" }}>
             <BotonPrincipal
-              type="submit"
+              onClick={onSubmit}
+              texto={modo === "login" ? "INGRESAR" : "COMPLETAR REGISTRO"}
               estaCargando={cargando}
-              texto={esRegistro ? "Completar Registro" : "Iniciar Sesión"}
             />
           </div>
         </form>
 
-        <button type="button" onClick={onToggleMode} style={styles.switchBtn}>
-          {esRegistro
-            ? "¿Ya tienes cuenta? Inicia sesión"
-            : "¿No tienes cuenta? Regístrate"}
-        </button>
-
-        {/* FOOTER LOCAL SIMÉTRICO */}
-        <div style={styles.footerLocal}>
-          <div style={styles.footerDivider} />
-          <span style={styles.footerText}>
-            © {anioActual} Ile Merin Adde SAC <br /> Todos los derechos
-            reservados.
-          </span>
-          <p style={styles.footerText}>Herbolario v2.3</p>
-        </div>
+        <footer className="oz-footer">
+          <div className="oz-line" />
+          <p className="oz-corp">
+            © 2026 <b>Ile Merin Adde SAC</b>
+          </p>
+        </footer>
       </div>
     </div>
   );
-};
-
-const styles = {
-  formCard: {
-    width: "100%",
-    maxWidth: "420px",
-    backgroundColor: "white",
-    padding: "35px 30px 25px 30px",
-    borderRadius: "28px",
-    boxShadow: "0 15px 40px rgba(0,0,0,0.12)",
-    boxSizing: "border-box",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "12px",
-    marginBottom: "25px",
-  },
-  title: { fontSize: "1.4rem", fontWeight: "800", color: "#1A3A32", margin: 0 },
-  unifiedContent: {
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    alignItems: "stretch",
-  },
-  bannerWrapper: { marginBottom: "20px" },
-  form: { display: "flex", flexDirection: "column", gap: "18px" },
-  field: { display: "flex", flexDirection: "column", gap: "6px" },
-  label: { fontSize: "0.85rem", fontWeight: "700", color: "#4A5568" },
-  input: {
-    width: "100%",
-    padding: "12px",
-    borderRadius: "10px",
-    border: "1.5px solid #E2E8F0",
-    fontSize: "16px",
-    boxSizing: "border-box",
-  },
-  passWrapper: { position: "relative", width: "100%" },
-  eyeBtn: {
-    position: "absolute",
-    right: "12px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "none",
-    border: "none",
-    color: "#A0AEC0",
-    cursor: "pointer",
-    display: "flex",
-  },
-  switchBtn: {
-    background: "none",
-    border: "none",
-    color: "#2D5A27",
-    fontWeight: "700",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-    textDecoration: "underline",
-    margin: "20px 0",
-    alignSelf: "center",
-  },
-  footerLocal: {
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    marginTop: "10px",
-  },
-  footerDivider: {
-    height: "1px",
-    backgroundColor: "#E2E8F0",
-    width: "100%",
-    marginBottom: "15px",
-  },
-  footerText: {
-    fontSize: "0.8rem",
-    color: "#A0AEC0",
-    fontWeight: "500",
-    textAlign: "center",
-    lineHeight: "1.4",
-  },
-  registroGroup: { display: "flex", flexDirection: "column", gap: "18px" },
 };

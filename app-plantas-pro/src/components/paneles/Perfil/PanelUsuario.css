@@ -9,73 +9,89 @@
 .panel-container {
   max-width: 550px;
   margin: 0 auto;
-  padding: 20px 15px 100px;
+  padding:  0px; /* Simetría lateral total */
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px; /* Espaciado entre cards */
 }
 
-.header-info-v3 h2{
-  font-size: 20px;
-  
+/* --- TARJETA BASE --- */
+.card-mirror {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid #edf2f7;
+
 }
 
-/* Títulos con espacio */
-.section-title-v3 {
-  display: flex;
-  align-items: center;
-  gap: 12px; /* Espacio entre icono y texto */
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: #1b4332;
-  margin-bottom: 25px; /* Espacio hacia abajo */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Header V3 */
+/* --- HEADER --- */
 .profile-header-v3 {
-  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%) !important;
-  color: white;
   display: flex;
   align-items: center;
-  gap: 20px;
-  height: 150px;
+  gap: 15px;
+  padding: 0px !important;
+  margin-bottom: 5px !important;
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%) !important;
+  color: white !important;
+  border: none !important;
+  overflow: hidden;
 }
 
 .avatar-wrapper-v3 {
-  position: relative;
+  position: relative; /* CRÍTICO: Contenedor referencia para la medalla */
+  flex-shrink: 0;
+  width: 70px; /* Igual al ancho del avatar */
+  height: 70px; /* Igual al alto del avatar */
+  margin: 20px 10px 20px 20px;
 }
 
 .avatar-circle {
   width: 70px;
   height: 70px;
   background: rgba(255,255,255,0.2);
-  border-radius: 20px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 800;
   backdrop-filter: blur(5px);
 }
 
 .medal-badge-v3 {
-  position: absolute;
-  top: -10px;
-  right: -10px;
+  position: absolute; /* CRÍTICO: Posicionamiento absoluto respecto al wrapper */
+  bottom: 0px;
+  right: 0px;
   background: white;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 10; /* Asegura que esté por encima del avatar */
 }
 
-/* Pastel Gigante Centrado */
+.header-info-v3 h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* --- ESTADÍSTICAS (EL ARREGLO) --- */
+.section-title-v3 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1b4332;
+  padding-bottom: 15px;
+  text-transform: uppercase;
+}
+
 .chart-center-v3 {
   display: flex;
   justify-content: center;
@@ -83,18 +99,18 @@
 }
 
 .donut-chart-v3 {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 15px 35px rgba(45, 106, 79, 0.15);
+  box-shadow: 0 15px 35px rgba(45, 106, 79, 0.1);
 }
 
 .donut-inner-v3 {
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   background: white;
   border-radius: 50%;
   display: flex;
@@ -104,34 +120,63 @@
 }
 
 .pct-v3 { font-size: 2.2rem; font-weight: 700; color: #2d6a4f; }
+.label-v3 { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
 
-/* Barras que NO se rompen */
+/* Contenedor de las barras para que no pierdan el formato */
+.bars-container-v3 {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Espacio entre cada barra */
+  width: 100%;
+}
+
 .bar-grid-v3 {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 15px;
+  width: 100%;
 }
 
-.bar-tag-v3 { width: 60px; font-size: 0.65rem; font-weight: 600; color: #64748b; }
-.bar-rail-v3 { flex: 1; height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden; }
-.bar-progress-v3 { height: 100%; background: #2d6a4f; border-radius: 5px; }
+.bar-tag-v3 { 
+  width: 55px; /* Ancho fijo para las etiquetas */
+  font-size: 0.7rem; 
+  font-weight: 600; 
+  color: #64748b; 
+}
+
+.bar-rail-v3 { 
+  flex: 1; /* Esto hace que la barra ocupe todo el centro */
+  height: 10px; 
+  background: #f1f5f9; 
+  border-radius: 5px; 
+  overflow: hidden; 
+}
+
+.bar-progress-v3 { 
+  height: 100%; 
+  background: #2d6a4f; 
+  border-radius: 5px; 
+  transition: width 0.4s ease-in-out;
+}
 
 .bar-numbers-v3 { 
-  width: 55px; /* Ancho fijo para que nunca se mueva el rail */
+  width: 55px; /* Ancho fijo para los números */
   text-align: right;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: #1b4332;
 }
-.bar-numbers-v3 span { color: #94a3b8; font-weight: 500; font-size: 0.65rem; }
 
-/* Detalles Suscripción Limpios */
+.bar-numbers-v3 span { color: #94a3b8; font-weight: 500; }
+
+/* --- DETALLES Y SEGURIDAD --- */
+.data-stack-v3 { display: flex; flex-direction: column; gap: 5px; }
+
 .detail-item-v3 {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-bottom: 18px;
+  padding: 10px 0;
 }
 
 .icon-box-v3 {
@@ -143,7 +188,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
 }
 
 .text-box-v3 label { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; display: block; }
@@ -151,29 +195,18 @@
 
 .expiry-alert-v3 {
   margin-top: 15px;
-  padding: 16px 20px;
+  padding: 16px;
   border-radius: 16px;
-  font-size: 0.9rem;
-  font-weight: 700;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.expiry-alert-v3 strong {
-  font-size: 1.2rem;
-  font-weight: 900;
-}
-
-/* Seguridad */
 .sec-mode-v3 {
   background: #f1f5f9;
-  padding: 12px;
+  padding: 14px;
   border-radius: 14px;
   font-size: 0.85rem;
-  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -189,8 +222,13 @@
   border: 1px solid #f1f5f9;
   border-radius: 16px;
   margin-bottom: 10px;
-  opacity: 0.6;
+  opacity: 0.5;
+  filter: grayscale(1);
 }
 
-.device-card-v3.active { opacity: 1; border-color: #bbf7d0; background: #f0fdf4; }
-.device-card-v3 p { font-size: 0.7rem; color: #64748b; margin: 0; }
+.device-card-v3.active { 
+  opacity: 1; 
+  filter: grayscale(0); 
+  border-color: #bbf7d0; 
+  background: #f0fdf4; 
+}

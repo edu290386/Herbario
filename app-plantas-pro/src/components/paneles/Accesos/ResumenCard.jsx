@@ -14,13 +14,13 @@ export const ResumenCard = ({ data, onLimpiar }) => {
 
   const camposConfig = {
     status: {
-      etiqueta: "Nuevo Estado",
+      etiqueta: "Nuevo Status",
       icono: <FaCheckCircle />,
       color: "#2D5A27",
     },
     rol: { etiqueta: "Nuevo Rol", icono: <FaShieldAlt />, color: "#2D5A27" },
     plan: {
-      etiqueta: "Nueva Subscripción",
+      etiqueta: "Nueva Suscripción",
       icono: <BsCalendar2Check />,
       color: "#2D5A27",
     },
@@ -30,12 +30,12 @@ export const ResumenCard = ({ data, onLimpiar }) => {
       color: "#2D5A27",
     },
     acceso: {
-      etiqueta: "Nuevo Modo Acceso",
+      etiqueta: "Nuevo Modo de Acceso",
       icono: <FaUserLock />,
       color: "#2D5A27",
     },
     hardware: {
-      etiqueta: "Nuevo Hardware Reset",
+      etiqueta: "Hardware Reset",
       icono: <FaMicrochip />,
       color: "#2D5A27",
     },

@@ -22,81 +22,85 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback((usuario = {}) => {
     localStorage.setItem("user", JSON.stringify(usuario));
-    const action = {
-      type: types.login,
-      payload: usuario,
-    };
-    dispatch(action);
+    dispatch({ type: types.login, payload: usuario });
   }, []);
 
-  // ✅ USAMOS useCallback para que la referencia no cambie
-  // y pueda usarse en dependencias de useEffect sin problemas.
-const verificarSesion = useCallback(async () => {
-  // Si no hay ID, no hay nada que vigilar
-  if (!auth.user?.id) return true;
+  const verificarSesion = useCallback(async () => {
+    if (!auth.user?.id) return true;
 
-  try {
-    // 1. Traemos el Token y el Rol actual de la DB
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("login_token, rol")
-      .eq("id", auth.user.id)
-      .single();
+    try {
+      // 1. CONSULTA SELECTIVA: Traemos solo lo que queremos que sea automático
+      // OJO: No seleccionamos 'nombre' ni 'apellido' para que no se actualicen en caliente
+      const { data: dbUser, error } = await supabase
+        .from("usuarios")
+        .select("login_token, rol, status, suscripcion_vence, modo_acceso")
+        .eq("id", auth.user.id)
+        .single();
 
-    if (error) throw error;
+      if (error || !dbUser) throw new Error("Usuario no encontrado");
 
-    // 2. VERIFICACIÓN DE TOKEN (Hard Reset o Sesión Duplicada)
-    // Si el token es null (Hard Reset) o diferente al actual (Sesión en otro lado)
-    // EXCEPTO para modo 'libre' o 'doble_dispositivo' (aquí solo validamos si es null)
-    const esTokenNull = data.login_token === null;
-    const esTokenDiferente = data.login_token !== auth.user.login_token;
-    const modoRestringido = !["libre", "doble_dispositivo"].includes(
-      auth.user.modo_acceso,
-    );
+      const ahora = new Date();
+      const vencimiento = new Date(dbUser.suscripcion_vence);
+      let statusActual = dbUser.status;
 
-    if (esTokenNull || (modoRestringido && esTokenDiferente)) {
-      console.warn("🚫 Sesión invalidada por el Administrador. Expulsando...");
-      logout();
-      return false;
+      // 2. AUTO-SUSPENSIÓN SILENCIOSA
+      if (statusActual !== "BLOQUEADO" && ahora > vencimiento) {
+        statusActual = "SUSPENDIDO";
+        await supabase
+          .from("usuarios")
+          .update({ status: "SUSPENDIDO" })
+          .eq("id", auth.user.id);
+      }
+
+      // 3. SEGURIDAD: Expulsión
+      const esTokenDiferente = dbUser.login_token !== auth.user.login_token;
+      const modoRestringido = !["libre", "doble_dispositivo"].includes(
+        dbUser.modo_acceso,
+      );
+
+      if (
+        statusActual === "BLOQUEADO" ||
+        (modoRestringido && dbUser.login_token && esTokenDiferente)
+      ) {
+        console.warn("🚫 Acceso denegado o sesión duplicada.");
+        logout();
+        return false;
+      }
+
+      // 4. SINCRONIZACIÓN AUTOMÁTICA (Solo Rol, Status y Tiempo)
+      // Comparamos los valores específicos que SI queremos que cambien
+      const huboCambioCritico =
+        dbUser.rol !== auth.user.rol ||
+        statusActual !== auth.user.status ||
+        dbUser.suscripcion_vence !== auth.user.suscripcion_vence;
+
+      if (huboCambioCritico) {
+        console.log("♻️ Actualizando Rol/Status/Tiempo en tiempo real...");
+
+        const usuarioActualizado = {
+          ...auth.user, // Mantenemos Nombre y Apellido originales de la sesión
+          rol: dbUser.rol, // Aplicamos el nuevo Rol automáticamente
+          status: statusActual, // Aplicamos el nuevo Status automáticamente
+          suscripcion_vence: dbUser.suscripcion_vence, // Aplicamos el nuevo Tiempo automáticamente
+        };
+
+        dispatch({ type: types.login, payload: usuarioActualizado });
+        localStorage.setItem("user", JSON.stringify(usuarioActualizado));
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Vigilante Error:", error.message);
+      return true;
     }
+  }, [auth.user, logout, dispatch]); // Agregamos dispatch a dependencias
 
-    // 3. VERIFICACIÓN DE ROL (Sincronización instantánea)
-    if (data.rol !== auth.user.rol) {
-      console.log("🔄 Cambio de Rol detectado. Actualizando perfil...");
-      // Aquí podrías llamar a una función que actualice el estado 'auth'
-      // con el nuevo rol sin cerrar sesión, o simplemente forzar logout
-      // para que entre con los nuevos privilegios:
-      logout();
-      return false;
-    }
+  const authValue = useMemo(
+    () => ({ ...auth, login, logout, verificarSesion }),
+    [auth, login, logout, verificarSesion],
+  );
 
-    return true;
-  } catch (error) {
-    console.error("Error en Vigilante:", error.message);
-    return true; // En caso de error de red, no expulsamos al usuario
-  }
-}, [
-  auth.user?.id,
-  auth.user?.login_token,
-  auth.user?.rol,
-  auth.user?.modo_acceso,
-  logout,
-]);
-
-  // Este bloque expone todo el arsenal de autenticación a tu App
-const authValue = useMemo(
-  () => ({
-    ...auth,           // Aquí viajan: user (con su rol, id, etc), logged, loading
-    login,             // Función para entrar
-    logout,            // Función para salir (el "hachazo" final)
-    verificarSesion,   // El "Vigilante" que ahora detecta NULLs y cambios de Rol
-  }),
-  [auth, login, logout, verificarSesion] 
-);
-
-return (
-  <AuthContext.Provider value={authValue}>
-    {children}
-  </AuthContext.Provider>
-);
+  return (
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
+  );
 };

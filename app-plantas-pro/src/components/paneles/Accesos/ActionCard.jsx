@@ -12,150 +12,143 @@ import { BsCalendar2Check } from "react-icons/bs";
 import { supabase } from "../../../supabaseClient";
 import { BotonPrincipal } from "../../ui/BotonPrincipal";
 import { ResumenCard } from "./ResumenCard";
-import { isValidPhone } from "../../../helpers/textHelper";
+import { cleanNumeric, isValidPhone } from "../../../helpers/textHelper";
 
+const CONFIG_VACIA = {
+  diasASumar: 0,
+  hardReset: false,
+  modoAcceso: "",
+  rol: "",
+  groupId: "",
+};
 
-export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
+export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [datosResumen, setDatosResumen] = useState(null);
 
+  
+  // 2. INICIALIZAMOS EL ESTADO
   const [config, setConfig] = useState({
-    telefono: "",
-    diasASumar: 0,
-    resetMovil: false,
-    resetLaptop: false,
-    hardReset: false,
-    modoAcceso: "",
-    rol: "",
-    groupId: "",
+    ...CONFIG_VACIA,
+    telefono: usuario?.telefono || telefonoBuscado || "",
   });
 
+  // 3. EL USEEFFECT MAESTRO
   useEffect(() => {
-    // 1. Si acabamos de guardar con éxito, no tocamos nada para ver el Resumen.
     if (success) return;
-
-    // 2. Si hay un usuario (Edición) o si es nuevo (Registro):
-    // Inicializamos TODO en vacío para obligar al administrador a configurar.
     setConfig({
-      telefono: usuario?.telefono || "", // El teléfono es lo único que mantenemos para saber a quién editamos
-      diasASumar: 0,
-      hardReset: false,
-      modoAcceso: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
-      rol: "", // ⬅️ Forzamos vacío aunque el usuario ya tenga uno
-      groupId: "",
+      ...CONFIG_VACIA,
+      telefono: usuario?.telefono || telefonoBuscado || "",
     });
-
-    // 3. Limpiamos estados de éxito anteriores
     setSuccess(false);
-    setDatosResumen(null);
-  }, [usuario?.id, usuario?.telefono, success]);
+  }, [usuario, telefonoBuscado, success]);
 
+ const aplicarGatilloMaestro = async () => {
+   if (!isValidPhone(config.telefono)) return;
+   setLoading(true);
 
-  const aplicarGatilloMaestro = async () => {
-    if (!isValidPhone(config.telefono)) return;
+   try {
+     const ahora = new Date();
+     let fechaBase =
+       usuario?.suscripcion_vence && new Date(usuario.suscripcion_vence) > ahora
+         ? new Date(usuario.suscripcion_vence)
+         : ahora;
 
-    setLoading(true);
-    try {
-      let infoResumen = { telefono: config.telefono.trim() };
-      let cambios = {};
+     const diasSeleccionados = parseInt(config.diasASumar) || 0;
+     const nuevaFecha = new Date(fechaBase);
+     nuevaFecha.setDate(
+       nuevaFecha.getDate() + (diasSeleccionados + (!usuario?.id ? 7 : 0)),
+     );
 
-      // --- 1. CASO: REGISTRO NUEVO ---
-      if (!usuario?.id) {
-        const fechaVence = new Date();
-        fechaVence.setDate(fechaVence.getDate() + 7); // 7 días de prueba por defecto
+     let infoResumen = { telefono: config.telefono.trim() };
 
-        const nuevoUsuario = {
-          telefono: config.telefono.trim(),
-          rol: config.rol || "Usuario",
-          status: "PENDIENTE",
-          modo_acceso: config.modoAcceso || "solo_movil",
-          suscripcion_vence: fechaVence.toISOString(),
-          grupo_id: config.groupId.trim() || null,
-        };
+     if (!usuario?.id) {
+       // --- 🟢 REGISTRO NUEVO ---
+       const { error } = await supabase.from("usuarios").insert([
+         {
+           telefono: config.telefono.trim(),
+           rol: config.rol || "Usuario",
+           status: "PENDIENTE",
+           modo_acceso: config.modoAcceso || "solo_movil",
+           suscripcion_vence: nuevaFecha.toISOString(),
+           grupo_id: config.groupId || null,
+         },
+       ]);
+       if (error) throw error;
 
-        const { error } = await supabase
-          .from("usuarios")
-          .insert([nuevoUsuario]);
-        if (error) throw error;
+       infoResumen = {
+         ...infoResumen,
+         status: "PENDIENTE",
+         rol: "Usuario",
+         plan: "7 Días",
+       };
+     } else {
+       // --- 🔵 ACTUALIZACIÓN PROTEGIDA ---
+       const cambios = {};
 
-        // Preparamos resumen de bienvenida
-        infoResumen = {
-          ...infoResumen,
-          rol: nuevoUsuario.rol,
-          plan: "7 días (Prueba)",
-          acceso: "Solo móvil",
-          grupo: nuevoUsuario.grupo_id || "Sin grupo",
-        };
-      } else {
-        // --- 2. CASO: ACTUALIZACIÓN (Solo lo modificado) ---
-
-        // A. Cambio de Rol
-        if (config.rol && config.rol !== usuario.rol) {
-          cambios.rol = config.rol;
-          infoResumen.rol = config.rol;
-        }
-
-        // B. Cambio de Modo de Acceso
-        if (config.modoAcceso && config.modoAcceso !== usuario.modo_acceso) {
-          cambios.modo_acceso = config.modoAcceso;
-          infoResumen.acceso = config.modoAcceso;
-        }
-
-        // C. Tiempo (Suscripción)
-        if (config.diasASumar > 0) {
-          const v = new Date(usuario.suscripcion_vence || new Date());
-          v.setDate(v.getDate() + parseInt(config.diasASumar));
-          cambios.suscripcion_vence = v.toISOString();
-          infoResumen.plan = `+ ${config.diasASumar} Días`;
-        }
-
-        // 🆕 Lógica para actualizar Grupo
-        if (config.groupId && config.groupId !== usuario.grupo_id) {
-          cambios.grupo_id = config.groupId.trim();
-          infoResumen.grupo = config.groupId.trim();
-        }
-
-        // D. Hardware & Sesión (HARD RESET)
-        // Se activa si marcaste el checkbox O si hubo cambios arriba (para forzar refresh)
-        if (config.hardReset || Object.keys(cambios).length > 0) {
-          cambios.session_id = null;
-          cambios.login_token = null;
-
-          // Si específicamente es por cambio de equipo (Checkbox), limpiamos IDs físicos
-          if (config.hardReset) {
-            cambios.id_movil = null;
-            cambios.id_laptop = null;
-            infoResumen.hardware = "Reseteo de equipos vinculados";
-          }
-        }
-
-        // Ejecutar Update si hay cambios detectados
-        if (Object.keys(cambios).length > 0) {
-          const { error } = await supabase
-            .from("usuarios")
-            .update(cambios)
-            .eq("id", usuario.id);
-
-          if (error) throw error;
-        } else {
-          infoResumen.status = "SIN CAMBIOS REALIZADOS";
-        }
+       // CLAVE: Solo agregamos al objeto 'cambios' si el valor NO es una cadena vacía
+       if (config.status) {
+         cambios.status = config.status;
+         infoResumen.status = config.status;
+       } else if (parseInt(config.diasASumar) > 0) {
+        // ⚡ SI SUMA DÍAS Y NO ELIGIÓ STATUS, LO ACTIVAMOS AUTOMÁTICAMENTE
+        cambios.status = "ACTIVO";
+        infoResumen.status = "ACTIVO (Auto)";
       }
 
-      // --- 3. FINALIZACIÓN ---
-      setDatosResumen(infoResumen);
-      setSuccess(true);
+       if (config.rol) {
+         cambios.rol = config.rol;
+         infoResumen.rol = config.rol;
+       }
 
-      // Refresco silencioso para que UserCard vea los cambios sin cerrar el Resumen
-      if (onRefresh) onRefresh(null, true);
-    } catch (err) {
-      console.error("Error en Operación:", err.message);
-      alert("Error al procesar: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+       if (config.modoAcceso) {
+         cambios.modo_acceso = config.modoAcceso;
+         infoResumen.acceso = config.modoAcceso;
+       }
+
+       if (config.groupId) {
+         cambios.grupo_id = config.groupId;
+         infoResumen.grupo = config.groupId;
+       }
+
+       // Solo actualizamos la fecha si se seleccionó un plan
+       if (diasSeleccionados > 0) {
+         cambios.suscripcion_vence = nuevaFecha.toISOString();
+         infoResumen.plan = `+${diasSeleccionados} Días`;
+       }
+
+       if (config.hardReset) {
+         cambios.id_movil = null;
+         cambios.id_laptop = null;
+         cambios.login_token = null;
+         cambios.session_id = null;
+         infoResumen.hardware = "RESET REALIZADO";
+       }
+
+       // Solo ejecutamos el update si hay al menos un cambio detectado
+       if (Object.keys(cambios).length > 0) {
+         const { error } = await supabase
+           .from("usuarios")
+           .update(cambios)
+           .eq("id", usuario.id);
+
+         if (error) throw error;
+       } else {
+         // Si no se tocó nada, avisamos en el resumen
+         infoResumen.nota = "No se realizaron cambios";
+       }
+     }
+
+     setDatosResumen(infoResumen);
+     setSuccess(true);
+     if (onRefresh) onRefresh(null, true);
+   } catch (err) {
+     alert("Error: " + err.message);
+   } finally {
+     setLoading(false);
+   }
+ };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -171,23 +164,27 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
           </div>
 
           {!usuario?.id ? (
-            <Section icon={<FaPhoneAlt />} label="NUEVO REGISTRO: TELÉFONO">
+            <Section icon={<FaPhoneAlt />} label="TELÉFONO">
               <input
                 style={styles.input}
-                placeholder="Ej: 51999888777"
                 value={config.telefono}
                 onChange={(e) =>
                   setConfig({
                     ...config,
-                    telefono: e.target.value.replace(/\D/g, ""),
+                    telefono: cleanNumeric(e.target.value),
                   })
                 }
+                placeholder="Código de país + Teléfono"
               />
+              <p
+                style={{ fontSize: "10px", color: "#2d5a27", marginTop: "5px" }}
+              >
+                * Se creará como <b>Usuario</b> con <b>7 días</b> de prueba.
+              </p>
             </Section>
           ) : (
             <>
-              {/* SELECT DE ROL TRANSPARENTE */}
-              <Section icon={<FaShieldAlt />} label="Rol de Usuario">
+              <Section icon={<FaShieldAlt />} label="Rol">
                 <select
                   style={styles.input}
                   value={config.rol}
@@ -201,10 +198,9 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                   <option value="Administrador">Administrador</option>
                 </select>
               </Section>
-
               <Section
                 icon={<BsCalendar2Check />}
-                label="Extender Subscripción"
+                label="Suscripción"
               >
                 <select
                   style={styles.input}
@@ -214,14 +210,11 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                   }
                 >
                   <option value="0">Escoger plan</option>
-                  <option value="7">Periodo de prueba +7 Días</option>
-                  <option value="30">Plan Mensual +30 Días</option>
-                  <option value="60">Plan Bimestral +60 Días</option>
-                  <option value="90">Plan Trimestral +90 Días</option>
-                  <option value="365">Plan Anual +365 Días</option>
+                  <option value="7">+7 Días</option>
+                  <option value="30">+30 Días</option>
+                  <option value="365">+365 Días</option>
                 </select>
               </Section>
-
               <Section icon={<FaUserLock />} label="Modo de Acceso">
                 <select
                   style={styles.input}
@@ -230,7 +223,7 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                     setConfig({ ...config, modoAcceso: e.target.value })
                   }
                 >
-                  <option value="">Escoger modo de acceso</option>
+                  <option value="">Escoger modo</option>
                   <option value="solo_movil">(1 móvil)</option>
                   <option value="solo_laptop">(1 laptop)</option>
                   <option value="sesion_unica">(1 Sesión Única)</option>
@@ -238,34 +231,26 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
                   <option value="libre">Libre</option>
                 </select>
               </Section>
-
               <Section icon={<FaMicrochip />} label="Hardware Reset">
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
-                  <label style={{ ...styles.check, color: "#C62828" }}>
-                    <input
-                      type="checkbox"
-                      checked={config.hardReset}
-                      onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          hardReset: e.target.checked,
-                          resetMovil: false,
-                          resetLaptop: false,
-                        })
-                      }
-                    />{" "}
-                    <b>Hard Reset</b>
-                  </label>
-                </div>
+                <label style={{ ...styles.check, color: "#C62828" }}>
+                  <input
+                    type="checkbox"
+                    checked={config.hardReset}
+                    onChange={(e) =>
+                      setConfig({ ...config, hardReset: e.target.checked })
+                    }
+                  />
+                  <b>Hard Reset</b>
+                </label>
               </Section>
-              <Section icon={<FaUsers />} label="ID de Grupo">
+              <Section icon={<FaUsers />} label="Grupo">
                 <input
                   style={styles.input}
-                  placeholder="Asignar código de grupo..."
                   value={config.groupId}
                   onChange={(e) =>
                     setConfig({ ...config, groupId: e.target.value })
                   }
+                  placeholder="Código de grupo..."
                 />
               </Section>
             </>
@@ -273,7 +258,6 @@ export const ActionCard = ({ usuario, onRefresh, resetPadre }) => {
 
           <BotonPrincipal
             texto={usuario?.id ? "GUARDAR CAMBIOS" : "REGISTRAR USUARIO"}
-            icono={!usuario?.id && <FaUserPlus />}
             onClick={aplicarGatilloMaestro}
             estaCargando={loading}
           />
@@ -303,7 +287,6 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     marginBottom: "1rem",
-    alignItems: "center",
   },
   title: {
     fontSize: "11px",
@@ -318,9 +301,6 @@ const styles = {
     fontSize: "0.7rem",
     fontWeight: "bold",
     cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "4px",
   },
   labelTitle: {
     fontSize: "0.7rem",

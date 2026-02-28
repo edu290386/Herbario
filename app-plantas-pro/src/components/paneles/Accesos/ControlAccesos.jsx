@@ -4,15 +4,13 @@ import { supabase } from "../../../supabaseClient";
 import { UserCard } from "./UserCard";
 import { ActionCard } from "./ActionCard";
 import { StatusBanner } from "../../ui/StatusBanner";
-import { cleanNumeric } from "../../../helpers/textHelper";
+import { cleanNumeric, isValidPhone } from "../../../helpers/textHelper"; // Ajustado a tus helpers
 import { formatearFechaLocal } from "../../../helpers/timeHelper";
-import { isValidPhone } from "../../../helpers/textHelper";
 
 export const ControlAccesos = () => {
   const [telefonoBusqueda, setTelefonoBusqueda] = useState("");
   const [usuarioEncontrado, setUsuarioEncontrado] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [telefonoRegistro, setTelefonoRegistro] = useState("");
 
   const [statusBusqueda, setStatusBusqueda] = useState({
     mostrar: true,
@@ -28,19 +26,16 @@ export const ControlAccesos = () => {
   const buscarUsuario = async (e, silencioso = false) => {
     if (e && e.preventDefault) e.preventDefault();
 
-    // 1. Validar que no esté vacío
-    if (!telefonoBusqueda) return;
-    // Solo limpiamos si NO es un refresco (es una búsqueda nueva)
-    if (!silencioso) {
+    const numLimpio = cleanNumeric(telefonoBusqueda);
+    if (!numLimpio) return;
+
+    if (!silencioso) setUsuarioEncontrado(null);
+
+    if (!isValidPhone(numLimpio)) {
       setUsuarioEncontrado(null);
-    }
-    // 2. Validación de seguridad (Longitud y Formato)
-    if (!isValidPhone(telefonoBusqueda)) {
-      setUsuarioEncontrado(null); // Limpiamos cualquier resultado previo
       setStatusBusqueda({
         mostrar: true,
-        mensaje:
-          "Número telefónico no válido. Comunicarse con el administrador.",
+        mensaje: "Número telefónico no válido. Formato incorrecto.",
         tipo: "error",
       });
       return;
@@ -51,7 +46,7 @@ export const ControlAccesos = () => {
       const { data: usuario, error: errorUser } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("telefono", telefonoBusqueda.trim())
+        .eq("telefono", numLimpio)
         .maybeSingle();
 
       if (errorUser) throw errorUser;
@@ -88,7 +83,7 @@ export const ControlAccesos = () => {
     } finally {
       setLoading(false);
     }
-  };;
+  };
 
   return (
     <div style={styles.container}>
@@ -119,7 +114,7 @@ export const ControlAccesos = () => {
         </div>
       )}
 
-      {/* 3. VISOR DE DATOS (UserCard) */}
+      {/* 3. VISOR DE DATOS */}
       {(usuarioEncontrado || statusBusqueda.tipo === "warning") && (
         <UserCard
           usuario={
@@ -127,14 +122,14 @@ export const ControlAccesos = () => {
               nombre: "NUEVO",
               apellido: "REGISTRO",
               rol: "Sin Asignar",
-              status: "PENDIENTE",
-              telefono: telefonoRegistro || telefonoBusqueda,
+              status: "SUSPENDIDO",
+              telefono: telefonoBusqueda, // Eliminamos la dependencia de telefonoRegistro
               nombre_grupo_format: "Sin Asignar",
               suscripcion_vence: null,
             }
           }
-          getBadgeStyle={getBadgeStyle} // CRÍTICO: Se pasa la función
-          getIconStyle={getIconStyle} // CRÍTICO: Se pasa la función
+          getBadgeStyle={getBadgeStyle}
+          getIconStyle={getIconStyle}
           formatearFecha={formatearFechaLocal}
           copiarAlPortapapeles={copiarAlPortapapeles}
         />
@@ -142,22 +137,15 @@ export const ControlAccesos = () => {
 
       {/* 4. PANEL DE ACCIÓN */}
       {(usuarioEncontrado || statusBusqueda.tipo === "warning") && (
-        <div
-          style={{
-            opacity: loading ? 0.7 : 1,
-            pointerEvents: loading ? "none" : "auto",
-            marginTop: "1rem",
-          }}
-        >
+        <div style={{ opacity: loading ? 0.7 : 1, marginTop: "1rem" }}>
           <ActionCard
             usuario={usuarioEncontrado}
             telefonoBuscado={telefonoBusqueda}
             onRefresh={buscarUsuario}
-            onTelefonoChange={setTelefonoRegistro}
+            // Ya no pasamos onTelefonoChange porque no usaremos el estado duplicado
             resetPadre={() => {
               setUsuarioEncontrado(null);
               setTelefonoBusqueda("");
-              setTelefonoRegistro("");
               setStatusBusqueda({
                 mostrar: true,
                 mensaje:
@@ -173,10 +161,32 @@ export const ControlAccesos = () => {
 };
 
 const getBadgeStyle = (status, dias) => {
-  const base = { padding: "4px 12px", borderRadius: "12px", fontSize: "11px", fontWeight: "bold" };
-  if (status === "SUSPENDIDO" || dias <= 0) return { ...base, backgroundColor: "#FDECEA", color: "#C62828", border: "1px solid #C62828" };
-  if (status === "PENDIENTE") return { ...base, backgroundColor: "#FFF8E1", color: "#F57F17", border: "1px solid #F57F17" };
-  return { ...base, backgroundColor: "#F0F4F1", color: "#2D5A27", border: "1px solid #2D5A27" };
+  const base = {
+    padding: "4px 12px",
+    borderRadius: "12px",
+    fontSize: "11px",
+    fontWeight: "bold",
+  };
+  if (status === "SUSPENDIDO" || (dias !== null && dias <= 0))
+    return {
+      ...base,
+      backgroundColor: "#FDECEA",
+      color: "#C62828",
+      border: "1px solid #C62828",
+    };
+  if (status === "PENDIENTE")
+    return {
+      ...base,
+      backgroundColor: "#FFF8E1",
+      color: "#F57F17",
+      border: "1px solid #F57F17",
+    };
+  return {
+    ...base,
+    backgroundColor: "#F0F4F1",
+    color: "#2D5A27",
+    border: "1px solid #2D5A27",
+  };
 };
 
 const getIconStyle = (isActive) => ({
@@ -189,8 +199,23 @@ const getIconStyle = (isActive) => ({
 const styles = {
   container: { padding: "10px", maxWidth: "500px", margin: "0 auto" },
   searchSection: { marginBottom: "1.2rem" },
-  searchWrapper: { display: "flex", alignItems: "center", background: "#FFF", borderRadius: "12px", padding: "0.5rem 1rem", border: "1px solid rgba(0,0,0,0.1)" },
+  searchWrapper: {
+    display: "flex",
+    alignItems: "center",
+    background: "#FFF",
+    borderRadius: "12px",
+    padding: "0.5rem 1rem",
+    border: "1px solid rgba(0,0,0,0.1)",
+  },
   searchIcon: { color: "#2D5A27", marginRight: "0.8rem" },
   searchInput: { border: "none", outline: "none", flex: 1, fontSize: "16px" },
-  btnOk: { backgroundColor: "#2D5A27", color: "white", border: "none", padding: "8px 20px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" },
+  btnOk: {
+    backgroundColor: "#2D5A27",
+    color: "white",
+    border: "none",
+    padding: "8px 20px",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
 };

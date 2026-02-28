@@ -1,25 +1,28 @@
 import { supabase } from "../../../supabaseClient";
 
 export const getDashboardStats = async (userId, grupoId) => {
-  // 1. Validación inicial
-  if (!userId || !grupoId || grupoId === "undefined") {
-    console.warn("⚠️ getDashboardStats: Faltan IDs válidos.");
+  // 1. Validación mínima: El userId es obligatorio
+  if (!userId) {
+    console.warn("⚠️ getDashboardStats: Falta el ID de usuario.");
     return null;
   }
 
   try {
-    // 2. Obtener todos los miembros del grupo para saber el total grupal
-    const { data: miembros, error: errM } = await supabase
-      .from("usuarios")
-      .select("id")
-      .eq("grupo_id", grupoId);
+    let idsGrupo = [userId];
 
-    if (errM) throw errM;
-    if (!miembros || miembros.length === 0) return null;
+    // 2. Lógica de Miembros: Solo buscamos si existe un grupo real
+    if (grupoId && grupoId !== "undefined" && grupoId !== "null") {
+      const { data: miembros, error: errM } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("grupo_id", grupoId);
 
-    const idsGrupo = miembros.map((m) => m.id);
+      if (!errM && miembros && miembros.length > 0) {
+        idsGrupo = miembros.map((m) => m.id);
+      }
+    }
 
-    // 3. Traer los registros (ubicaciones) de todo el grupo
+    // 3. Traer los registros (ubicaciones) de los IDs seleccionados
     const { data: ubicaciones, error: errU } = await supabase
       .from("ubicaciones")
       .select("created_at, usuario_id")
@@ -28,7 +31,7 @@ export const getDashboardStats = async (userId, grupoId) => {
     if (errU) throw errU;
     const ubi = ubicaciones || [];
 
-    // --- LÓGICA DE TIEMPO (Milisegundos para evitar errores de zona horaria) ---
+    // --- LÓGICA DE TIEMPO ---
     const ahora = new Date();
     const hoyMs = new Date(
       ahora.getFullYear(),
@@ -44,20 +47,26 @@ export const getDashboardStats = async (userId, grupoId) => {
       lista.filter((u) => new Date(u.created_at).getTime() >= desdeMs).length;
 
     // Separamos registros del usuario actual
-    const mías = ubi.filter((u) => u.usuario_id === userId);
+    const mias = ubi.filter((u) => u.usuario_id === userId);
 
     // --- CÁLCULO DE PARTICIPACIÓN ---
     const totalGrupo = ubi.length;
-    const totalMio = mías.length;
-    const porcentaje =
-      totalGrupo > 0 ? Math.round((totalMio / totalGrupo) * 100) : 0;
+    const totalMio = mias.length;
+
+    // Si no hay grupo, la participación es siempre 100%
+    const tieneGrupo = grupoId && grupoId !== "undefined";
+    const porcentaje = tieneGrupo
+      ? totalGrupo > 0
+        ? Math.round((totalMio / totalGrupo) * 100)
+        : 0
+      : 100;
 
     return {
       individual: {
-        hoy: filtrar(mías, hoyMs),
-        semana: filtrar(mías, hoyMs - unaSemana),
-        mes: filtrar(mías, hoyMs - unMes),
-        año: filtrar(mías, hoyMs - unAño),
+        hoy: filtrar(mias, hoyMs),
+        semana: filtrar(mias, hoyMs - unaSemana),
+        mes: filtrar(mias, hoyMs - unMes),
+        año: filtrar(mias, hoyMs - unAño),
         total: totalMio,
       },
       grupal: {
@@ -69,7 +78,9 @@ export const getDashboardStats = async (userId, grupoId) => {
       },
       participacion: {
         porcentaje: porcentaje,
-        texto: `${totalMio} de ${totalGrupo} registros`,
+        texto: tieneGrupo
+          ? `${totalMio} de ${totalGrupo} registros`
+          : `${totalMio} registros totales`,
       },
     };
   } catch (err) {

@@ -1,0 +1,60 @@
+.oz-login-main {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  padding: 60px 20px;
+  box-sizing: border-box;
+}
+
+.oz-glass-card {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(15px);
+  border-radius: 35px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+}
+
+.oz-brand { text-align: center; margin-bottom: 30px; }
+.oz-brand h1 { color: #1b4332; font-size: 1.7rem; margin: 12px 0 0; font-weight: 900; }
+.oz-logo { color: #2d6a4f; animation: oz-spin 25s linear infinite; }
+
+.oz-nav-tabs {
+  display: flex;
+  margin-bottom: 35px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.oz-nav-tabs button {
+  flex: 1; border: none; background: none; padding: 16px;
+  font-weight: 800; font-size: 0.85rem; color: #94a3b8; cursor: pointer;
+}
+
+.oz-nav-tabs button.active {
+  color: #2d6a4f;
+  border-bottom: 2px solid #2d6a4f;
+  margin-bottom: -2px;
+}
+
+.oz-form-body { display: flex; flex-direction: column; gap: 22px; }
+.oz-field { display: flex; flex-direction: column; gap: 8px; }
+.oz-field label { font-size: 0.7rem; font-weight: 800; color: #475569; display: flex; align-items: center; gap: 8px; }
+.oz-field input { padding: 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 1rem; outline: none; }
+
+.oz-input-wrapper { position: relative; display: flex; align-items: center; }
+.oz-input-wrapper input { width: 100%; padding-right: 55px; }
+.oz-eye { position: absolute; right: 15px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.4rem; padding: 5px; }
+
+.oz-footer { margin-top: 50px; text-align: center; color: #94a3b8; font-size: 0.8rem; }
+.oz-line { height: 1px; background: #e2e8f0; margin-bottom: 30px; }
+
+@keyframes oz-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.oz-animate { animation: oz-fade 0.4s ease-out; }
+@keyframes oz-fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

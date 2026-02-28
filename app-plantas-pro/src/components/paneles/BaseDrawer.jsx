@@ -108,7 +108,7 @@ export const BaseDrawer = ({
         .drawer-body {
           flex: 1;
           overflow-y: auto;
-          padding: 20px 0;
+          padding: 20px 0px 20px 0px;
           /* Evita rebotes raros en iOS */
           overscroll-behavior: contain; 
           -webkit-overflow-scrolling: touch;
