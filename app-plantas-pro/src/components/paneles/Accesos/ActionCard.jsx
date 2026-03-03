@@ -3,7 +3,6 @@ import {
   FaEraser,
   FaPhoneAlt,
   FaUsers,
-  FaUserPlus,
   FaMicrochip,
   FaUserLock,
   FaShieldAlt,
@@ -22,12 +21,16 @@ const CONFIG_VACIA = {
   groupId: "",
 };
 
-export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) => {
+export const ActionCard = ({
+  usuario,
+  telefonoBuscado,
+  onRefresh,
+  resetPadre,
+}) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [datosResumen, setDatosResumen] = useState(null);
 
-  
   // 2. INICIALIZAMOS EL ESTADO
   const [config, setConfig] = useState({
     ...CONFIG_VACIA,
@@ -44,111 +47,112 @@ export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) 
     setSuccess(false);
   }, [usuario, telefonoBuscado, success]);
 
- const aplicarGatilloMaestro = async () => {
-   if (!isValidPhone(config.telefono)) return;
-   setLoading(true);
+  const aplicarGatilloMaestro = async () => {
+    if (!isValidPhone(config.telefono)) return;
+    setLoading(true);
 
-   try {
-     const ahora = new Date();
-     let fechaBase =
-       usuario?.suscripcion_vence && new Date(usuario.suscripcion_vence) > ahora
-         ? new Date(usuario.suscripcion_vence)
-         : ahora;
+    try {
+      const ahora = new Date();
+      // Lógica de acumulativo: Si ya estaba vencido, partimos de ahora. Si le quedaba saldo, partimos de su vencimiento
+      let fechaBase =
+        usuario?.suscripcion_vence &&
+        new Date(usuario.suscripcion_vence) > ahora
+          ? new Date(usuario.suscripcion_vence)
+          : ahora;
 
-     const diasSeleccionados = parseInt(config.diasASumar) || 0;
-     const nuevaFecha = new Date(fechaBase);
-     nuevaFecha.setDate(
-       nuevaFecha.getDate() + (diasSeleccionados + (!usuario?.id ? 7 : 0)),
-     );
+      const diasSeleccionados = parseInt(config.diasASumar) || 0;
+      let infoResumen = { telefono: config.telefono.trim() };
 
-     let infoResumen = { telefono: config.telefono.trim() };
+      if (!usuario?.id) {
+        // --- 🟢 REGISTRO NUEVO ESTRICTO (Ignora los selectores del admin) ---
+        const nuevaFechaTrial = new Date(ahora);
+        nuevaFechaTrial.setDate(nuevaFechaTrial.getDate() + 7);
 
-     if (!usuario?.id) {
-       // --- 🟢 REGISTRO NUEVO ---
-       const { error } = await supabase.from("usuarios").insert([
-         {
-           telefono: config.telefono.trim(),
-           rol: config.rol || "Usuario",
-           status: "PENDIENTE",
-           modo_acceso: config.modoAcceso || "solo_movil",
-           suscripcion_vence: nuevaFecha.toISOString(),
-           grupo_id: config.groupId || null,
-         },
-       ]);
-       if (error) throw error;
+        const { error } = await supabase.from("usuarios").insert([
+          {
+            telefono: config.telefono.trim(),
+            rol: "Usuario",
+            status: "PENDIENTE",
+            modo_acceso: "solo_movil",
+            suscripcion_vence: nuevaFechaTrial.toISOString(),
+            grupo_id: null,
+          },
+        ]);
+        if (error) throw error;
 
-       infoResumen = {
-         ...infoResumen,
-         status: "PENDIENTE",
-         rol: "Usuario",
-         plan: "7 Días",
-       };
-     } else {
-       // --- 🔵 ACTUALIZACIÓN PROTEGIDA ---
-       const cambios = {};
+        infoResumen = {
+          ...infoResumen,
+          status: "PENDIENTE",
+          rol: "Usuario",
+          acceso: "solo_movil",
+          plan: "7 Días (Trial Gratuito)",
+        };
+      } else {
+        // --- 🔵 ACTUALIZACIÓN PROTEGIDA Y LIBRE ---
+        const cambios = {};
+        const nuevaFechaRenovacion = new Date(fechaBase);
 
-       // CLAVE: Solo agregamos al objeto 'cambios' si el valor NO es una cadena vacía
-       if (config.status) {
-         cambios.status = config.status;
-         infoResumen.status = config.status;
-       } else if (parseInt(config.diasASumar) > 0) {
-        // ⚡ SI SUMA DÍAS Y NO ELIGIÓ STATUS, LO ACTIVAMOS AUTOMÁTICAMENTE
-        cambios.status = "ACTIVO";
-        infoResumen.status = "ACTIVO (Auto)";
+        // 1. Renovación de Plan (Fuerza a ACTIVO)
+        if (diasSeleccionados > 0) {
+          nuevaFechaRenovacion.setDate(
+            nuevaFechaRenovacion.getDate() + diasSeleccionados,
+          );
+          cambios.suscripcion_vence = nuevaFechaRenovacion.toISOString();
+
+          // Solo si no estamos forzando un BLOQUEO manual, reactivamos la cuenta
+          if (usuario.status !== "BLOQUEADO") {
+            cambios.status = "ACTIVO";
+            infoResumen.status = "ACTIVO";
+          }
+          infoResumen.plan = `+${diasSeleccionados} Días`;
+        }
+
+        // 2. Edición Libre (Solo manda a DB si el admin escogió algo específico)
+        if (config.rol !== "") {
+          cambios.rol = config.rol;
+          infoResumen.rol = config.rol;
+        }
+
+        if (config.modoAcceso !== "") {
+          cambios.modo_acceso = config.modoAcceso;
+          infoResumen.acceso = config.modoAcceso;
+        }
+
+        if (config.groupId !== "") {
+          cambios.grupo_id = config.groupId;
+          infoResumen.grupo = config.groupId;
+        }
+
+        if (config.hardReset) {
+          cambios.id_movil = null;
+          cambios.id_laptop = null;
+          cambios.login_token = null;
+          cambios.session_id = null;
+          infoResumen.hardware = "RESET REALIZADO";
+        }
+
+        // Solo ejecutamos el update si hay al menos un cambio detectado
+        if (Object.keys(cambios).length > 0) {
+          const { error } = await supabase
+            .from("usuarios")
+            .update(cambios)
+            .eq("id", usuario.id);
+
+          if (error) throw error;
+        } else {
+          infoResumen.nota = "No se realizaron cambios en el perfil";
+        }
       }
 
-       if (config.rol) {
-         cambios.rol = config.rol;
-         infoResumen.rol = config.rol;
-       }
-
-       if (config.modoAcceso) {
-         cambios.modo_acceso = config.modoAcceso;
-         infoResumen.acceso = config.modoAcceso;
-       }
-
-       if (config.groupId) {
-         cambios.grupo_id = config.groupId;
-         infoResumen.grupo = config.groupId;
-       }
-
-       // Solo actualizamos la fecha si se seleccionó un plan
-       if (diasSeleccionados > 0) {
-         cambios.suscripcion_vence = nuevaFecha.toISOString();
-         infoResumen.plan = `+${diasSeleccionados} Días`;
-       }
-
-       if (config.hardReset) {
-         cambios.id_movil = null;
-         cambios.id_laptop = null;
-         cambios.login_token = null;
-         cambios.session_id = null;
-         infoResumen.hardware = "RESET REALIZADO";
-       }
-
-       // Solo ejecutamos el update si hay al menos un cambio detectado
-       if (Object.keys(cambios).length > 0) {
-         const { error } = await supabase
-           .from("usuarios")
-           .update(cambios)
-           .eq("id", usuario.id);
-
-         if (error) throw error;
-       } else {
-         // Si no se tocó nada, avisamos en el resumen
-         infoResumen.nota = "No se realizaron cambios";
-       }
-     }
-
-     setDatosResumen(infoResumen);
-     setSuccess(true);
-     if (onRefresh) onRefresh(null, true);
-   } catch (err) {
-     alert("Error: " + err.message);
-   } finally {
-     setLoading(false);
-   }
- };
+      setDatosResumen(infoResumen);
+      setSuccess(true);
+      if (onRefresh) onRefresh(null, true);
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -179,7 +183,8 @@ export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) 
               <p
                 style={{ fontSize: "10px", color: "#2d5a27", marginTop: "5px" }}
               >
-                * Se creará como <b>Usuario</b> con <b>7 días</b> de prueba.
+                * Se creará como <b>Usuario</b> con <b>7 días</b> de prueba,
+                solo móvil y sin grupo de forma automática.
               </p>
             </Section>
           ) : (
@@ -198,10 +203,7 @@ export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) 
                   <option value="Administrador">Administrador</option>
                 </select>
               </Section>
-              <Section
-                icon={<BsCalendar2Check />}
-                label="Suscripción"
-              >
+              <Section icon={<BsCalendar2Check />} label="Suscripción">
                 <select
                   style={styles.input}
                   value={config.diasASumar}
@@ -210,9 +212,12 @@ export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) 
                   }
                 >
                   <option value="0">Escoger plan</option>
-                  <option value="7">+7 Días</option>
-                  <option value="30">+30 Días</option>
-                  <option value="365">+365 Días</option>
+                  <option value="7">Plan de prueba +7 días</option>
+                  <option value="30">Plan Mensual +30 días</option>
+                  <option value="60">Plan Bimestral +60 días</option>
+                  <option value="90">Plan Trimestral +90 días</option>
+                  <option value="180">Plan Semetral +180 días</option>
+                  <option value="365">Plan Anual +365 días</option>
                 </select>
               </Section>
               <Section icon={<FaUserLock />} label="Modo de Acceso">
@@ -250,14 +255,16 @@ export const ActionCard = ({ usuario, telefonoBuscado, onRefresh, resetPadre }) 
                   onChange={(e) =>
                     setConfig({ ...config, groupId: e.target.value })
                   }
-                  placeholder="Código de grupo..."
+                  placeholder="Dejar vacío si no se cambia..."
                 />
               </Section>
             </>
           )}
 
           <BotonPrincipal
-            texto={usuario?.id ? "GUARDAR CAMBIOS" : "REGISTRAR USUARIO"}
+            texto={
+              usuario?.id ? "GUARDAR CAMBIOS" : "REGISTRAR USUARIO (TRIAL)"
+            }
             onClick={aplicarGatilloMaestro}
             estaCargando={loading}
           />

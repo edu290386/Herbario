@@ -1,6 +1,7 @@
 import { TbCloverFilled } from "react-icons/tb";
 import { FaRegCopyright } from "react-icons/fa";
 import { colores } from "../../constants/tema";
+import { appConfig } from "../../constants/appConfig"; // 👈 1. Importas tu configuración
 
 export const Spinner = ({ mensaje = "" }) => {
   const year = new Date().getFullYear();
@@ -8,14 +9,23 @@ export const Spinner = ({ mensaje = "" }) => {
   return (
     <div style={styles.loadingContainer}>
       <div style={styles.loadingContent}>
+        {/* El trébol gigante que gira */}
         <TbCloverFilled style={styles.spinner} />
 
         <div style={styles.copyrightContainer}>
-          <p style={styles.empresaText}>Ile Merin Adde SAC</p>
+          {/* 👈 2. Usas el nombre de la empresa centralizado */}
+          <p style={styles.empresaText}>{appConfig.empresa}</p>
+
           <p style={styles.derechosText}>
             <FaRegCopyright color={colores.bosque} /> {year} • Todos los
             derechos reservados
           </p>
+
+          {/* 👈 3. Agregas la versión para que haga juego con el Footer */}
+          <p style={styles.versionText}>
+            {appConfig.nombreApp} {appConfig.version}
+          </p>
+
           {/* Opcional: un pequeño texto dinámico debajo */}
           <p style={styles.mensaje}>{mensaje}</p>
         </div>
@@ -86,6 +96,13 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     gap: "5px",
+  },
+  versionText: {
+    // 👈 Estilo nuevo para la versión
+    fontSize: "11px",
+    color: "#9CA3AF",
+    margin: "3px 0 0 0",
+    fontWeight: "600",
   },
   mensaje: {
     fontSize: "13px",

@@ -11,6 +11,7 @@ import {
 } from "react-icons/tb";
 import { BotonPrincipal } from "../components/ui/BotonPrincipal";
 import { StatusBanner } from "../components/ui/StatusBanner";
+import { Copyright } from "../components/ui/Copyright"; // 👈 1. IMPORTAS TU COMPONENTE
 import fondoOzain from "../assets/fondoLogin.jpg";
 import "./LoginStyles.css";
 
@@ -55,7 +56,6 @@ export const LoginFormView = ({
           </button>
         </nav>
 
-        {/* CONTENEDOR DE BANNER CON MARGEN CORREGIDO */}
         {banner.msj && (
           <div style={{ marginBottom: "25px" }}>
             <StatusBanner status={banner.tipo} message={banner.msj} />
@@ -186,10 +186,9 @@ export const LoginFormView = ({
         </form>
 
         <footer className="oz-footer">
-          <div className="oz-line" />
-          <p className="oz-corp">
-            © 2026 <b>Ile Merin Adde SAC</b>
-          </p>
+          <div className="oz-line" style={{ marginBottom: "15px" }} />
+          {/* 👈 2. REEMPLAZAS EL TEXTO FIJO POR EL COMPONENTE */}
+          <Copyright colorTexto="#666" colorTrébol="var(--color-frondoso)" />
         </footer>
       </div>
     </div>

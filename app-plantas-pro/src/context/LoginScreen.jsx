@@ -60,6 +60,16 @@ export const LoginScreen = () => {
         return;
       }
 
+      // 🚨 EL CANDADO MAESTRO DE SEGURIDAD
+      // Si está bloqueado, lo rebotamos aquí mismo. Ni siquiera le decimos si la contraseña era correcta.
+      if (usuario.status?.toUpperCase() === "BLOQUEADO") {
+        setBanner({
+          tipo: "error",
+          msj: "Acceso denegado. Esta cuenta se encuentra inhabilitada.",
+        });
+        return; // Cortamos la ejecución, nunca llega a iniciarSesionSegura
+      }
+
       if (modo === "login") {
         // --- LÓGICA LOGIN ---
         if (usuario.password !== form.password) {
@@ -80,9 +90,12 @@ export const LoginScreen = () => {
         await cargarPlantasHome();
         setTimeout(() => login(userUpd), 800);
       } else {
-        // --- LÓGICA ACTIVACIÓN (EL ARREGLO ESTÁ AQUÍ) ---
+        // --- LÓGICA ACTIVACIÓN ---
         if (usuario.status !== "PENDIENTE") {
-          setBanner({ tipo: "info", msj: "La cuenta ya está activa." });
+          setBanner({
+            tipo: "info",
+            msj: "La cuenta ya está activa o procesada.",
+          });
           setModo("login");
           return;
         }
@@ -100,7 +113,7 @@ export const LoginScreen = () => {
 
         setCargando(true);
 
-        // HACEMOS EL UPDATE DIRECTO PARA EVITAR QUE OTRO SERVICIO NOS CAMBIE LA FECHA
+        // HACEMOS EL UPDATE DIRECTO
         const { error: regErr } = await supabase
           .from("usuarios")
           .update({

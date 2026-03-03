@@ -232,8 +232,8 @@ export const getLogs = async (panelType) => {
   }
 
   if (panelType === "gestion") {
-    const fecha7 = new Date();
-    fecha7.setDate(fecha7.getDate() - 7);
+    const fecha30 = new Date();
+    fecha30.setDate(fecha30.getDate() - 30);
     const { data, error } = await query
       .in("tipo_accion", [
         "nueva_imagen",
@@ -244,7 +244,7 @@ export const getLogs = async (panelType) => {
         "imagen_aprobada",
       ])
       .or(
-        `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${fecha7.toISOString()})`,
+        `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${fecha30.toISOString()})`,
       );
     return { data: data || [], error };
   }

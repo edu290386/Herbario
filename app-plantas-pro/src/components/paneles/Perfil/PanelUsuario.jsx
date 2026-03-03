@@ -16,6 +16,7 @@ import { BsCalendar2Check } from "react-icons/bs";
 import { getDashboardStats } from "./getDashboardStats";
 import { AuthContext } from "../../../context/AuthContext";
 import { formatearFechaLocal } from "../../../helpers/timeHelper";
+import { Copyright } from "../../ui/Copyright"; // 👈 1. IMPORTAMOS EL COMPONENTE (Ajusta la ruta si es necesario)
 import "./PanelUsuario.css";
 
 export const PanelUsuario = ({ user }) => {
@@ -68,7 +69,8 @@ export const PanelUsuario = ({ user }) => {
   const estilos = getEstilosSuscripcion(diasRestantes);
 
   if (loading && !user) return <div className="loader-msg">Cargando...</div>;
-console.log(user)
+  console.log(user);
+
   return (
     <div className="panel-custom-font">
       <div className="panel-container">
@@ -91,7 +93,7 @@ console.log(user)
           </div>
         </div>
 
-        {/* ESTADÍSTICAS: Adaptables si hay grupo o no */}
+        {/* ESTADÍSTICAS */}
         {stats && (
           <div className="card-mirror">
             <h3 className="section-title-v3">
@@ -102,7 +104,6 @@ console.log(user)
               <div
                 className="donut-chart-v3"
                 style={{
-                  // Si no hay grupo, el aporte es 100% (360deg)
                   background: `conic-gradient(#2d6a4f ${
                     (user?.grupo_id ? stats.participacion.porcentaje : 100) *
                     3.6
@@ -164,7 +165,9 @@ console.log(user)
             <DetailItem
               icon={<FaLayerGroup />}
               label="Grupo"
-              value={user?.grupos.nombre_grupo || user?.grupo_id || "Uso Individual"}
+              value={
+                user?.grupos?.nombre_grupo || user?.grupo_id || "Uso Individual"
+              }
             />
             <DetailItem
               icon={<FaClock />}
@@ -215,6 +218,11 @@ console.log(user)
               active={!!user?.id_laptop}
             />
           </div>
+        </div>
+
+        {/* 👈 2. AGREGAMOS EL COPYRIGHT AL FINAL DEL PANEL */}
+        <div style={{ marginTop: "15px", paddingBottom: "20px", opacity: 0.8 }}>
+          <Copyright colorTexto="#6B7280" />
         </div>
       </div>
     </div>

@@ -160,32 +160,43 @@ export const ControlAccesos = () => {
   );
 };
 
-const getBadgeStyle = (status, dias) => {
-  const base = {
-    padding: "4px 12px",
-    borderRadius: "12px",
-    fontSize: "11px",
-    fontWeight: "bold",
-  };
-  if (status === "SUSPENDIDO" || (dias !== null && dias <= 0))
-    return {
-      ...base,
-      backgroundColor: "#FDECEA",
-      color: "#C62828",
-      border: "1px solid #C62828",
-    };
-  if (status === "PENDIENTE")
-    return {
-      ...base,
-      backgroundColor: "#FFF8E1",
-      color: "#F57F17",
-      border: "1px solid #F57F17",
-    };
+const getBadgeStyle = (status) => {
+  let bg, color, border;
+
+  switch (status) {
+    case "BLOQUEADO":
+      bg = "#fee2e2";
+      color = "#dc2626";
+      border = "#f87171"; // Rojo
+      break;
+    case "ACTIVO":
+      bg = "#dcfce7";
+      color = "#15803d";
+      border = "#4ade80"; // Verde
+      break;
+    case "PENDIENTE":
+      bg = "#e0f2fe";
+      color = "#0369a1";
+      border = "#38bdf8"; // Azul
+      break;
+    case "SUSPENDIDO":
+    default:
+      bg = "#fef9c3";
+      color = "#a16207";
+      border = "#facc15"; // Amarillo
+      break;
+  }
+
   return {
-    ...base,
-    backgroundColor: "#F0F4F1",
-    color: "#2D5A27",
-    border: "1px solid #2D5A27",
+    backgroundColor: bg,
+    color: color,
+    border: `1px solid ${border}`,
+    padding: "4px 12px",
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: "800",
+    letterSpacing: "0.5px",
+    display: "inline-block",
   };
 };
 

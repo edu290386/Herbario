@@ -23,13 +23,21 @@ export const VigilanteDeSesion = ({ children }) => {
       );
 
       if (esRutaCritica) {
+        // 🚨 1. REGLA SUPREMA: EL MARTILLO DE BANEO
+        // Si está bloqueado, lo destruimos ANTES de mirar sus fechas
+        if (user.status === "BLOQUEADO") {
+          console.log("⛔ Usuario BLOQUEADO. Expulsando...");
+          logout();
+          navigate("/login");
+          return; // 👈 Este return evita que el código siga y lo auto-active
+        }
+
         const ahora = new Date();
         const vencimiento = new Date(user.suscripcion_vence);
 
-        // --- 1. LÓGICA DE AUTO-REPARACIÓN (Vencimiento manda) ---
-
-        // Caso A: TIENE TIEMPO pero el status dice SUSPENDIDO -> Reactivamos
-        if (vencimiento > ahora && user.status !== "ACTIVO") {
+        // --- 2. LÓGICA DE AUTO-REPARACIÓN ---
+        // ✅ CORRECCIÓN: Solo curamos a los SUSPENDIDOS. Jamás usamos "!== ACTIVO"
+        if (vencimiento > ahora && user.status === "SUSPENDIDO") {
           console.log(
             "♻️ Vigilante: Días válidos detectados. Reactivando status...",
           );
@@ -38,8 +46,6 @@ export const VigilanteDeSesion = ({ children }) => {
               .from("usuarios")
               .update({ status: "ACTIVO" })
               .eq("id", user.id);
-
-            // Forzamos la actualización del estado global de la app
             await verificarSesion();
             return;
           } catch (e) {
@@ -48,31 +54,25 @@ export const VigilanteDeSesion = ({ children }) => {
         }
 
         // Caso B: NO TIENE TIEMPO pero el status dice ACTIVO -> Suspendemos
-        if (vencimiento <= ahora && user.status !== "SUSPENDIDO") {
-          console.log(
-            "⚠️ Vigilante: Suscripción vencida. Cambiando a SUSPENDIDO...",
-          );
+        if (vencimiento <= ahora && user.status === "ACTIVO") {
           try {
             await supabase
               .from("usuarios")
               .update({ status: "SUSPENDIDO" })
               .eq("id", user.id);
-
             await verificarSesion();
-          } catch (e) {
-            console.error("Error al auto-suspender:", e);
-          }
+          } catch (e) {console.error(e)}
           navigate("/perfil");
           return;
         }
 
-        // --- 2. VALIDACIÓN FINAL DE ACCESO ---
-        if (user.status === "SUSPENDIDO" || user.status === "PENDIENTE") {
+        // --- 3. VALIDACIÓN FINAL DE ACCESO ---
+        if (user.status === "SUSPENDIDO") {
           navigate("/perfil");
           return;
         }
 
-        // --- 3. INTEGRIDAD DE HARDWARE ---
+        // --- 4. INTEGRIDAD DE HARDWARE ---
         const esValido = await verificarSesion();
         if (!esValido) {
           logout();
