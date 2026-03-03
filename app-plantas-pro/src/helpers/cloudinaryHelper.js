@@ -36,28 +36,35 @@ export const uploadImage = async (file, path) => {
  * Transforma la URL de Cloudinary de forma segura
  */
 export const transformarImagen = (url, modo = "card") => {
-  // 1. SEGURO TOTAL: Si no es un string, devolvemos vacío y evitamos el crash
   if (!url || typeof url !== "string") return "";
-
-  // 2. SEGURO DE FORMATO: Si la URL no es de Cloudinary, la devolvemos tal cual
   if (!url.includes("/upload/")) return url;
 
   try {
-    // CONFIGURACIÓN PARA DETALLE (CARRUSEL)
-    if (modo === "detalle") {
+    // --- NUEVAS ESTRATEGIAS PARA DETALLE ---
+
+    // 1. VISOR BASE: Buena calidad, peso controlado (aprox w_800)
+    if (modo === "detalle_base") {
+      return url.replace(
+        "/upload/",
+        "/upload/ar_3:4,c_fill,g_auto,w_800,f_auto,q_auto/",
+      );
+    }
+
+    // 2. ZOOM EXPLÍCITO: Alta calidad solo bajo demanda (aprox w_1200)
+    if (modo === "detalle_zoom") {
       return url.replace(
         "/upload/",
         "/upload/ar_3:4,c_fill,g_auto,w_1200,f_auto,q_auto/",
       );
     }
 
-    // CONFIGURACIÓN PARA HOME (LISTADO)
+    // --- ESTRATEGIAS EXISTENTES ---
+    // (Mantenemos la de 'card' para el Home)
     return url.replace(
       "/upload/",
       "/upload/w_500,h_700,c_fill,g_auto,f_auto,q_auto/",
     );
   } catch (error) {
-    // Si algo falla en el replace, devolvemos la URL original para no romper la app
     console.error("Error en transformarImagen:", error);
     return url;
   }

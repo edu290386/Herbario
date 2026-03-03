@@ -16,12 +16,3 @@ export * from "./ubicacion/SeccionUbicaciones";
 export * from "./ubicacion/UbicacionInfo";
 // (Añade aquí los demás archivos que tengas en /ubicacion)
 
-// --- Carpeta Marketplace (Venta y visualización) ---
-//export * from "./marketplace/ListaProductos";
-//export * from "./marketplace/TarjetaProducto";
-
-// --- Carpeta Carrusel (Galería de imágenes) ---
-export * from "./carrusel/CarruselDetalle";
-export * from "./carrusel/CarruselControles";
-export * from "./carrusel/CarruselImagenPrincipal";
-export * from "./carrusel/CarruselMiniaturas";

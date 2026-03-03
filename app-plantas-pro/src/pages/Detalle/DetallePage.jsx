@@ -1,18 +1,22 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getDetallePlanta } from "../../services/plantasServices.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
+import { useGPS } from "../../hooks/useGPS.js";
+
+// Importaciones de tus componentes intactos
 import {
   BotonPrincipal,
   SeccionInformacion,
   BloqueIdentidad,
-  CarruselDetalle,
   SeccionUbicaciones,
 } from "../../components/index.js";
-import { getDetallePlanta } from "../../services/plantasServices.js";
-import { TbCloverFilled, TbReload } from "react-icons/tb";
-import { AuthContext } from "../../context/AuthContext.jsx";
-import { useGPS } from "../../hooks/useGPS.js"
-import "./DetallePage.css"
 
+// NUEVOS COMPONENTES (Ajusta la ruta según dónde los hayas guardado)
+import { CarruselPrincipal } from "../../components/planta/CarruselPrincipal.jsx";
+import { Spinner } from "../../components/ui/Spinner.jsx";
+
+import "./DetallePage.css";
 
 export const DetallePage = () => {
   const { id } = useParams();
@@ -25,38 +29,24 @@ export const DetallePage = () => {
   const [loading, setLoading] = useState(true);
   const { coords, errorGPS, cargandoGPS, refrescarGPS } = useGPS();
 
-  // SOLUCIÓN AL SCROLL: Sube al inicio apenas carga el componente
+  // SOLUCIÓN AL SCROLL (Intacto)
   useEffect(() => {
-    // 1. Desactivamos la restauración del navegador
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
-    // 2. Forzamos el scroll al inicio con un pequeño retraso
-    // Esto asegura que incluso si las imágenes tardan en cargar, el scroll suba
     const timer = setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: "instant",
-      });
-    }, 100); // 100ms es imperceptible para el ojo pero suficiente para el navegador
-    return () => clearTimeout(timer); // Limpieza
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [planta]);
 
-  // CARGA DE DATOS DESDE SUPABASE
+  // CARGA DE DATOS (Optimizado: Quitamos el setTimeout de 2 segundos)
   useEffect(() => {
     const fetchDatosCompletos = async () => {
       try {
         setLoading(true);
-        // Promesa del tiempo mínimo (2 segundos)
-        const tiempoMinimo = new Promise((resolve) =>
-          setTimeout(resolve, 2000),
-        );
-        // Promesa de datos (Servicio)
         const miNombreGrupo = user?.grupos?.nombre_grupo;
-        const consultaSupabase = getDetallePlanta(id, miNombreGrupo);
-        // Esperamos a que ambas promesas terminen
-        const [_, result] = await Promise.all([tiempoMinimo, consultaSupabase]);
+        const result = await getDetallePlanta(id, miNombreGrupo);
         setPlanta(result);
       } catch (error) {
         console.error("Error cargando planta:", error.message);
@@ -69,26 +59,18 @@ export const DetallePage = () => {
     }
   }, [id, user]);
 
-  // --- RENDERIZADO DE CARGA ---
+  // --- RENDERIZADO DE CARGA (Con tu componente oficial) ---
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <TbCloverFilled className="spinner" />
-      </div>
-    );
+    return <Spinner mensaje="Cargando información botánica..." />;
   }
 
-  // Si no hay planta después de cargar, no renderizamos nada (o un error)
   if (!planta) return null;
 
   const tienePerfil =
     planta.foto_perfil?.length > 0 && planta.foto_perfil[0] !== null;
-
-  // Si categoriaSeleccionada es null, usamos la lógica de prioridad, si no, lo que el usuario clickeó
   const categoriaActiva =
     categoriaSeleccionada || (tienePerfil ? "perfil" : "referencial");
 
-  // 3. Filtrado de etiquetas (igual que antes)
   const categorias = [
     { id: "perfil", label: "PERFIL" },
     { id: "referencial", label: "REFERENCIAL" },
@@ -110,20 +92,16 @@ export const DetallePage = () => {
       : !!fotos;
   });
 
-  // 4. Lógica de fotos para el carrusel usando la "categoriaActiva" calculada
   const fotosActuales =
     categoriaActiva === "referencial"
       ? [planta.foto_referencial]
       : planta[`foto_${categoriaActiva}`] || [];
 
-  const imagenesCarrusel =
-    fotosActuales.length > 0 && fotosActuales[0] !== null
-      ? fotosActuales
-      : [null];
+  // Filtramos nulls para no romper el carrusel
+  const imagenesCarrusel = fotosActuales.filter((img) => img !== null);
 
   const manejarEliminarUbicacion = (idUbi) => {
     try {
-      // 2. Filtramos el estado local // Como 'planta' tiene una lista de 'ubicaciones', creamos un nuevo objeto
       setPlanta((prevPlanta) => ({
         ...prevPlanta,
         ubicaciones: prevPlanta.ubicaciones.filter((u) => u.id !== idUbi),
@@ -136,28 +114,31 @@ export const DetallePage = () => {
   return (
     <div className="detalle-wrapper">
       <main className="main-block">
+        {/* === SECCIÓN CARRUSEL (Modificada) === */}
         <section className="carrusel-panel">
-          {/* Componente del Carrusel */}
-          <CarruselDetalle imagenes={imagenesCarrusel} key={categoriaActiva} />
+          {/* Componente del Nuevo Carrusel */}
+          <CarruselPrincipal
+            imagenes={imagenesCarrusel}
+            key={categoriaActiva}
+          />
 
-          {/* Contenedor de Botones (Etiquetas) */}
-          <div className="etiquetas-tecnicas-container">
+          {/* Contenedor de Botones (Ahora con diseño de Píldoras) */}
+          <div className="etiquetas-pildora-container">
             {opcionesVisibles.map((cat) => {
-              // Calculamos el conteo para mostrar en el botón (1) (0) etc.
               const dataFotos =
                 cat.id === "referencial"
                   ? [planta.foto_referencial]
                   : planta[`foto_${cat.id}`] || [];
-
-              const conteo =
-                Array.isArray(dataFotos) && dataFotos[0] === null
-                  ? 0
-                  : dataFotos.length;
+              const conteo = Array.isArray(dataFotos)
+                ? dataFotos.filter((f) => f !== null).length
+                : dataFotos
+                  ? 1
+                  : 0;
 
               return (
                 <button
                   key={cat.id}
-                  className={`btn-etiqueta ${categoriaActiva === cat.id ? "active" : ""}`}
+                  className={`btn-pildora ${categoriaActiva === cat.id ? "active" : ""}`}
                   onClick={() => setCategoriaSeleccionada(cat.id)}
                 >
                   {cat.label} ({conteo})
@@ -167,18 +148,17 @@ export const DetallePage = () => {
           </div>
         </section>
 
-        {/* PANEL DERECHO: TEXTO AGRUPADO */}
+        {/* === PANEL DERECHO: TEXTO AGRUPADO (INTACTO) === */}
         <section className="info-panel">
           <div className="info-content-scroll">
             <BloqueIdentidad planta={planta} />
             <SeccionInformacion planta={planta} />
 
-            {/* Contenedor unificado de acciones */}
+            {/* Contenedor unificado de acciones (INTACTO) */}
             <div
               className="btn-container"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}
             >
-              {/* 1. Botón Público: Agregar Ubicación */}
               <BotonPrincipal
                 texto="AGREGAR UBICACIÓN"
                 onClick={() =>
@@ -186,24 +166,23 @@ export const DetallePage = () => {
                     state: {
                       plantaId: planta.id,
                       nombres_planta: planta.nombres_planta,
-                      flujo: "ubicacion", // Clarificamos el flujo
+                      flujo: "ubicacion",
                     },
                   })
                 }
               />
 
-              {/* 2. Botones exclusivos para Staff */}
               {esStaff && (
                 <>
                   <BotonPrincipal
                     texto="AGREGAR NOMBRE"
-                    color="#8d6e63" // Marrón madera para diferenciar
+                    color="#8d6e63"
                     onClick={() =>
                       navigate("/registro", {
                         state: {
                           plantaId: planta.id,
                           nombres_planta: planta.nombres_planta,
-                          esDetalleStaff: true, // Activa el flujo de nombre extra
+                          esDetalleStaff: true,
                         },
                       })
                     }
@@ -211,13 +190,13 @@ export const DetallePage = () => {
 
                   <BotonPrincipal
                     texto="AGREGAR IMAGEN"
-                    color="#455a64" // Gris azulado para técnico
+                    color="#455a64"
                     onClick={() =>
                       navigate("/registro", {
                         state: {
                           plantaId: planta.id,
                           nombres_planta: planta.nombres_planta,
-                          esImagenTecnica: true, // Activa el flujo de imagen técnica
+                          esImagenTecnica: true,
                         },
                       })
                     }
@@ -229,6 +208,7 @@ export const DetallePage = () => {
         </section>
       </main>
 
+      {/* === SECCIÓN UBICACIONES (INTACTA) === */}
       <section className="ubicaciones-block">
         <SeccionUbicaciones
           ubicaciones={planta.ubicaciones || []}
