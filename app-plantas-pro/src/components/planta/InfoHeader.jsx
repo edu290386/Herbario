@@ -1,58 +1,55 @@
-import { colores } from "../../constants/tema";
-
 export const InfoHeader = ({
   nombrePrincipal = "Planta sin nombre",
   nombreCientifico = "",
 }) => {
   return (
-    <div style={styles.headerContainer}>
-      {/* NOMBRE COMÚN: El protagonista */}
+    <div style={styles.container}>
       <h1 style={styles.titulo}>
         {nombrePrincipal.charAt(0).toUpperCase() + nombrePrincipal.slice(1)}
       </h1>
 
-      {/* NOMBRE CIENTÍFICO: Estilo botánico clásico */}
       {nombreCientifico && (
-        <div style={styles.subtituloContainer}>
-          <span style={styles.cientifico}>{nombreCientifico}</span>
+        <div style={styles.cientificoWrapper}>
+          <span style={styles.linea} />
+          <i style={styles.cientificoTexto}>{nombreCientifico}</i>
         </div>
       )}
-
-      {/* Una línea divisoria sutil para separar de las etiquetas/redes */}
-      <hr style={styles.separador} />
     </div>
   );
 };
 
 const styles = {
-  headerContainer: {
-    marginBottom: "15px",
-    padding: "0 5px",
+  container: { marginBottom: "25px", paddingLeft: "4px" },
+  tagSuperior: {
+    display: "inline-block",
+    backgroundColor: "rgba(76, 175, 80, 0.1)", // Mismo verde del carrusel active
+    color: "#4CAF50",
+    fontSize: "9px",
+    fontWeight: "900",
+    padding: "3px 10px",
+    borderRadius: "100px",
+    letterSpacing: "1px",
+    marginBottom: "8px",
   },
   titulo: {
     fontSize: "32px",
-    fontWeight: "800",
-    color: colores.bosque,
+    fontWeight: "900",
+    color: "#222",
     margin: 0,
-    lineHeight: "1.1",
+    lineHeight: "1",
     letterSpacing: "-0.5px",
   },
-  subtituloContainer: {
-    marginTop: "8px",
+  cientificoWrapper: {
     display: "flex",
-    flexDirection: "column",
-    gap: "2px",
+    alignItems: "center",
+    gap: "10px",
+    marginTop: "10px",
   },
-  cientifico: {
-    fontSize: "18px",
-    fontStyle: "italic",
-    color: "#555",
-    fontFamily: "serif", // Le da un toque de libro de botánica antiguo
+  linea: {
+    width: "20px",
+    height: "2px",
+    backgroundColor: "#4CAF50",
+    borderRadius: "2px",
   },
-  separador: {
-    border: "none",
-    borderBottom: "1px solid #eee",
-    marginTop: "20px",
-    width: "40%", // No cruza toda la pantalla, solo un detalle
-  },
+  cientificoTexto: { fontSize: "15px", color: "#666", fontWeight: "500" },
 };

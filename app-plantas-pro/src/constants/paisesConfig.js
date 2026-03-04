@@ -1,20 +1,13 @@
 export const PAISES_CONFIG = [
-  { id: "PE", nombre: "Perú", bandera: "🇵🇪" },
-  { id: "VE", nombre: "Venezuela", bandera: "🇻🇪" },
-  { id: "CO", nombre: "Colombia", bandera: "🇨🇴" },
-  { id: "EC", nombre: "Ecuador", bandera: "🇪🇨" },
-  { id: "AR", nombre: "Argentina", bandera: "🇦🇷" },
-  { id: "BR", nombre: "Brasil", bandera: "🇧🇷" },
-  { id: "MX", nombre: "México", bandera: "🇲🇽" },
-  { id: "CU", nombre: "Cuba", bandera: "🇨🇺" },
-  { id: "CL", nombre: "Chile", bandera: "🇨🇱" },
-  { id: "ES", nombre: "España", bandera: "🇪🇸" },
-  { id: "world", nombre: "Mundo", bandera: "🌍" },
-  { id: "yoruba", nombre: "Yoruba", bandera: "✨" },
+  { id: "PE", nombre: "Perú" },
+  { id: "VE", nombre: "Venezuela" },
+  { id: "CO", nombre: "Colombia" },
+  { id: "EC", nombre: "Ecuador" },
+  { id: "MX", nombre: "México" },
+  { id: "CU", nombre: "Cuba" },
+  { id: "PE", nombre: "Perú" },
+  { id: "CL", nombre: "Chile" },
+  { id: "ES", nombre: "España" },
+  { id: "world", nombre: "Mundo" },
+  { id: "yoruba", nombre: "Yoruba" },
 ];
-
-// Helper para obtener bandera por ID rápido
-export const obtenerBandera = (id) => {
-  const pais = PAISES_CONFIG.find((p) => p.id === id);
-  return pais ? pais.bandera : "🏳️";
-};

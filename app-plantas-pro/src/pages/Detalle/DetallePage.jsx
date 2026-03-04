@@ -10,7 +10,7 @@ import { useGPS } from "../../hooks/useGPS.js";
 // Nuevos componentes modulares del DNI de la Planta
 import { InfoHeader } from "../../components/planta/InfoHeader.jsx";
 import { InfoEtiquetas } from "../../components/planta/InfoEtiquetas.jsx";
-import { InfoRedesSociales } from "../../components/planta/InfoRedesSociales.jsx";
+import { FichaInteractiva } from "../../components/planta/FichaInteractiva.jsx";
 import { InfoAcordeones } from "../../components/planta/InfoAcordeones.jsx";
 import { SeccionNombresColaborativa } from "../../components/planta/SeccionNombresColaborativa.jsx";
 import { CarruselPrincipal } from "../../components/planta/CarruselPrincipal.jsx";
@@ -110,43 +110,62 @@ export const DetallePage = () => {
   };
 
   // --- LÓGICA DE VOTACIÓN Y VERIFICACIÓN ---
-  const handleVotarNombre = async (codigoPais, nombreTexto) => {
+  const handleVotarNombre = async (codigoPais, nombreTexto, tipoVoto) => {
+    const userId = user.id; // El ID del usuario actual
+
     try {
       const copiaNombres = [...(planta.nombres_internacionales || [])];
-      const bloquePais = copiaNombres.find((p) => p.pais === codigoPais);
-      const nombreObj = bloquePais.nombres.find((n) => n.texto === nombreTexto);
+      const bloque = copiaNombres.find((p) => p.pais === codigoPais);
+      const nombreObj = bloque.nombres.find((n) => n.texto === nombreTexto);
 
-      // 1. Aumentamos el voto
-      nombreObj.votos = (nombreObj.votos || 0) + 1;
+      // Inicializamos los arrays si no existen (para evitar errores)
+      if (!nombreObj.votos_usuarios) nombreObj.votos_usuarios = [];
+      if (!nombreObj.dislikes_usuarios) nombreObj.dislikes_usuarios = [];
 
-      // 2. REGLA: ¿Quién verifica?
-      let actualizacionBusqueda = {};
-      if (!nombreObj.verificado) {
-        if (esStaff || nombreObj.votos >= 5) {
-          nombreObj.verificado = true;
-          // Si se verifica, actualizamos el array de búsqueda del Home
-          const nuevaListaBusqueda = [
-            ...new Set([...(planta.nombres_busqueda || []), nombreTexto]),
-          ];
-          actualizacionBusqueda = { nombres_busqueda: nuevaListaBusqueda };
-        }
+      // 🚩 VALIDACIÓN: ¿Ya votó?
+      const yaVotoLike = nombreObj.votos_usuarios.includes(userId);
+      const yaVotoDislike = nombreObj.dislikes_usuarios.includes(userId);
+
+      if (tipoVoto === "like") {
+        if (yaVotoLike) return; // Si ya dio like, salimos (no hace nada)
+        nombreObj.votos_usuarios.push(userId); // Agregamos su ID
+        // Si antes tenía dislike, se lo quitamos (opcional, para limpieza)
+        nombreObj.dislikes_usuarios = nombreObj.dislikes_usuarios.filter(
+          (id) => id !== userId,
+        );
+      } else {
+        if (yaVotoDislike) return; // Si ya dio dislike, salimos
+        nombreObj.dislikes_usuarios.push(userId); // Agregamos su ID
+        nombreObj.votos_usuarios = nombreObj.votos_usuarios.filter(
+          (id) => id !== userId,
+        );
       }
 
-      // 3. Mandar a Supabase
-      const { error } = await plantaServices.actualizarPlanta(planta.id, {
+      // Calculamos los totales basados en el tamaño de los arrays
+      const totalLikes = nombreObj.votos_usuarios.length;
+      const totalDislikes = nombreObj.dislikes_usuarios.length;
+
+      // Lógica de "Corte"
+      let updateBusqueda = {};
+      if (totalLikes >= 5 || (tipoVoto === "like" && esStaff)) {
+        nombreObj.verificado = true;
+        const nuevaLista = [
+          ...new Set([...(planta.nombres_busqueda || []), nombreTexto]),
+        ];
+        updateBusqueda = { nombres_busqueda: nuevaLista };
+      } else if (totalDislikes >= 5 || (tipoVoto === "dislike" && esStaff)) {
+        nombreObj.rechazado = true;
+      }
+
+      // Guardar y Actualizar UI (Igual que antes...)
+      await plantaServices.actualizarPlanta(planta.id, {
         nombres_internacionales: copiaNombres,
-        ...actualizacionBusqueda,
+        ...updateBusqueda,
       });
-
-      if (error) throw error;
-
-      // 4. Reflejar en pantalla
       setPlanta((prev) => ({
         ...prev,
         nombres_internacionales: copiaNombres,
-        ...(actualizacionBusqueda.nombres_busqueda
-          ? { nombres_busqueda: actualizacionBusqueda.nombres_busqueda }
-          : {}),
+        ...updateBusqueda,
       }));
     } catch (error) {
       console.error("Error al votar:", error);
@@ -163,17 +182,18 @@ export const DetallePage = () => {
         (p) => p.pais === sugerenciaForm.pais,
       );
 
-      // Si es Staff, entra verificado automáticamente
-      const nombreVerificado = esStaff;
-
+      // NUEVO CONTRATO DE DATOS (REEMPLAZA TU BLOQUE ANTERIOR)
       const nuevoNombreObj = {
         texto: sugerenciaForm.texto,
-        verificado: nombreVerificado,
-        rol: user?.rol || "Usuario",
-        votos: nombreVerificado ? 0 : 1,
-        fecha_sugerencia: new Date().toISOString(),
-        usuario_id: user?.id || null,
+        verificado: esStaff,
+        rechazado: false,
         auditado: false,
+        usuario_id: user?.id || null,
+        nombre_autor: `${user?.nombre || "Usuario"} ${user?.apellido || ""}`,
+        rol_creador: user?.rol || "Usuario",
+        fecha_sugerencia: new Date().toISOString(),
+        votos_usuarios: esStaff ? [] : [user?.id], // Si es staff no necesita votos, si es user empieza con el suyo
+        dislikes_usuarios: [],
       };
 
       if (indicePais > -1) {
@@ -185,9 +205,9 @@ export const DetallePage = () => {
         });
       }
 
-      // Solo actualizamos "nombres_busqueda" si entró verificado (Staff)
+      // ... lógica de actualización de búsqueda (se mantiene igual)
       let actualizacionBusqueda = {};
-      if (nombreVerificado) {
+      if (esStaff) {
         const nuevaListaBusqueda = [
           ...new Set([
             ...(planta.nombres_busqueda || []),
@@ -197,25 +217,18 @@ export const DetallePage = () => {
         actualizacionBusqueda = { nombres_busqueda: nuevaListaBusqueda };
       }
 
-      // Guardar en BD
-      const { error } = await plantaServices.actualizarPlanta(planta.id, {
+      await plantaServices.actualizarPlanta(planta.id, {
         nombres_internacionales: copiaNombresInternacionales,
         ...actualizacionBusqueda,
       });
 
-      if (error) throw error;
-
-      // Actualizar UI
       setPlanta((prev) => ({
         ...prev,
         nombres_internacionales: copiaNombresInternacionales,
-        ...(actualizacionBusqueda.nombres_busqueda
-          ? { nombres_busqueda: actualizacionBusqueda.nombres_busqueda }
-          : {}),
+        ...actualizacionBusqueda,
       }));
     } catch (error) {
-      console.error("Error en la sugerencia:", error);
-      alert("Error al procesar el nombre.");
+      console.error("Error:", error);
     }
   };
 
@@ -250,6 +263,9 @@ export const DetallePage = () => {
               );
             })}
           </div>
+          <div style={{ padding: "0 20px", marginTop: "-5px" }}>
+            <InfoEtiquetas listaEtiquetasBotanicas={planta.etiquetas_tags} />
+          </div>
         </section>
 
         {/* === PANEL DERECHO: DNI DE LA PLANTA === */}
@@ -263,24 +279,13 @@ export const DetallePage = () => {
                 }
                 nombreCientifico={planta.nombre_cientifico}
               />
-              <InfoRedesSociales
-                enlacesRedesSocialesJson={planta.enlaces_redes}
-              />
-            </div>
-
-            {/* 2. Etiquetas */}
-            <InfoEtiquetas listaEtiquetasBotanicas={planta.etiquetas_tags} />
-
-            {/* 3. Panel Colaborativo de Nombres (Glassmorphism) */}
-            <SeccionNombresColaborativa
-              datosNombres={planta.nombres_internacionales}
+            </div>          
+            <FichaInteractiva
+              planta={planta}
               usuarioActual={user}
               onVotar={handleVotarNombre}
               onSugerir={handleSugerirNombre}
             />
-
-            {/* 4. Acordeones Dinámicos */}
-            <InfoAcordeones secciones={planta.secciones_info} />
 
             {/* 5. Acciones de Staff y Ubicación */}
             <div

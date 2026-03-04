@@ -29,8 +29,7 @@ export const AuthProvider = ({ children }) => {
     if (!auth.user?.id) return true;
 
     try {
-      // 1. CONSULTA SELECTIVA: Traemos solo lo que queremos que sea automático
-      // OJO: No seleccionamos 'nombre' ni 'apellido' para que no se actualicen en caliente
+      // 1. SELECT CORREGIDO: Ahora sí traemos 'modo_acceso' (y asegúrate de que 'solo_movil' sea parte de modo_acceso o añádela)
       const { data: dbUser, error } = await supabase
         .from("usuarios")
         .select("login_token, rol, status, suscripcion_vence, modo_acceso")
@@ -43,7 +42,10 @@ export const AuthProvider = ({ children }) => {
       const vencimiento = new Date(dbUser.suscripcion_vence);
       let statusActual = dbUser.status;
 
-      // 2. AUTO-SUSPENSIÓN SILENCIOSA
+      // --- DETECCIÓN DE HARDWARE EN TIEMPO REAL ---
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // 2. AUTO-SUSPENSIÓN (Igual que antes)
       if (statusActual !== "BLOQUEADO" && ahora > vencimiento) {
         statusActual = "SUSPENDIDO";
         await supabase
@@ -52,36 +54,40 @@ export const AuthProvider = ({ children }) => {
           .eq("id", auth.user.id);
       }
 
-      // 3. SEGURIDAD: Expulsión
+      // 3. SEGURIDAD: Expulsión por Token O por Dispositivo No Autorizado
       const esTokenDiferente = dbUser.login_token !== auth.user.login_token;
-      const modoRestringido = !["libre", "doble_dispositivo"].includes(
-        dbUser.modo_acceso,
-      );
+
+      // REGLA CRÍTICA: ¿Es un perfil de "solo_movil" entrando desde Laptop?
+      const esIntrusoLaptop = dbUser.modo_acceso === "solo_movil" && !isMobile;
 
       if (
         statusActual === "BLOQUEADO" ||
-        (modoRestringido && dbUser.login_token && esTokenDiferente)
+        esIntrusoLaptop || // <--- EL MARTILLO NUEVO
+        (dbUser.modo_acceso !== "libre" &&
+          dbUser.modo_acceso !== "doble_dispositivo" &&
+          esTokenDiferente)
       ) {
-        console.warn("🚫 Acceso denegado o sesión duplicada.");
+        console.warn(
+          "🚫 ACCESO DENEGADO: Dispositivo no autorizado o sesión duplicada.",
+        );
         logout();
         return false;
       }
 
-      // 4. SINCRONIZACIÓN AUTOMÁTICA (Solo Rol, Status y Tiempo)
-      // Comparamos los valores específicos que SI queremos que cambien
+      // 4. SINCRONIZACIÓN (Añadimos modo_acceso para que el Vigilante lo vea)
       const huboCambioCritico =
         dbUser.rol !== auth.user.rol ||
         statusActual !== auth.user.status ||
+        dbUser.modo_acceso !== auth.user.modo_acceso || // <--- Sincronizamos el modo
         dbUser.suscripcion_vence !== auth.user.suscripcion_vence;
 
       if (huboCambioCritico) {
-        console.log("♻️ Actualizando Rol/Status/Tiempo en tiempo real...");
-
         const usuarioActualizado = {
-          ...auth.user, // Mantenemos Nombre y Apellido originales de la sesión
-          rol: dbUser.rol, // Aplicamos el nuevo Rol automáticamente
-          status: statusActual, // Aplicamos el nuevo Status automáticamente
-          suscripcion_vence: dbUser.suscripcion_vence, // Aplicamos el nuevo Tiempo automáticamente
+          ...auth.user,
+          rol: dbUser.rol,
+          status: statusActual,
+          modo_acceso: dbUser.modo_acceso, // <--- Ahora el Vigilante tendrá este dato
+          suscripcion_vence: dbUser.suscripcion_vence,
         };
 
         dispatch({ type: types.login, payload: usuarioActualizado });
@@ -91,9 +97,9 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error("Vigilante Error:", error.message);
-      return true;
+      return false; // Si hay error de red, mejor denegar por seguridad
     }
-  }, [auth.user, logout, dispatch]); // Agregamos dispatch a dependencias
+  }, [auth.user, logout, dispatch]);
 
   const authValue = useMemo(
     () => ({ ...auth, login, logout, verificarSesion }),

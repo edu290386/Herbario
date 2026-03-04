@@ -1,4 +1,4 @@
 // src/constants/appConfig.js
 export const appConfig = {
-  version: "v2.6",
+  version: "v2.7",
 };
