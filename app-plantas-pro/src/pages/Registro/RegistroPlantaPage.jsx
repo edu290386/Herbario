@@ -34,7 +34,7 @@ import "./Registro.css";
 
 const OPCIONES_PAISES = [
   { label: "Nombre global (Internacional)", value: "world" },
-  { label: "Nombre sagrado", value: "sacred" },
+  { label: "Nombre sagrado", value: "yoruba" },
   { label: "Perú", value: "PE" },
   { label: "Venezuela", value: "VE" },
   { label: "Cuba", value: "CU" },
@@ -333,10 +333,10 @@ export const RegistroPlantaPage = () => {
                         {paisSeleccionado === "world" && (
                           <GiEarthAmerica size={24} />
                         )}
-                        {paisSeleccionado === "sacred" && (
+                        {paisSeleccionado === "yoruba" && (
                           <GiAfrica size={24} />
                         )}
-                        {!["world", "sacred"].includes(paisSeleccionado) && (
+                        {!["world", "yoruba"].includes(paisSeleccionado) && (
                           <PiGpsFixFill size={24} />
                         )}
                       </div>

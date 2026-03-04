@@ -22,7 +22,7 @@ export const BloqueIdentidad = ({ planta, busqueda }) => {
         />
       );
     }
-    if (p === "sacred") {
+    if (p === "yoruba") {
       return (
         <PiLeafLight
           className="icono-contexto"

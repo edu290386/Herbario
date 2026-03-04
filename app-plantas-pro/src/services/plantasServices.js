@@ -27,9 +27,7 @@ export const checkNombreExistente = async (nombreUsuario) => {
 export const getPlantasBasico = async () => {
   const { data, error } = await supabase
     .from("plantas")
-    .select(
-      "id, nombres_planta: nombres, nombre_cientifico, foto_perfil",
-    )
+    .select("id, nombres_planta: nombres, nombre_cientifico, foto_perfil")
     .order("nombres", { ascending: true });
 
   if (error) throw error;
@@ -136,7 +134,7 @@ export const agregarUbicacion = async (
   if (error) throw error;
 
   const ahora = new Date().toISOString();
- 
+
   await supabase.from("logs").insert([
     {
       planta_id: plantaId,
@@ -156,8 +154,7 @@ export const agregarUbicacion = async (
       fecha_revision: ahora,
       auditado_por: alias,
       fecha_auditado: ahora,
-      auditado: "aprobado"
-
+      auditado: "aprobado",
     },
   ]);
 
@@ -310,4 +307,122 @@ export const eliminarUbicacionConFoto = async (idUbi, urlFoto) => {
     console.error("Error en eliminarUbicacionConFoto:", error.message);
     return false;
   }
+};
+
+
+export const plantaServices = {
+  /**
+   * REGISTRAR PLANTA (Con lógica inteligente de aplanamiento de nombres)
+   */
+  registrarNuevaPlanta: async (datosRecogidosDelFormulario) => {
+    try {
+      // 1. EXTRAER NOMBRES PARA BÚSQUEDA (Transformamos el JSON a Array simple)
+      // Recorremos cada país, sacamos sus nombres y eliminamos duplicados con Set
+      const listaNombresPlanosParaBusquedaHome = [
+        ...new Set(
+          datosRecogidosDelFormulario.nombresInternacionalesJson.flatMap(
+            (bloquePais) =>
+              bloquePais.nombres.map((objNombre) => objNombre.texto),
+          ),
+        ),
+      ];
+
+      // 2. PREPARAR OBJETO PARA SUPABASE
+      const objetoFinalParaSupabase = {
+        // --- Nuevas Columnas JSONB / Arrays ---
+        nombres_internacionales:
+          datosRecogidosDelFormulario.nombresInternacionalesJson,
+        secciones_info: datosRecogidosDelFormulario.seccionesInformativasJson,
+        etiquetas_tags: datosRecogidosDelFormulario.etiquetasTagsArray,
+        enlaces_redes: datosRecogidosDelFormulario.enlacesRedesSocialesJson,
+        nombres_busqueda: listaNombresPlanosParaBusquedaHome,
+
+        // --- Columnas Originales (Para no romper nada existente) ---
+        nombres: listaNombresPlanosParaBusquedaHome,
+        paises_nombre:
+          datosRecogidosDelFormulario.nombresInternacionalesJson.map(
+            (b) => b.pais,
+          ),
+
+        // --- Campos Básicos ---
+        nombre_cientifico: datosRecogidosDelFormulario.nombreCientificoTexto,
+        id_usuario: datosRecogidosDelFormulario.idUsuarioCreador,
+        // (Agrega aquí el resto de campos: fotos, etc.)
+      };
+
+      const { data, error } = await supabase
+        .from("plantas")
+        .insert([objetoFinalParaSupabase])
+        .select();
+
+      if (error) throw error;
+      return { data: data[0], error: null };
+    } catch (error) {
+      console.error("Error en plantaServices (registrar):", error.message);
+      return { data: null, error: error.message };
+    }
+  },
+
+  /**
+   * OBTENER DETALLE COMPLETO (Trae todas las columnas nuevas)
+   */
+  obtenerPlantaPorId: async (idPlanta) => {
+    try {
+      const { data, error } = await supabase
+        .from("plantas")
+        .select(
+          `
+          *,
+          nombres_internacionales,
+          secciones_info,
+          etiquetas_tags,
+          enlaces_redes,
+          nombres_busqueda
+        `,
+        )
+        .eq("id", idPlanta)
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error en plantaServices (obtener):", error.message);
+      return { data: null, error: error.message };
+    }
+  },
+
+  /**
+   * ACTUALIZAR PLANTA (Mantiene la misma lógica inteligente de nombres)
+   */
+  actualizarPlanta: async (idPlanta, nuevosDatosEditados) => {
+    try {
+      // Si se editaron los nombres, re-calculamos la lista de búsqueda
+      let camposAActualizar = { ...nuevosDatosEditados };
+
+      if (nuevosDatosEditados.nombresInternacionalesJson) {
+        const listaActualizadaNombresPlanos = [
+          ...new Set(
+            nuevosDatosEditados.nombresInternacionalesJson.flatMap((bloque) =>
+              bloque.nombres.map((n) => n.texto),
+            ),
+          ),
+        ];
+
+        camposAActualizar.nombres_busqueda = listaActualizadaNombresPlanos;
+        camposAActualizar.nombres = listaActualizadaNombresPlanos;
+      }
+
+      const { data, error } = await supabase
+        .from("plantas")
+        .update(camposAActualizar)
+        .eq("id", idPlanta)
+        .select();
+
+      if (error) throw error;
+      return { data: data[0], error: null };
+    } catch (error) {
+      console.error("Error en plantaServices (actualizar):", error.message);
+      return { data: null, error: error.message };
+    }
+  },
 };
