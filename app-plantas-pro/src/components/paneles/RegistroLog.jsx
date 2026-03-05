@@ -20,38 +20,55 @@ export const RegistroLog = ({
   onAction,
   onReview,
 }) => {
-  
   const isAdmin = userRole === "Administrador" || userRole === "admin";
   const isColab = userRole === "Colaborador";
   const esPanelGestion = panelType === "control" || panelType === "gestion";
   const mostrarBotones =
     esPanelGestion && (isAdmin || isColab) && log.revisado === "pendiente";
 
-  // Limpiamos la URL por si viene con el error [null]
-  const urlOriginal = log.contenido;
+  // --- NUEVA LÓGICA DE EXTRACCIÓN HÍBRIDA ---
+  const aporteJSON = log.aportes?.[0]?.contenido; // Datos de la nueva tabla
+  const urlOriginal = log.contenido; // Datos de la tabla logs antigua
 
-  const etiqueta =
-    log.tipo_accion === "nueva_imagen" ? log.contenido?.split("|")[0] : null;
-  const urlOptimizada = urlOriginal?.includes("|")
-    ? urlOriginal.split("|")[1]
+  // Identificación de tipos
+  const esImagen =
+    log.tipo_accion === "nueva_imagen" || log.tipo_accion === "imagen_aprobada";
+  const esNombre = log.tipo_accion?.includes("nombre");
+
+  // Lógica para Imagen: Prioriza JSON, si no, usa el split antiguo
+  const etiqueta = esImagen
+    ? aporteJSON?.categoria || urlOriginal?.split("|")[0]
+    : null;
+
+  const urlOptimizada = esImagen
+    ? aporteJSON?.url ||
+      (urlOriginal?.includes("|") ? urlOriginal.split("|")[1] : urlOriginal)
     : urlOriginal;
+
+  // Lógica para Nombre: Prioriza JSON, si no, usa el split antiguo
+  const sugerenciaTexto = esNombre
+    ? aporteJSON
+      ? `${aporteJSON.nombre} (${aporteJSON.pais})`
+      : urlOriginal?.includes("|")
+        ? `${urlOriginal.split("|")[0]} (${urlOriginal.split("|")[1]})`
+        : urlOriginal
+    : urlOriginal;
+  // ------------------------------------------
 
   return (
     <div style={styles.card}>
       {/* 1. FOTO */}
-      {(log.tipo_accion === "nueva_imagen" ||
-        log.tipo_accion === "imagen_aprobada") &&
-        urlOriginal?.includes("http") && (
-          <div style={styles.contenedorImagen}>
-            <img
-              src={urlOptimizada}
-              style={styles.imagen}
-              alt="Evidencia"
-              loading="lazy"
-            />
-            {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
-          </div>
-        )}
+      {esImagen && urlOptimizada?.includes("http") && (
+        <div style={styles.contenedorImagen}>
+          <img
+            src={urlOptimizada}
+            style={styles.imagen}
+            alt="Evidencia"
+            loading="lazy"
+          />
+          {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
+        </div>
+      )}
 
       {/* 2. CUERPO DE DATOS */}
       <div style={styles.cuerpoData}>
@@ -69,7 +86,7 @@ export const RegistroLog = ({
               cursor: isAdmin ? "pointer" : "default",
             }}
             onClick={() => {
-              if (isAdmin && onReview) {
+              if (isAdmin && onReview && log.auditado !== "revisado") {
                 onReview(log, "auditado_final_admin");
               }
             }}
@@ -85,10 +102,10 @@ export const RegistroLog = ({
         <p style={styles.alias}>@{log.alias || "explorador"}</p>
 
         {/* 3. CONTENEDORES VERDES */}
-        {log.tipo_accion?.includes("nombre") && (
+        {esNombre && (
           <div style={styles.contenedorVerde}>
             <span style={styles.labelVerde}>NOMBRE Y LUGAR SUGERIDO</span>
-            <p style={styles.textoDestacado}>{log.contenido}</p>
+            <p style={styles.textoDestacado}>{sugerenciaTexto}</p>
           </div>
         )}
 
@@ -119,7 +136,6 @@ export const RegistroLog = ({
               {log.tipo_accion?.replace("_", " ")}
             </span>
           </div>
-          {/* Indicador visual de estado si ya fue aprobado */}
           {log.revisado === "aprobado" && (
             <span style={{ ...styles.badgeText, color: colores.frondoso }}>
               ✓ APROBADO
@@ -173,11 +189,7 @@ const styles = {
     backgroundColor: "#f8fafc",
     position: "relative",
   },
-  imagen: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
+  imagen: { width: "100%", height: "100%", objectFit: "cover" },
   floatingTag: {
     position: "absolute",
     bottom: 30,
@@ -191,19 +203,13 @@ const styles = {
     fontWeight: "800",
     textTransform: "uppercase",
   },
-  cuerpoData: {
-    padding: "20px 24px",
-  },
+  cuerpoData: { padding: "20px 24px" },
   filaPrincipal: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  infoPlantaContenedor: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
+  infoPlantaContenedor: { display: "flex", alignItems: "center", gap: 10 },
   circuloIcono: {
     width: 24,
     height: 24,
@@ -288,11 +294,7 @@ const styles = {
     color: "#475569",
     textTransform: "uppercase",
   },
-  fecha: {
-    fontSize: 12,
-    color: "#94a3b8",
-    fontWeight: "600",
-  },
+  fecha: { fontSize: 12, color: "#94a3b8", fontWeight: "600" },
   footerAcciones: {
     padding: "0 24px 24px 24px",
     display: "flex",

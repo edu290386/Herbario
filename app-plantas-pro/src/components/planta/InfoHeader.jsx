@@ -1,55 +1,116 @@
-export const InfoHeader = ({
-  nombrePrincipal = "Planta sin nombre",
-  nombreCientifico = "",
-}) => {
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.titulo}>
-        {nombrePrincipal.charAt(0).toUpperCase() + nombrePrincipal.slice(1)}
-      </h1>
+import React from "react";
+import {
+  FaInstagram,
+  FaFacebook,
+  FaYoutube,
+  FaWikipediaW,
+} from "react-icons/fa";
 
-      {nombreCientifico && (
-        <div style={styles.cientificoWrapper}>
-          <span style={styles.linea} />
-          <i style={styles.cientificoTexto}>{nombreCientifico}</i>
+export const InfoHeader = ({ nombrePrincipal, nombreCientifico, redes }) => {
+  return (
+    <div style={styles.headerContainer}>
+      <div style={styles.titleGroup}>
+        <h1 style={styles.nombreComun}>{nombrePrincipal}</h1>
+        <p style={styles.nombreCientifico}>
+          <i>{nombreCientifico || "Nombre científico no registrado"}</i>
+        </p>
+      </div>
+
+      {/* Redes Sociales */}
+      {redes && (
+        <div style={styles.socialLinks}>
+          {redes.instagram && (
+            <a
+              href={redes.instagram}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              <FaInstagram style={{ ...styles.icon, color: "#E1306C" }} />
+            </a>
+          )}
+          {redes.facebook && (
+            <a
+              href={redes.facebook}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              <FaFacebook style={{ ...styles.icon, color: "#4267B2" }} />
+            </a>
+          )}
+          {redes.youtube && (
+            <a
+              href={redes.youtube}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              <FaYoutube style={{ ...styles.icon, color: "#FF0000" }} />
+            </a>
+          )}
+          {redes.wikipedia && (
+            <a
+              href={redes.wikipedia}
+              target="_blank"
+              rel="noreferrer"
+              style={styles.link}
+            >
+              <FaWikipediaW style={{ ...styles.icon, color: "#000000" }} />
+            </a>
+          )}
         </div>
       )}
     </div>
   );
 };
 
+// --- ESTILOS ---
 const styles = {
-  container: { marginBottom: "25px", paddingLeft: "4px" },
-  tagSuperior: {
-    display: "inline-block",
-    backgroundColor: "rgba(76, 175, 80, 0.1)", // Mismo verde del carrusel active
-    color: "#4CAF50",
-    fontSize: "9px",
-    fontWeight: "900",
-    padding: "3px 10px",
-    borderRadius: "100px",
-    letterSpacing: "1px",
-    marginBottom: "8px",
+  headerContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    width: "100%",
+    padding: "10px 0",
+    marginBottom: "15px",
+    gap: "10px",
   },
-  titulo: {
-    fontSize: "32px",
+  titleGroup: {
+    display: "flex",
+    flexDirection: "column",
+    flex: 1,
+  },
+  nombreComun: {
+    fontSize: "28px",
     fontWeight: "900",
-    color: "#222",
+    color: "#2f4538", // Tu color bosque
     margin: 0,
-    lineHeight: "1",
+    textTransform: "uppercase",
+    lineHeight: "1.1",
     letterSpacing: "-0.5px",
   },
-  cientificoWrapper: {
+  nombreCientifico: {
+    fontSize: "15px",
+    color: "#64748b", // Color pizarra/gris
+    margin: "4px 0 0 0",
+    lineHeight: "1.4",
+  },
+  socialLinks: {
+    display: "flex",
+    gap: "12px",
+    alignItems: "center",
+    paddingTop: "5px",
+  },
+  link: {
+    textDecoration: "none",
     display: "flex",
     alignItems: "center",
-    gap: "10px",
-    marginTop: "10px",
+    justifyContent: "center",
+    transition: "transform 0.2s ease",
   },
-  linea: {
-    width: "20px",
-    height: "2px",
-    backgroundColor: "#4CAF50",
-    borderRadius: "2px",
+  icon: {
+    fontSize: "22px",
+    cursor: "pointer",
   },
-  cientificoTexto: { fontSize: "15px", color: "#666", fontWeight: "500" },
 };

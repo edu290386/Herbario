@@ -2,7 +2,11 @@ import { useContext, useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { PlantasContext } from "../../context/PlantasContext";
-import { normalizarParaBusqueda, formatearParaDB } from "../../helpers/textHelper";
+import {
+  normalizarParaBusqueda,
+  formatearParaDB,
+} from "../../helpers/textHelper";
+import { resaltarTexto } from "../../helpers/highLightText"; // <-- Importamos tu helper
 import { colores } from "../../constants/tema";
 import "./HomePage.css";
 
@@ -25,6 +29,8 @@ import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { Paginador } from "./Paginador";
 import { ControlAccesos } from "../../components/paneles/Accesos/ControlAccesos";
+import { HistorialActividades } from "../../components/paneles/Historial/HistorialActividades";
+import { CentroAportesPage } from "../../pages/Aportes/CentroAportesPage";
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -32,10 +38,9 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // --- CONFIGURACIÓN DE PAGINACIÓN ---
   const queryParams = new URLSearchParams(location.search);
   const paginaActual = parseInt(queryParams.get("page")) || 1;
-  const itemsPorPagina = 12; // Puedes subirlo a 20 o 30 según prefieras
+  const itemsPorPagina = 12;
 
   const [busqueda, setBusqueda] = useState("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -45,7 +50,6 @@ export const HomePage = () => {
     cargarPlantasHome(true);
   }, [cargarPlantasHome]);
 
-  // --- FILTRADO Y BÚSQUEDA ---
   const { filtradas, existeExacta } = useMemo(() => {
     const busquedaNorm = normalizarParaBusqueda(busqueda);
     if (busqueda.length < 2) return { filtradas: plantas, existeExacta: false };
@@ -63,7 +67,6 @@ export const HomePage = () => {
     return { filtradas: resultados, existeExacta: exacta };
   }, [busqueda, plantas]);
 
-  // --- LÓGICA DE NAVEGACIÓN Y PANELES ---
   const abrirPanel = (tipo) => {
     setTipoPanel(tipo);
     setIsPanelOpen(true);
@@ -71,42 +74,18 @@ export const HomePage = () => {
 
   const cambiarPagina = (num) => {
     navigate(`?page=${num}`);
-    window.scrollTo({ top: 0, behavior: "auto" }); // 'auto' para que no se vea el salto con la animación
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
-  // --- CÁLCULO DE ÍTEMS A MOSTRAR ---
   const totalPaginas = Math.ceil(filtradas.length / itemsPorPagina);
   const indiceInicio = (paginaActual - 1) * itemsPorPagina;
 
-  // Si busca (>=2 letras), mostramos todo el filtro (minimalista si > 20)
-  // Si no busca, mostramos el slice de la página actual
+  // Lógica abstraída para limpieza visual
+  const mostrarMinimalista = filtradas.length > 20 && busqueda.length >= 2;
   const plantasParaMostrar =
     busqueda.length >= 2
       ? filtradas
       : filtradas.slice(indiceInicio, indiceInicio + itemsPorPagina);
-
-  // --- FUNCIÓN HIGHLIGHT (Resaltado) ---
-  const renderNombreConHighlight = (nombre) => {
-    if (!busqueda || busqueda.length < 2) return nombre;
-    const parts = nombre.split(new RegExp(`(${busqueda})`, "gi"));
-    return (
-      <span>
-        {parts.map((part, i) =>
-          part.toLowerCase() === busqueda.toLowerCase() ? (
-            <b
-              key={i}
-              className="highlight-text"
-              style={{ color: colores.frondoso }}
-            >
-              {part}
-            </b>
-          ) : (
-            part
-          ),
-        )}
-      </span>
-    );
-  };
 
   return (
     <div className="home-page">
@@ -120,30 +99,30 @@ export const HomePage = () => {
               ? "Control de Accesos"
               : tipoPanel === "actividades"
                 ? "Historial de Actividades"
-                : tipoPanel === "gestion"
-                  ? "Control de Aportes"
-                  : "Panel"
+                : "Panel"
         }
         icon={
           tipoPanel === "accesos"
             ? FaRegUserCircle
             : tipoPanel === "actividades"
               ? FaRegBell
-              : tipoPanel === "gestion"
-                ? LuMicroscope
-                : TbCloverFilled
+              : TbCloverFilled
         }
       >
+        {/* 1. Perfil y Estadísticas (Para todos) */}
         {tipoPanel === "usuario" && <PanelUsuario user={user} />}
+
+        {/* 2. Gestión de Usuarios (Solo Admin) */}
         {tipoPanel === "accesos" && <ControlAccesos admin={user} />}
-        {(tipoPanel === "actividades" || tipoPanel === "gestion") && (
-          <PanelLogs tipo={tipoPanel} user={user} />
-        )}
+
+        {/* 3. Muro Social / Noticias del Grupo (Solo lectura - Para todos) */}
+        {tipoPanel === "actividades" && <HistorialActividades user={user} />}
       </BaseDrawer>
 
       <div className="home-layout-container">
-        {/* 1. TOP BAR */}
+        {/* TOP BAR */}
         <div className="home-top-bar">
+          {/* 1. MI PERFIL / ESTADÍSTICAS (Abierto a todos) */}
           <div
             className="user-profile-info"
             onClick={() => abrirPanel("usuario")}
@@ -162,6 +141,7 @@ export const HomePage = () => {
           </div>
 
           <div className="nav-actions">
+            {/* 2. CONTROL DE ACCESOS (Exclusivo para Administrador) */}
             {user?.rol === "Administrador" && (
               <button
                 onClick={() => abrirPanel("accesos")}
@@ -170,27 +150,31 @@ export const HomePage = () => {
                 <FaRegUserCircle size={22} color={colores.frondoso} />
               </button>
             )}
+
+            {/* 3. HISTORIAL DE ACTIVIDADES (Abierto a todos - Muro del grupo) */}
             <button
               onClick={() => abrirPanel("actividades")}
               className="icon-btn"
             >
               <FaRegBell size={20} color={colores.frondoso} />
             </button>
-            {(user?.rol === "Administrador" || user?.rol === "Colaborador") && (
-              <button
-                onClick={() => abrirPanel("gestion")}
-                className="icon-btn"
-              >
-                <LuMicroscope size={22} color={colores.frondoso} />
-              </button>
-            )}
+
+            {/* 4. CONTROL DE APORTES (NUEVO: ¡Abierto a todos!) */}
+            <button
+              onClick={() => navigate("/aportes")} // ➔ ¡Magia simple y limpia!
+              className="icon-btn"
+            >
+              <LuMicroscope size={22} color={colores.frondoso} />
+            </button>
+
+            {/* 5. CERRAR SESIÓN */}
             <button onClick={logout} className="icon-btn logout-sep">
               <IoLogOutOutline size={26} />
             </button>
           </div>
         </div>
 
-        {/* 2. BUSCADOR */}
+        {/* BUSCADOR */}
         <header className="search-section">
           <div className="search-wrapper">
             <IoSearchOutline size={24} color="var(--color-frondoso)" />
@@ -204,15 +188,14 @@ export const HomePage = () => {
           </div>
         </header>
 
-        {/* 3. ÁREA PRINCIPAL */}
+        {/* ÁREA PRINCIPAL */}
         <main className="main-content-layout">
-          {/* Feedback de Búsqueda */}
           {busqueda.length >= 2 && (
             <div className="search-feedback-container">
               <StatusBanner
                 status={
                   existeExacta
-                    ? "error"
+                    ? "info"
                     : filtradas.length > 0
                       ? "success"
                       : "warning"
@@ -252,20 +235,21 @@ export const HomePage = () => {
             </div>
           )}
 
-          {/* Grid de Cards */}
+          {/* Grid de Cards (Lógica simplificada) */}
           <div
-            className={`${filtradas.length > 20 && busqueda.length >= 2 ? "minimalist-list" : "home-grid"} grid-transition`}
+            className={`${mostrarMinimalista ? "minimalist-list" : "home-grid"} grid-transition`}
           >
             {plantasParaMostrar.map((p) =>
-              filtradas.length > 20 && busqueda.length >= 2 ? (
+              mostrarMinimalista ? (
                 <div
                   key={p.id}
                   className="minimalist-item"
-                  onClick={() => navigate(`/detalle/${p.id}`)}
+                  onClick={() => navigate(`/planta/${p.id}`)}
                 >
                   <div>
+                    {/* Usamos tu helper directamente */}
                     <strong>
-                      {renderNombreConHighlight(p.nombres_planta[0])}
+                      {resaltarTexto(p.nombres_planta[0], busqueda)}
                     </strong>
                     <p style={{ fontSize: "0.8rem", color: "#666" }}>
                       {p.nombre_cientifico}
@@ -274,11 +258,7 @@ export const HomePage = () => {
                   <IoChevronForward color={colores.frondoso} />
                 </div>
               ) : (
-                <CardPlanta
-                  key={p.id}
-                  planta={p}
-                  renderNombre={renderNombreConHighlight}
-                />
+                <CardPlanta key={p.id} planta={p} busqueda={busqueda} />
               ),
             )}
           </div>

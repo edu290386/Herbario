@@ -11,40 +11,38 @@ export const GuiaRegistro = ({ flujo }) => {
     "nueva planta": {
       bg: "#fdfdfd",
       border: "var(--color-frondoso)",
-      icon: <FaBookReader size={25} color="339af0" />,
+      icon: <FaBookReader size={25} color="#339af0" />,
       titulo: "Registro de Planta",
       pasos: [
         <>
-          <strong>Nombres locales:</strong> Si en tu país se llama{" "}
-          <strong>Aguacate (MX)</strong> o <strong>Palta (PE)</strong>,
-          escríbelo y selecciona su país respectivo.
+          <strong>Nombres Locales:</strong> Los nombres cambian al cruzar la
+          frontera. Si en tu país se llama <strong>Plátano (VE)</strong> o{" "}
+          <strong>Banano (CO)</strong>, escríbelo y selecciona su bandera para
+          ayudar a tu comunidad.
         </>,
         <>
-          <strong>Sin fronteras:</strong> Si no sabes el país exacto o es un
-          nombre universal, usa{" "}
-          <span style={{ color: "var(--color-frondoso)", fontWeight: "700" }}>
-            <GiEarthAmerica /> Internacional
-          </span>
-          . No hay problema si desconoces ese dato.
+          <strong>Nombre Internacional:</strong> ¿Es un nombre universal o no
+          estás seguro del país exacto? Usa la opción <strong>Global</strong>.
+          Es ideal para términos como <strong>Banana</strong> que se usan en
+          todo el mundo.
         </>,
         <>
-          <strong>Sabiduría Sagrada:</strong> Para nombres religiosos o sagrados
-          como <em style={{ color: "#856404" }}>Ewé Atori</em> (Yoruba),
-          selecciona{" "}
-          <span style={{ color: "#856404", fontWeight: "700" }}>
-            <GiAfrica /> Nombre Sagrado
-          </span>
-          .
+          <strong>Nombres Yoruba</strong> Honramos el conocimiento litúrgico.
+          Para nombres con carga espiritual como{" "}
+          <em style={{ color: "#856404" }}>Ewé Ògèdè</em>, selecciona{" "}
+          <strong>Yoruba</strong>.
         </>,
         <>
-          <strong>Ejemplos rápidos:</strong>{" "}
-          <em style={{ opacity: 0.8 }}>Cayena (VE)</em>,{" "}
-          <em style={{ opacity: 0.8 }}>Cucarda (PE)</em>.
-        </>,
-        <>
-          <strong>Sistema Inteligente:</strong> No permitimos duplicados. Si el
-          sistema bloquea tu registro y crees que es un error,{" "}
+          <strong>Sistema de Calidad (Anti-Duplicados):</strong> Nuestra base de
+          datos no permite registros duplicados. Si el sistema bloquea tu
+          registro y crees que es un error,{" "}
           <strong>contacta al administrador</strong> para evaluar tu caso.
+        </>,
+        <>
+          <strong>Foto de Referencia:</strong> Sube una imagen
+          clara y bien iluminada. Esta foto es la que permite al{" "}
+          <strong>Administrador</strong> validar la especie, identificar sus
+          detalles técnicos y aprobar tu registro con total seguridad.
         </>,
       ],
     },
@@ -52,7 +50,7 @@ export const GuiaRegistro = ({ flujo }) => {
       bg: "#fdfdfd",
       border: "#339af0", // Azul informativo
       icon: <FaBookReader size={25} color="#339af0" />,
-      titulo: "Captura de Ubicación",
+      titulo: "Capturar Ubicación",
       pasos: [
         <>
           <strong>Requisitos Técnicos:</strong> Es obligatorio permitir el

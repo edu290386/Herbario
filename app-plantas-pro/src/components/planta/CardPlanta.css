@@ -106,3 +106,38 @@
   padding: 0 2px;
   border-radius: 4px;
 }
+
+/* Contenedor de los nombres secundarios */
+.card-otros-nombres-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+  min-height: 20px; /* Evita saltos de layout */
+}
+
+/* Estilo de los nombres individuales */
+.card-tag-nombre {
+  font-size: 0.8rem;
+  color: #777;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+/* El punto separador */
+.card-separador {
+  margin-left: 6px;
+  color: #ccc;
+  font-weight: bold;
+}
+
+/* Aseguramos que el resaltado se vea perfecto aquí también */
+.card-tag-nombre .resaltado-amarillo {
+  background-color: #fff34d !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  padding: 0 2px;
+  border-radius: 2px;
+}

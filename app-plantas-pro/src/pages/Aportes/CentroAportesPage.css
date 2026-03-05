@@ -1,0 +1,104 @@
+/* Layout y Contenedor */
+.centro-aportes-layout {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  background-image: radial-gradient(at 0% 0%, rgba(45, 139, 87, 0.05) 0px, transparent 50%);
+}
+
+.container-aportes {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0px;
+}
+
+/* Menú Principal de Opciones */
+.menu-opciones-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.card-opcion-aporte {
+  background: white;
+  padding: 22px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  cursor: pointer;
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.card-opcion-aporte:hover {
+  transform: translateY(-3px);
+  border-color: #2d8b57;
+}
+
+/* Iconos de las tarjetas */
+.icon-circle {
+  width: 55px; height: 55px;
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.icon-verde { background: #f0fdf4; color: #2d8b57; }
+.icon-azul { background: #eff6ff; color: #1d4ed8; }
+.icon-naranja { background: #fff7ed; color: #c2410c; }
+
+/* 🟢 Contenedor para centrar el menú en la pantalla */
+.oz-menu-centered-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Centrado Vertical */
+  min-height: calc(100vh - 40px); /* Ocupa el alto de pantalla restando el padding */
+  padding: 20px;
+}
+
+.menu-opciones-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Un poco más de aire entre tarjetas */
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.card-opcion-aporte {
+  background: white;
+  padding: 24px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.03); /* Sombra más suave */
+  cursor: pointer;
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-opcion-aporte:hover {
+  transform: scale(1.02); /* Efecto sutil de elevación */
+  border-color: #2d8b57;
+}
+
+/* Ajuste para que el texto no se amontone con el icono */
+.card-text-content {
+  flex: 1;
+}
+
+.card-text-content h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+
+.card-text-content p {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.3;
+}

@@ -1,0 +1,42 @@
+.oz-form-body-text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.oz-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oz-label-tiny {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+}
+
+.oz-input-modern {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+}
+
+.oz-input-modern:focus {
+  border-color: #2d8b57;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(45, 139, 87, 0.05);
+}
+
+.oz-textarea {
+  resize: none;
+  min-height: 150px;
+  line-height: 1.5;
+}

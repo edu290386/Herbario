@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo, useEffect } from "react";
+import { useState, useContext, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
 // Contextos, Hooks y Helpers
 import { AuthContext } from "../../context/AuthContext";
@@ -12,71 +12,43 @@ import {
 import {
   crearEspecieNueva,
   agregarUbicacion,
-  agregarDetalleStaff,
-  registrarPropuestaImagen,
   checkNombreExistente,
 } from "../../services/plantasServices";
 import { uploadImage } from "../../helpers/cloudinaryHelper";
 import { formatearParaDB } from "../../helpers/textHelper";
+
 // UI e Iconos
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { StatusBanner } from "../../components/ui/StatusBanner";
 import { GuiaRegistro } from "./GuiaRegistro";
-import {
-  IoIosCamera,
-  IoMdCheckmarkCircle,
-  IoMdCloseCircle,
-} from "react-icons/io";
-import { PiPlantFill, PiGpsFixFill } from "react-icons/pi";
-import { GiEarthAmerica, GiAfrica } from "react-icons/gi";
+import { IoMdCheckmarkCircle, IoMdCloseCircle } from "react-icons/io";
+import { TbCamera, TbTrash } from "react-icons/tb";
+import { PiPlantFill } from "react-icons/pi";
+import { PAISES_CONFIG } from "../../constants/paisesConfig";
+import { NombreOficialRow } from "../../components/planta/NombreOficialRow";
 import "./Registro.css";
-
-const OPCIONES_PAISES = [
-  { label: "Nombre global (Internacional)", value: "world" },
-  { label: "Nombre sagrado", value: "yoruba" },
-  { label: "Perú", value: "PE" },
-  { label: "Venezuela", value: "VE" },
-  { label: "Cuba", value: "CU" },
-  { label: "Colombia", value: "CO" },
-  { label: "México", value: "MX" },
-];
-
-const TIPOS_FOTO = [
-  { label: "Foto de Perfil", value: "perfil" },
-  { label: "Hoja", value: "hoja" },
-  { label: "Tallo", value: "tallo" },
-  { label: "Flor", value: "flor" },
-  { label: "Fruto", value: "fruto" },
-  { label: "Semilla", value: "semilla" },
-  { label: "Raíz", value: "raiz" },
-];
 
 export const RegistroPlantaPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-
   const { cargarPlantasHome } = useContext(PlantasContext);
   const { coords, cargandoGPS, errorGPS } = useGPS();
+  const fileInputRef = useRef(null);
 
+  // Lógica de flujo simplificada
   const plantaId = state?.plantaId || null;
   const esNuevaPlanta = !plantaId;
-  const esStaff = user?.rol === "Administrador" || user?.rol === "Colaborador";
-
-  const esImagenTecnica = !!state?.esImagenTecnica && esStaff;
-  const esAgregarDetalle =
-    !!state?.esDetalleStaff && esStaff && !esImagenTecnica;
-  const esSoloUbicacion = !!plantaId && !esAgregarDetalle && !esImagenTecnica;
+  const esSoloUbicacion = !!plantaId;
 
   const [nombreLocal, setNombreLocal] = useState(
     plantaId
       ? state?.nombres_planta?.[0]
       : state?.nombreComun || state?.busqueda || "",
   );
-  const [nuevoNombreSecundario, setNuevoNombreSecundario] = useState("");
+
   const [paisSeleccionado, setPaisSeleccionado] = useState("");
-  const [etiquetaFoto, setEtiquetaFoto] = useState("hoja");
   const [foto, setFoto] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
@@ -112,19 +84,16 @@ export const RegistroPlantaPage = () => {
       try {
         const existe = await checkNombreExistente(nombreATestear);
         setNombreDuplicadoDB(existe);
-        if (existe) {
-          setValidacionNombre({
-            status: "error",
-            message: "El sistema detectó que esta planta ya existe.",
-          });
-        } else {
-          setValidacionNombre({
-            status: "success",
-            message: "¡Nombre disponible!",
-          });
-        }
+        setValidacionNombre(
+          existe
+            ? {
+                status: "error",
+                message: "El sistema detectó que esta planta ya existe.",
+              }
+            : { status: "success", message: "¡Nombre disponible!" },
+        );
       } catch (error) {
-        console.error("Error en validación:", error);
+        console.error(error);
       }
     }, 900);
     return () => clearTimeout(timeoutId);
@@ -134,16 +103,12 @@ export const RegistroPlantaPage = () => {
   const gpsListo = coords?.lat && coords?.lng && !cargandoGPS;
 
   const formularioInvalido = useMemo(() => {
-    if (cargando || guardadoExitoso) return true;
-    if (!esAgregarDetalle && !tieneFotoReal) return true;
-    if (esNuevaPlanta) {
+    if (cargando || guardadoExitoso || !tieneFotoReal) return true;
+    if (esNuevaPlanta)
       return (
         nombreLocal.trim().length < 2 || nombreDuplicadoDB || !paisSeleccionado
       );
-    }
     if (esSoloUbicacion) return !gpsListo || validacionDistancia.bloquear;
-    if (esAgregarDetalle)
-      return !nuevoNombreSecundario.trim() || !paisSeleccionado;
     return false;
   }, [
     cargando,
@@ -156,8 +121,6 @@ export const RegistroPlantaPage = () => {
     esSoloUbicacion,
     gpsListo,
     validacionDistancia.bloquear,
-    esAgregarDetalle,
-    nuevoNombreSecundario,
   ]);
 
   const manejarEnvio = async (e) => {
@@ -170,42 +133,47 @@ export const RegistroPlantaPage = () => {
         const checkFinal = await checkNombreExistente(nombreLocal);
         if (checkFinal) {
           setNombreDuplicadoDB(true);
-          setValidacionNombre({
-            status: "error",
-            message: "Error: Se acaba de registrar este nombre.",
-          });
           setCargando(false);
           return;
         }
       }
 
-      let urlFoto = null;
+      const nombreFormateado = formatearParaDB(nombreLocal);
+      const subCarpeta = esSoloUbicacion ? "ubicaciones" : "perfil";
+      const urlFoto = await uploadImage(
+        foto,
+        `${nombreFormateado}/${subCarpeta}`,
+      );
+
       let plantaIdFinal = plantaId;
 
-      if (tieneFotoReal) {
-        const nombreCarpetaRaiz = formatearParaDB(nombreLocal);
-        const subCarpetaDinamica = esImagenTecnica
-          ? etiquetaFoto
-          : esSoloUbicacion
-            ? "ubicaciones"
-            : "perfil";
-        urlFoto = await uploadImage(
-          foto,
-          `${nombreCarpetaRaiz}/${subCarpetaDinamica}`,
-        );
-      }
-
       if (esNuevaPlanta) {
+        const nombresInternacionalesJSON = [
+          {
+            pais: paisSeleccionado.toUpperCase(),
+            nombres: [
+              {
+                texto: nombreFormateado,
+                verificado: true,
+                votos_usuarios: [user?.id],
+                creado_por: user?.id,
+                fecha_registro: new Date().toISOString(),
+              },
+            ],
+          },
+        ];
         const nueva = await crearEspecieNueva(
-          nombreLocal,
+          nombreFormateado,
           urlFoto,
           user?.id,
           user?.alias,
-          paisSeleccionado,
+          paisSeleccionado.toUpperCase(),
           user?.grupo_id,
+          [nombreFormateado],
+          nombresInternacionalesJSON,
         );
         plantaIdFinal = nueva.id;
-      } else if (esSoloUbicacion) {
+      } else {
         const resLugar = await obtenerDireccion(coords.lat, coords.lng);
         await agregarUbicacion(
           plantaId,
@@ -217,24 +185,6 @@ export const RegistroPlantaPage = () => {
           user?.alias,
           user?.grupo_id,
           user?.grupos?.nombre_grupo,
-        );
-      } else if (esAgregarDetalle) {
-        await agregarDetalleStaff(
-          plantaId,
-          formatearParaDB(nuevoNombreSecundario),
-          paisSeleccionado,
-          user,
-          nombreLocal,
-        );
-      } else if (esImagenTecnica) {
-        await registrarPropuestaImagen(
-          plantaId,
-          user.id,
-          urlFoto,
-          etiquetaFoto,
-          nombreLocal,
-          user?.alias,
-          user?.grupo_id,
         );
       }
 
@@ -255,59 +205,29 @@ export const RegistroPlantaPage = () => {
 
   return (
     <div className="registro-page-container">
-      <header className="registro-header">
-        <PiPlantFill size={45} color="var(--color-frondoso)" />
-        <h1 className="registro-titulo">
-          {esNuevaPlanta && "REGISTRAR PLANTA"}
-          {esSoloUbicacion && "AÑADIR UBICACIÓN"}
-          {esAgregarDetalle && "AGREGAR DETALLE"}
-          {esImagenTecnica && "IMAGEN TÉCNICA"}
-        </h1>
-      </header>
-
-      <GuiaRegistro
-        flujo={
-          esNuevaPlanta
-            ? "nueva planta"
-            : esSoloUbicacion
-              ? "solo ubicacion"
-              : esImagenTecnica
-                ? "imagen tecnica"
-                : "agregar detalle"
-        }
-      />
+      <GuiaRegistro flujo={esNuevaPlanta ? "nueva planta" : "solo ubicacion"} />
 
       <form onSubmit={manejarEnvio} className="registro-card">
         <div className="registro-section">
-          {esNuevaPlanta || esAgregarDetalle ? (
+          {esNuevaPlanta ? (
             <>
-              <label className="registro-label">
-                {esNuevaPlanta ? "NOMBRE DE LA PLANTA" : "AÑADIR NOMBRE EXTRA"}
-              </label>
+              <label className="registro-label">NOMBRE DE LA PLANTA</label>
               <input
                 type="text"
                 className={`registro-input-text ${nombreDuplicadoDB ? "input-error" : ""}`}
-                value={esAgregarDetalle ? nuevoNombreSecundario : nombreLocal}
-                onChange={(e) =>
-                  esAgregarDetalle
-                    ? setNuevoNombreSecundario(e.target.value)
-                    : setNombreLocal(e.target.value)
-                }
-                disabled={cargando || guardadoExitoso}
+                value={nombreLocal}
+                onChange={(e) => setNombreLocal(e.target.value)}
                 placeholder="Ej: Piñón de botija"
               />
-
               {validacionNombre.status && (
-                <div className="status-banner-wrapper">
-                  <StatusBanner
-                    status={validacionNombre.status}
-                    message={validacionNombre.message}
-                  />
-                </div>
+                <StatusBanner
+                  status={validacionNombre.status}
+                  message={validacionNombre.message}
+                />
               )}
 
               <div className="registro-section">
-                <label className="registro-label">TIPO DE NOMBRE / PAÍS</label>
+                <label className="registro-label">PROCEDENCIA DEL NOMBRE</label>
                 <select
                   className="registro-input-text"
                   value={paisSeleccionado}
@@ -316,44 +236,20 @@ export const RegistroPlantaPage = () => {
                   <option value="" disabled>
                     ¿Dónde se usa este nombre?
                   </option>
-                  {OPCIONES_PAISES.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {PAISES_CONFIG.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
                     </option>
                   ))}
                 </select>
-
-                {nombreLocal.trim().length > 0 && paisSeleccionado && (
-                  <div className="registro-section animation-fadeIn">
-                    <label className="registro-label">
-                      TIP DE NOMBRE / PAÍS
-                    </label>
-                    <div className="info-formada-container">
-                      <div className="info-formada-icon">
-                        {paisSeleccionado === "world" && (
-                          <GiEarthAmerica size={24} />
-                        )}
-                        {paisSeleccionado === "yoruba" && (
-                          <GiAfrica size={24} />
-                        )}
-                        {!["world", "yoruba"].includes(paisSeleccionado) && (
-                          <PiGpsFixFill size={24} />
-                        )}
-                      </div>
-                      <div className="info-formada-texto">
-                        {/* USAMOS LA FUNCIÓN AQUÍ PARA LA VISTA PREVIA */}
-                        <span className="info-formada-nombre">
-                          {formatearParaDB(nombreLocal)}
-                        </span>
-                        <span className="info-formada-detalle">
-                          {
-                            OPCIONES_PAISES.find(
-                              (op) => op.value === paisSeleccionado,
-                            )?.label
-                          }
-                        </span>
-                      </div>
-                    </div>
+                {nombreLocal.trim().length > 1 && paisSeleccionado && (
+                  <div className="animation-fadeIn">
+                    <label className="registro-label">VISTA PREVIA</label>
+                    <NombreOficialRow
+                      nombre={formatearParaDB(nombreLocal)}
+                      pais={paisSeleccionado}
+                      esPreview={true}
+                    />
                   </div>
                 )}
               </div>
@@ -364,64 +260,99 @@ export const RegistroPlantaPage = () => {
               <h2 className="nombre-fijo-display">
                 {nombreLocal.toUpperCase()}
               </h2>
-              {esImagenTecnica && (
-                <div className="registro-section">
-                  <label className="registro-label">PARTE DE LA PLANTA</label>
-                  <select
-                    className="registro-input-text"
-                    value={etiquetaFoto}
-                    onChange={(e) => setEtiquetaFoto(e.target.value)}
-                  >
-                    {TIPOS_FOTO.filter((t) => t.value !== "perfil").map(
-                      (opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </div>
-              )}
             </>
           )}
         </div>
 
-        {!esAgregarDetalle && (
-          <div className="registro-section">
-            <label className="registro-label">
-              {esSoloUbicacion ? "FOTO DE LA UBICACIÓN" : "FOTO DE REFERENCIA"}
-            </label>
-            <label
-              className={`registro-zona-foto ${tieneFotoReal ? "foto-ok" : ""}`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFoto(e.target.files[0])}
-                style={{ display: "none" }}
-              />
-              {tieneFotoReal ? (
-                <IoMdCheckmarkCircle size={60} color="var(--color-frondoso)" />
-              ) : (
-                <IoIosCamera size={60} />
-              )}
-              <p>{tieneFotoReal ? "FOTO CARGADA" : "TOCAR PARA CARGAR"}</p>
-            </label>
-          </div>
-        )}
-
-        {esSoloUbicacion && (
-          <>
-            {/* Contenedor de Checklists (Foto y GPS) */}
-            <div className="registro-validaciones">
-              <div className="val-item">
-                {tieneFotoReal ? (
-                  <IoMdCheckmarkCircle color="#2d6a4f" />
-                ) : (
-                  <IoMdCloseCircle color="#f44336" />
-                )}
-                <span>Foto obligatoria</span>
+        {/* SECCIÓN FOTO: VISOR INNOVADOR 3:4 */}
+        <div className="registro-section">
+          <label className="registro-label">FOTO DE REFERENCIA</label>
+          <div
+            className={`oz-visor-container ${tieneFotoReal ? "has-photo" : ""}`}
+          >
+            {!tieneFotoReal ? (
+              <div
+                className="oz-drop-area"
+                onClick={() => fileInputRef.current.click()}
+              >
+                <div className="oz-cam-circle">
+                  <TbCamera size={32} />
+                </div>
+                <p>CARGAR FOTO</p>
+                <span>Cámara o Galería</span>
               </div>
+            ) : (
+              <div className="oz-preview-wrapper">
+                <img
+                  src={URL.createObjectURL(foto)}
+                  alt="Preview"
+                  className="oz-img-botanica"
+                />
+                <div className="oz-visor-overlay">
+                  <div className="oz-visor-badge">
+                    {esSoloUbicacion ? "UBICACIÓN" : "PERFIL"}
+                  </div>
+                  <div className="oz-visor-actions">
+                    <button
+                      type="button"
+                      className="oz-action-btn"
+                      onClick={() => fileInputRef.current.click()}
+                    >
+                      <TbCamera size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      className="oz-action-btn delete"
+                      onClick={() => setFoto(null)}
+                    >
+                      <TbTrash size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={(e) => setFoto(e.target.files[0])}
+              style={{ display: "none" }}
+            />
+          </div>
+        </div>
+
+        {/* VALIDACIONES UNIFICADAS */}
+        <div className="registro-section">
+          <div className="registro-validaciones">
+            <div className="val-item">
+              {tieneFotoReal ? (
+                <IoMdCheckmarkCircle color="#2d6a4f" />
+              ) : (
+                <IoMdCloseCircle color="#f44336" />
+              )}
+              <span>Foto obligatoria</span>
+            </div>
+
+            {esNuevaPlanta ? (
+              <>
+                <div className="val-item">
+                  {nombreLocal.trim().length >= 2 && !nombreDuplicadoDB ? (
+                    <IoMdCheckmarkCircle color="#2d6a4f" />
+                  ) : (
+                    <IoMdCloseCircle color="#f44336" />
+                  )}
+                  <span>Nombre válido disponible</span>
+                </div>
+                <div className="val-item">
+                  {paisSeleccionado ? (
+                    <IoMdCheckmarkCircle color="#2d6a4f" />
+                  ) : (
+                    <IoMdCloseCircle color="#f44336" />
+                  )}
+                  <span>Origen del nombre</span>
+                </div>
+              </>
+            ) : (
               <div className="val-item">
                 {gpsListo ? (
                   <IoMdCheckmarkCircle color="#2d6a4f" />
@@ -436,22 +367,20 @@ export const RegistroPlantaPage = () => {
                       : errorGPS || "GPS requerido"}
                 </span>
               </div>
-            </div>
-
-            {/* EL BANNER AHORA VIVE AQUÍ AFUERA */}
-            {gpsListo && (
-              <div
-                className="status-banner-wrapper"
-                style={{ marginTop: "12px" }}
-              >
-                <StatusBanner
-                  status={validacionDistancia.status}
-                  message={validacionDistancia.message}
-                />
-              </div>
             )}
-          </>
-        )}
+          </div>
+          {esSoloUbicacion && gpsListo && (
+            <div
+              className="status-banner-wrapper"
+              style={{ marginTop: "12px" }}
+            >
+              <StatusBanner
+                status={validacionDistancia.status}
+                message={validacionDistancia.message}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="registro-botones-footer">
           <BotonPrincipal
@@ -461,9 +390,7 @@ export const RegistroPlantaPage = () => {
             esExitoso={guardadoExitoso}
             disabled={formularioInvalido}
           />
-          <div className="boton-cancelar-wrapper">
-            <BotonCancelar />
-          </div>
+          <BotonCancelar />
         </div>
       </form>
     </div>

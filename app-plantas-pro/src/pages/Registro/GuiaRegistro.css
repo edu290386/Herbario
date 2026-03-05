@@ -21,7 +21,7 @@
   justify-content: space-between;
   flex-wrap: wrap; 
   gap: 12px;
-  padding: 15px 20px;
+  padding: 12px 20px 12px 20px;
   cursor: pointer;
 }
 
@@ -34,9 +34,10 @@
 
 .guia-titulo-new {
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #1b4332;
   text-transform: uppercase;
+  letter-spacing: -0.6px;
 }
 
 /* Botón de Indicaciones (Pill) */

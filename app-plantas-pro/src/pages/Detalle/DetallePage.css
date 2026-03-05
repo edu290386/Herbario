@@ -249,3 +249,172 @@
     transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
+
+
+/* ==========================================================================
+   8. BURBUJA FLOTANTE SIMPLIFICADA (FaCommentMedical)
+   ========================================================================== */
+
+.burbuja-aporte-flotante {
+  position: fixed;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* 1. 🖥️ DESKTOP ESTÁNDAR (> 920px) */
+  top: 25px;
+  bottom: auto;
+  /* Se pega al borde derecho de la pantalla por ahora */
+  right: 20px; 
+}
+
+.burbuja-fondo {
+  font-size: 55px;   /* Tamaño del icono completo */
+  color: #2d8b57;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+  transition: transform 0.2s ease;
+}
+
+/* Efectos de interacción */
+.burbuja-aporte-flotante:hover {
+  transform: scale(1.15) rotate(5deg);
+}
+
+.burbuja-aporte-flotante:active {
+  transform: scale(0.95);
+}
+
+@media (min-width: 1240px) {
+  .burbuja-aporte-flotante {
+    /* CÁLCULO MÁGICO:
+       (100% de pantalla - 1200px de contenido) / 2 
+       Esto nos da el ancho del "aire" o margen vacío a la derecha.
+       Le sumamos 20px para que entre un poquito en el diseño.
+    */
+    right: calc((100% - 1200px) / 2 + 20px);
+  }
+}
+
+/* 📱 Ajustes para dispositivos móviles */
+@media (max-width: 920px) {
+  .burbuja-aporte-flotante {
+    top: auto;
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+.burbuja-fondo {
+  font-size: 55px;
+  color: #2d8b57;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+}
+
+/* Interacciones visuales */
+.burbuja-aporte-flotante:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* ==========================================================================
+   9. FICHA INTERACTIVA (SISTEMA DE CARPETAS)
+   ========================================================================== */
+.folder {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.folder-header {
+  width: 100%;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.title-group { display: flex; align-items: center; gap: 10px; }
+
+.dot {
+  width: 6px; height: 6px; 
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.folder-title {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.folder-content { padding: 0 16px 16px 16px; }
+
+.fila-pais {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+  align-items: center;
+}
+
+.texto-nombre {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ==========================================================================
+   10. FORMULARIOS DEL CENTRO DE APORTES
+   ========================================================================== */
+.form-aporte-main {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.header-text-block h3 {
+  margin: 0; font-size: 1.1rem; font-weight: 900;
+}
+
+.subtitle-aporte {
+  margin: 0; font-size: 0.8rem; font-weight: 800;
+  color: #2d8b57; text-transform: uppercase;
+}
+
+.input-text-modern, .form-select-modern, .textarea-aporte {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-weight: 700;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-text-modern:focus { border-color: #2d8b57; background: white; }
+
+.btn-primario {
+  background: #2d8b57; color: white; border: none;
+  padding: 15px; border-radius: 12px; font-weight: 900;
+  cursor: pointer; transition: background 0.2s;
+}
+
+.btn-primario:hover { background: #247046; }
+
+.btn-secundario {
+  background: #f1f5f9; color: #64748b; border: none;
+  padding: 15px; border-radius: 12px; font-weight: 700;
+  cursor: pointer;
+}

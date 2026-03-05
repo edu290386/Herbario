@@ -16,7 +16,7 @@ import { BsCalendar2Check } from "react-icons/bs";
 import { getDashboardStats } from "./getDashboardStats";
 import { AuthContext } from "../../../context/AuthContext";
 import { formatearFechaLocal } from "../../../helpers/timeHelper";
-import { Copyright } from "../../ui/Copyright"; // 👈 1. IMPORTAMOS EL COMPONENTE (Ajusta la ruta si es necesario)
+import { Copyright } from "../../ui/Copyright";
 import "./PanelUsuario.css";
 
 export const PanelUsuario = ({ user }) => {
@@ -26,12 +26,8 @@ export const PanelUsuario = ({ user }) => {
 
   useEffect(() => {
     const cargarTodo = async () => {
-      // 1. Intentamos obtener el ID del grupo si existe
       const gId = user?.grupo_id || user?.id_grupo || user?.grupos?.id;
-
-      // 2. CAMBIO CLAVE: Quitamos la obligación de tener gId para consultar
       if (user?.id) {
-        // Si no hay gId, pasamos null. getDashboardStats debe manejarlo.
         const data = await getDashboardStats(user.id, gId || null);
         setStats(data);
       }
@@ -69,7 +65,6 @@ export const PanelUsuario = ({ user }) => {
   const estilos = getEstilosSuscripcion(diasRestantes);
 
   if (loading && !user) return <div className="loader-msg">Cargando...</div>;
-  console.log(user);
 
   return (
     <div className="panel-custom-font">
@@ -104,10 +99,7 @@ export const PanelUsuario = ({ user }) => {
               <div
                 className="donut-chart-v3"
                 style={{
-                  background: `conic-gradient(#2d6a4f ${
-                    (user?.grupo_id ? stats.participacion.porcentaje : 100) *
-                    3.6
-                  }deg, #f1f5f9 0deg)`,
+                  background: `conic-gradient(#2d6a4f ${(user?.grupo_id ? stats.participacion.porcentaje : 100) * 3.6}deg, #f1f5f9 0deg)`,
                 }}
               >
                 <div className="donut-inner-v3">
@@ -177,10 +169,7 @@ export const PanelUsuario = ({ user }) => {
 
             <div
               className="expiry-alert-v3"
-              style={{
-                backgroundColor: estilos.bg,
-                color: estilos.text,
-              }}
+              style={{ backgroundColor: estilos.bg, color: estilos.text }}
             >
               <span>Tiempo restante:</span>
               <strong>{diasRestantes} días</strong>
@@ -220,7 +209,7 @@ export const PanelUsuario = ({ user }) => {
           </div>
         </div>
 
-        {/* 👈 2. AGREGAMOS EL COPYRIGHT AL FINAL DEL PANEL */}
+        {/* COPYRIGHT */}
         <div style={{ marginTop: "15px", paddingBottom: "20px", opacity: 0.8 }}>
           <Copyright colorTexto="#6B7280" />
         </div>

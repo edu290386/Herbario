@@ -9,6 +9,7 @@ import { LoginScreen } from "../context/LoginScreen";
 import { DetallePage } from "../pages/Detalle/DetallePage";
 import { RegistroPlantaPage } from "../pages/Registro/RegistroPlantaPage";
 import { PerfilPage } from "../pages/Perfil/PerfilPage";
+import { CentroAportesPage } from "../pages/Aportes/CentroAportesPage";
 import { Footer } from "../components/ui/Footer";
 
 export const AppRouter = () => {
@@ -47,6 +48,13 @@ export const AppRouter = () => {
                     <Route path="/home" element={<HomePage />} />
                     <Route path="/registro" element={<RegistroPlantaPage />} />
                     <Route path="/planta/:id" element={<DetallePage />} />
+
+                    {/* RUTA DE APORTES INTEGRADA */}
+                    <Route
+                      path="/aportes"
+                      element={<CentroAportesPage user={user} />}
+                    />
+
                     <Route
                       path="/perfil"
                       element={<PerfilPage user={user} />}
