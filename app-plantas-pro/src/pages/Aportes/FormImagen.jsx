@@ -1,12 +1,11 @@
-import { useState, useRef } from "react";
-import {
-  IoMdCheckmarkCircle,
-  IoMdCloseCircle,
-} from "react-icons/io";
-import {
-  TbCamera,
-  TbTrash,
-} from "react-icons/tb";
+import React, { useState, useRef, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { uploadImage } from "../../helpers/cloudinaryHelper";
+import { supabase } from "../../supabaseClient";
+import { formatearParaDB } from "../../helpers/textHelper";
+import { GuiaRegistro } from "../Registro/GuiaRegistro";
+import { IoMdCheckmarkCircle, IoMdCloseCircle } from "react-icons/io";
+import { TbCamera, TbTrash } from "react-icons/tb";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
 import { StatusBanner } from "../../components/ui/StatusBanner";
@@ -18,6 +17,7 @@ export const FormImagen = ({
   conteoActual,
   onCancel,
 }) => {
+  const { user } = useContext(AuthContext);
   const [etiquetaFoto, setEtiquetaFoto] = useState("hoja");
   const [archivo, setArchivo] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -38,17 +38,65 @@ export const FormImagen = ({
 
   const manejarEnvio = async (e) => {
     if (e) e.preventDefault();
+    if (!archivo || enviando) return;
+
     setEnviando(true);
-    // Lógica de envío...
-    setTimeout(() => {
-      setEnviando(false);
+
+    try {
+      const folderPath = `${formatearParaDB(nombrePlanta)}/${etiquetaFoto}`;
+      const urlFoto = await uploadImage(archivo, folderPath);
+      if (!urlFoto) throw new Error("Error al subir la imagen.");
+
+      const objetoContenido = {
+        categoria: etiquetaFoto,
+        url: urlFoto,
+      };
+
+      // 1. INSERTAR EN LOGS
+      const { data: logData, error: errorLog } = await supabase
+        .from("logs")
+        .insert([
+          {
+            planta_id: Number(plantaId), // 113 es número, aquí sí va Number
+            usuario_id: user?.id,
+            nombre_planta: nombrePlanta,
+            alias: user?.alias || "Usuario Ozain",
+            grupo_id: user?.grupo_id,
+            tipo_accion: "nueva_imagen",
+            contenido: objetoContenido,
+            revisado: "pendiente",
+            auditado: "pendiente",
+          },
+        ])
+        .select()
+        .single();
+
+      if (errorLog) throw errorLog;
+
+      // 2. INSERTAR EN APORTES
+      // IMPORTANTE: logData.id NO lleva Number() porque es un UUID (string)
+      const { error: errorAportes } = await supabase.from("aportes").insert([
+        {
+          planta_id: Number(plantaId),
+          log_id: logData.id, // Pasamos el string directo '1eaf9305...'
+          contenido: objetoContenido,
+        },
+      ]);
+
+      if (errorAportes) throw errorAportes;
+
       setExito(true);
-      setTimeout(() => onCancel(), 1500);
-    }, 2000);
+      setTimeout(() => onCancel(), 1800);
+    } catch (error) {
+      console.error("Error detallado:", error);
+      alert("Error: " + error.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const categoriasBotánicas = [
-    { id: "perfil", label: "Perfil"},
+    { id: "perfil", label: "Perfil" },
     { id: "hoja", label: "Hoja" },
     { id: "flor", label: "Flor" },
     { id: "tallo", label: "Tallo" },
@@ -59,13 +107,12 @@ export const FormImagen = ({
 
   return (
     <div className="registro-page-container">
+      <GuiaRegistro flujo="nueva imagen" />
       <form onSubmit={manejarEnvio} className="registro-card">
-        {/* SECCIÓN 1: DISPLAY DE PLANTA */}
         <div className="registro-section">
           <div className="oz-display-name">{nombrePlanta?.toUpperCase()}</div>
         </div>
 
-        {/* SECCIÓN 2: SELECTOR INNOVADOR (TABS) */}
         <div className="registro-section">
           <label className="registro-label">PARTE DE LA PLANTA</label>
           <div className="oz-category-tabs">
@@ -83,7 +130,6 @@ export const FormImagen = ({
           </div>
         </div>
 
-        {/* SECCIÓN 3: VISOR BOTÁNICO 3:4 */}
         <div className="registro-section">
           <div
             className={`oz-visor-container ${tieneFotoReal ? "has-photo" : ""}`}
@@ -138,7 +184,6 @@ export const FormImagen = ({
           </div>
         </div>
 
-        {/* SECCIÓN 4: VALIDACIONES */}
         <div className="registro-section">
           <div className="registro-validaciones">
             <div className="val-item">
@@ -156,18 +201,16 @@ export const FormImagen = ({
               </span>
             </div>
           </div>
-
           {cupoLleno && !enviando && (
             <div className="status-banner-wrapper">
               <StatusBanner
                 status="warning"
-                message="Esta categoría ya tiene 3 fotos oficiales."
+                message="Esta categoría ya tiene 3 fotos. Tu aporte debe ser de alta calidad."
               />
             </div>
           )}
         </div>
 
-        {/* FOOTER: BOTONES ORIGINALES */}
         <div className="registro-botones-footer">
           <BotonPrincipal
             type="submit"

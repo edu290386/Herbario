@@ -22,15 +22,14 @@ import { LuMicroscope } from "react-icons/lu";
 
 // Componentes
 import { BaseDrawer } from "../../components/paneles/BaseDrawer";
-import { PanelLogs } from "../../components/paneles/PanelLogs";
+import { PanelLogs }  from "../../components/paneles/PanelLogs";
 import { PanelUsuario } from "../../components/paneles/Perfil/PanelUsuario";
 import { CardPlanta } from "../../components/planta/CardPlanta";
 import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { Paginador } from "./Paginador";
 import { ControlAccesos } from "../../components/paneles/Accesos/ControlAccesos";
-import { HistorialActividades } from "../../components/paneles/Historial/HistorialActividades";
-import { CentroAportesPage } from "../../pages/Aportes/CentroAportesPage";
+
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -87,36 +86,50 @@ export const HomePage = () => {
       ? filtradas
       : filtradas.slice(indiceInicio, indiceInicio + itemsPorPagina);
 
+  const CONFIG_PANELES = {
+    usuario: {
+      titulo: "Mi Perfil",
+      icono: TbCloverFilled,
+      componente: <PanelUsuario user={user} />,
+    },
+    accesos: {
+      titulo: "Control de Accesos",
+      icono: FaRegUserCircle,
+      componente: <ControlAccesos admin={user} />,
+    },
+    actividades: {
+      titulo: "Historial de Actividades",
+      icono: FaRegBell,
+      componente: <PanelLogs tipo="actividades" user={user} />,
+    },
+    gestion: {
+      titulo: "Control de Aportes",
+      icono: LuMicroscope,
+      componente: <PanelLogs tipo="gestion" user={user} />,
+    },
+  };
+
+  // Obtenemos la configuración actual basada en el estado
+  const configActual = CONFIG_PANELES[tipoPanel] || {};    
+      
   return (
     <div className="home-page">
       <BaseDrawer
         isOpen={isPanelOpen}
         onClose={() => setIsPanelOpen(false)}
-        title={
-          tipoPanel === "usuario"
-            ? "Mi Perfil"
-            : tipoPanel === "accesos"
-              ? "Control de Accesos"
-              : tipoPanel === "actividades"
-                ? "Historial de Actividades"
-                : "Panel"
-        }
-        icon={
-          tipoPanel === "accesos"
-            ? FaRegUserCircle
-            : tipoPanel === "actividades"
-              ? FaRegBell
-              : TbCloverFilled
-        }
+        title={configActual.titulo || "Panel"}
+        icon={configActual.icono || TbCloverFilled}
       >
-        {/* 1. Perfil y Estadísticas (Para todos) */}
+        {/* 1. Perfil y Estadísticas */}
         {tipoPanel === "usuario" && <PanelUsuario user={user} />}
 
-        {/* 2. Gestión de Usuarios (Solo Admin) */}
+        {/* 2. Gestión de Usuarios */}
         {tipoPanel === "accesos" && <ControlAccesos admin={user} />}
 
-        {/* 3. Muro Social / Noticias del Grupo (Solo lectura - Para todos) */}
-        {tipoPanel === "actividades" && <HistorialActividades user={user} />}
+        {/* 3. Muro Social / Noticias (El que lee solo de la tabla 'logs') */}
+        {tipoPanel === "actividades" && (
+          <PanelLogs tipo="actividades" user={user} />
+        )}
       </BaseDrawer>
 
       <div className="home-layout-container">

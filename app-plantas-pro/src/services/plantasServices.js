@@ -147,11 +147,11 @@ export const agregarUbicacion = async (
       {
         planta_id: plantaId,
         usuario_id: usuarioId,
-        foto_contexto: fotoUrl,
+        foto_contexto: fotoUrl || "No aplica",
         latitud: coords.lat,
         longitud: coords.lng,
-        ciudad: datos?.ciudad || null,
-        distrito: datos?.distrito || null,
+        ciudad: datos?.ciudad || "Desconocida",
+        distrito: datos?.distrito || "Desconocida",
       },
     ])
     .select()
@@ -172,11 +172,13 @@ export const agregarUbicacion = async (
       grupo_id: grupoId,
       nombre_grupo: nombreGrupo,
       tipo_accion: "nueva_ubicacion",
-      contenido: fotoUrl,
+      contenido: {
+        url: fotoUrl || "No aplica",
+      },
       latitud: coords.lat,
       longitud: coords.lng,
-      ciudad: datos?.ciudad || null,
-      distrito: datos?.distrito || null,
+      ciudad: datos?.ciudad || "Desconocida",
+      distrito: datos?.distrito || "Desconocido",
 
       // APROBACIÓN AUTOMÁTICA
       revisado: "aprobado",
@@ -199,57 +201,26 @@ export const agregarUbicacion = async (
  * ==========================================
  */
 
-export const getLogs = async (panelType, user) => {
-  // Seguridad básica
-  if (!user) return { data: [], error: "Usuario no autenticado" };
-
+export const getLogs = async (panelType) => {
   const query = supabase
     .from("logs")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const fecha30 = new Date();
-  fecha30.setDate(fecha30.getDate() - 30);
-  const isoFecha30 = fecha30.toISOString();
-
-  // 1. HISTORIAL DE ACTIVIDADES (El muro del grupo)
   if (panelType === "actividades") {
-    if (!user.grupo_id) return { data: [], error: "Usuario sin grupo" };
-
-    return await query
-      .eq("grupo_id", user.grupo_id) // PRIVACIDAD DE GRUPO
-      .or(`tipo_accion.eq.nueva_planta,tipo_accion.eq.nueva_ubicacion`)
-      .gte("created_at", isoFecha30);
+    // El Muro Social: Solo nuevos hallazgos
+    return await query.in("tipo_accion", ["nueva_planta", "nueva_ubicacion"]);
   }
 
-  // 2. PANEL DE GESTIÓN (Exclusivo para Staff)
   if (panelType === "gestion") {
-    if (!user.grupo_id) return { data: [], error: "Staff sin grupo asignado" };
+    // El Laboratorio: Solo lo que requiere revisión (últimos 30 días si no es pendiente)
+    const fecha30 = new Date();
+    fecha30.setDate(fecha30.getDate() - 30);
 
     return await query
-      .eq("grupo_id", user.grupo_id) // El staff solo aprueba cosas de su grupo
-      .in("tipo_accion", [
-        "nueva_imagen",
-        "nuevo_nombre",
-        "nombre_aprobado",
-        "nombre_rechazado",
-        "imagen_rechazada",
-        "imagen_aprobada",
-        // Aquí agregaremos los "aporte_nombre", etc. más adelante
-      ])
-      .or(
-        `revisado.eq.pendiente,revisado.is.null,and(revisado.neq.pendiente,created_at.gte.${isoFecha30})`,
-      );
+      .in("tipo_accion", ["nueva_imagen", "nuevo_nombre", "nuevo_comentario"])
+      .or(`revisado.eq.pendiente,created_at.gte.${fecha30.toISOString()}`);
   }
-
-  // 3. MIS APORTES (Exclusivo para Usuarios Normales - Futuro)
-  if (panelType === "mis_aportes") {
-    return await query
-      .eq("usuario_id", user.id) // PRIVACIDAD INDIVIDUAL: Solo ve sus propios envíos
-      .in("tipo_accion", ["nueva_imagen", "nuevo_nombre"]); // Reemplazaremos esto por los nuevos tipos de aporte
-  }
-
-  return { data: [], error: "Tipo de panel no reconocido" };
 };
 
 export const eliminarUbicacionConFoto = async (idUbi, urlFoto) => {
@@ -333,4 +304,20 @@ export const plantaServices = {
 
     return data; // Devolvemos la planta actualizada directamente
   },
+};
+
+export const getActividadesCompletas = async () => {
+  try {
+    // ¡Mira qué simple! Una sola consulta a una sola tabla.
+    const { data, error } = await supabase
+      .from("logs")
+      .select("*")
+      .order("created_at", { ascending: false }); // Ordenamos de más nuevo a más viejo
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error obteniendo el historial unificado:", error);
+    return [];
+  }
 };

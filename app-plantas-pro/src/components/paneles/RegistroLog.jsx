@@ -1,327 +1,224 @@
-import React from "react";
-import {
-  FaRegCheckCircle,
-  FaExclamationTriangle,
-  FaLeaf,
-} from "react-icons/fa";
+import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { TbLeaf, TbMapPinFilled, TbCalendar } from "react-icons/tb";
 
-const colores = {
-  azul: "#3b82f6",
-  bosque: "#2f4538",
-  frondoso: "#2d8b57",
-  tierra: "#64748b",
-  fondo: "#f8fafc",
-};
+export const RegistroLog = ({ log }) => {
+  const esNuevaPlanta = log.tipo_accion === "nueva_planta";
 
-export const RegistroLog = ({
-  log,
-  userRole,
-  panelType,
-  onAction,
-  onReview,
-}) => {
-  const isAdmin = userRole === "Administrador" || userRole === "admin";
-  const isColab = userRole === "Colaborador";
-  const esPanelGestion = panelType === "control" || panelType === "gestion";
-  const mostrarBotones =
-    esPanelGestion && (isAdmin || isColab) && log.revisado === "pendiente";
-
-  // --- NUEVA LÓGICA DE EXTRACCIÓN HÍBRIDA ---
-  const aporteJSON = log.aportes?.[0]?.contenido; // Datos de la nueva tabla
-  const urlOriginal = log.contenido; // Datos de la tabla logs antigua
-
-  // Identificación de tipos
-  const esImagen =
-    log.tipo_accion === "nueva_imagen" || log.tipo_accion === "imagen_aprobada";
-  const esNombre = log.tipo_accion?.includes("nombre");
-
-  // Lógica para Imagen: Prioriza JSON, si no, usa el split antiguo
-  const etiqueta = esImagen
-    ? aporteJSON?.categoria || urlOriginal?.split("|")[0]
-    : null;
-
-  const urlOptimizada = esImagen
-    ? aporteJSON?.url ||
-      (urlOriginal?.includes("|") ? urlOriginal.split("|")[1] : urlOriginal)
-    : urlOriginal;
-
-  // Lógica para Nombre: Prioriza JSON, si no, usa el split antiguo
-  const sugerenciaTexto = esNombre
-    ? aporteJSON
-      ? `${aporteJSON.nombre} (${aporteJSON.pais})`
-      : urlOriginal?.includes("|")
-        ? `${urlOriginal.split("|")[0]} (${urlOriginal.split("|")[1]})`
-        : urlOriginal
-    : urlOriginal;
-  // ------------------------------------------
+  // PALETAS DE ALTO CONTRASTE
+  const estilo = esNuevaPlanta
+    ? {
+        back: "#E8E8E1", // Verde menta muy suave (elegante, no cansa la vista)
+        titulo: "#163020", // Verde bosque profundo
+        sub: "#527853", // Verde oliva para alias y fecha
+        iconCirc: "#e2ede7",
+        badgeBack: "#163020", // Badge oscuro (Cámbialo a #FF0000 para probar si gustas)
+        badgeText: "#ffffff", // Texto blanco
+        status: "#d97706",
+      }
+    : {
+        back: "#ffffff",
+        titulo: "#2f4538",
+        sub: "#64748b",
+        iconCirc: "#f0fdf4",
+        badgeBack: "#f1f5f9",
+        badgeText: "#475569",
+        status: "#2d8b57",
+      };
 
   return (
-    <div style={styles.card}>
-      {/* 1. FOTO */}
-      {esImagen && urlOptimizada?.includes("http") && (
-        <div style={styles.contenedorImagen}>
-          <img
-            src={urlOptimizada}
-            style={styles.imagen}
-            alt="Evidencia"
-            loading="lazy"
-          />
-          {etiqueta && <div style={styles.floatingTag}>{etiqueta}</div>}
+    <div
+      style={{
+        ...styles.card,
+        backgroundColor: estilo.back,
+      }}
+    >
+      {/* 1. SECCIÓN SUPERIOR */}
+      <div style={styles.filaPrincipal}>
+        <div style={styles.infoPlantaContenedor}>
+          <div
+            style={{ ...styles.circuloIcono, backgroundColor: estilo.iconCirc }}
+          >
+            {esNuevaPlanta ? (
+              <TbLeaf size={16} color={estilo.titulo} />
+            ) : (
+              <TbMapPinFilled size={16} color={estilo.status} />
+            )}
+          </div>
+          <h3 style={{ ...styles.nombrePlanta, color: estilo.titulo }}>
+            {log.nombre_planta || "REGISTRO BOTÁNICO"}
+          </h3>
+        </div>
+
+        <div style={styles.estadoAuditado}>
+          {esNuevaPlanta ? (
+            <FaExclamationTriangle size={20} color={estilo.status} />
+          ) : (
+            <FaCheckCircle size={20} color={estilo.status} />
+          )}
+        </div>
+      </div>
+
+      {/* 2. LÍNEA DE AUTORÍA */}
+      <div style={styles.autorBox}>
+        <div style={styles.perfilAutor}>
+          <span style={{ ...styles.alias, color: estilo.sub }}>
+            @{(log.alias || "explorador").toLowerCase()}
+          </span>
+        </div>
+
+        {!esNuevaPlanta && (
+          <div style={{ ...styles.tagGrupo, backgroundColor: estilo.titulo }}>
+            {log.nombre_grupo || "Sin grupo"}
+          </div>
+        )}
+      </div>
+
+      {/* 3. BLOQUE DE UBICACIÓN (Solo para Nueva Ubicación) */}
+      {log.tipo_accion === "nueva_ubicacion" && (
+        <div style={styles.contenedorVerde}>
+          <span style={styles.labelUbicacion}>LOCALIZACIÓN</span>
+          <p style={styles.textoDestacado}>
+            {log.distrito ? `${log.distrito}, ` : ""}
+            {log.ciudad || "Ubicación desconocida"}
+          </p>
         </div>
       )}
 
-      {/* 2. CUERPO DE DATOS */}
-      <div style={styles.cuerpoData}>
-        <div style={styles.filaPrincipal}>
-          <div style={styles.infoPlantaContenedor}>
-            <div style={styles.circuloIcono}>
-              <FaLeaf size={12} color={colores.frondoso} />
-            </div>
-            <p style={styles.nombrePlanta}>{log.nombre_planta}</p>
-          </div>
-
-          <div
-            style={{
-              ...styles.estadoIcono,
-              cursor: isAdmin ? "pointer" : "default",
-            }}
-            onClick={() => {
-              if (isAdmin && onReview && log.auditado !== "revisado") {
-                onReview(log, "auditado_final_admin");
-              }
-            }}
-          >
-            {log.auditado === "revisado" || log.revisado === "aprobado" ? (
-              <FaRegCheckCircle size={32} color={colores.frondoso} />
-            ) : (
-              <FaExclamationTriangle size={32} color="#e2e8f0" />
-            )}
-          </div>
+      {/* 4. FOOTER: Ahora sí usando badgeBack y badgeText directamente */}
+      <div
+        style={{
+          ...styles.filaSecundaria,
+          borderTop: `1px solid ${esNuevaPlanta ? "rgba(0,0,0,0.05)" : "#f8fafc"}`,
+        }}
+      >
+        <div
+          style={{
+            ...styles.badgeTipo,
+            backgroundColor: estilo.badgeBack, // <--- AQUÍ OBEDECE EL COLOR DE FONDO
+            color: estilo.badgeText, // <--- AQUÍ OBEDECE EL COLOR DE TEXTO
+          }}
+        >
+          {log.tipo_accion?.replace("_", " ").toUpperCase()}
         </div>
-
-        <p style={styles.alias}>@{log.alias || "explorador"}</p>
-
-        {/* 3. CONTENEDORES VERDES */}
-        {esNombre && (
-          <div style={styles.contenedorVerde}>
-            <span style={styles.labelVerde}>NOMBRE Y LUGAR SUGERIDO</span>
-            <p style={styles.textoDestacado}>{sugerenciaTexto}</p>
-          </div>
-        )}
-
-        {log.tipo_accion === "nueva_ubicacion" && (
-          <div style={styles.contenedorVerde}>
-            <div style={styles.headerContenedor}>
-              <span style={styles.labelVerde}>UBICACIÓN EXCLUSIVA</span>
-              <span style={styles.tagGrupo}>
-                {log.nombre_grupo || "SIN GRUPO"}
-              </span>
-            </div>
-            <p style={styles.textoDestacado}>
-              {log.distrito ? `${log.distrito}, ` : ""}
-              {log.ciudad || "UBICACIÓN DESCONOCIDA"}
-            </p>
-            {isAdmin && (
-              <div style={styles.adminData}>
-                LAT: {log.latitud?.toFixed(5)} | LNG: {log.longitud?.toFixed(5)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 4. FOOTER */}
-        <div style={styles.filaSecundaria}>
-          <div style={styles.badgeTipo}>
-            <span style={styles.badgeText}>
-              {log.tipo_accion?.replace("_", " ")}
-            </span>
-          </div>
-          {log.revisado === "aprobado" && (
-            <span style={{ ...styles.badgeText, color: colores.frondoso }}>
-              ✓ APROBADO
-            </span>
-          )}
-          <span style={styles.fecha}>
+        <div style={styles.fechaBox}>
+          <TbCalendar size={14} color={estilo.sub} />
+          <span style={{ color: estilo.sub }}>
             {new Date(log.created_at).toLocaleDateString()}
           </span>
         </div>
       </div>
-
-      {/* 5. SECCIÓN DE ACCIONES (Solo si está pendiente) */}
-      {mostrarBotones && (
-        <div style={styles.footerAcciones}>
-          <button
-            onClick={() =>
-              onAction && onAction(log, "filtro_operativo_rechazar")
-            }
-            style={styles.btnRechazar}
-          >
-            RECHAZAR
-          </button>
-          <button
-            onClick={() =>
-              onAction && onAction(log, "filtro_operativo_aprobar")
-            }
-            style={styles.btnAprobar}
-          >
-            APROBAR
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
 const styles = {
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 28,
-    marginBottom: 24,
+    borderRadius: 20,
+    padding: "5px 12px 12px 12px",
+    marginBottom: 15,
     border: "1px solid #f1f5f9",
-    overflow: "hidden",
-    boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.04)",
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.04)",
     display: "flex",
     flexDirection: "column",
+    gap: 10,
   },
-  contenedorImagen: {
-    width: "100%",
-    aspectRatio: "3 / 4",
-    backgroundColor: "#f8fafc",
-    position: "relative",
-  },
-  imagen: { width: "100%", height: "100%", objectFit: "cover" },
-  floatingTag: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    backgroundColor: "rgba(47, 69, 56, 0.85)",
-    backdropFilter: "blur(6px)",
-    color: "#fff",
-    padding: "6px 12px",
-    borderRadius: 10,
-    fontSize: 14,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  cuerpoData: { padding: "20px 24px" },
   filaPrincipal: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
-  infoPlantaContenedor: { display: "flex", alignItems: "center", gap: 10 },
+  infoPlantaContenedor: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
   circuloIcono: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#f0fdf4",
+    width: 28,
+    height: 28,
+    borderRadius: 10,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
   nombrePlanta: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "900",
-    color: colores.bosque,
     margin: 0,
+    textTransform: "uppercase",
     letterSpacing: "-0.5px",
   },
-  alias: {
-    fontSize: 14,
-    color: colores.tierra,
-    margin: "4px 0 0 34px",
-    fontWeight: "600",
+  estadoAuditado: {
+    display: "flex",
+    alignItems: "center",
+    paddingLeft: 10,
   },
-  contenedorVerde: {
-    marginTop: 18,
-    padding: "18px",
-    backgroundColor: "#f0fdf4",
-    borderRadius: 22,
-    border: "1px solid #dcfce7",
-    borderLeft: `6px solid ${colores.frondoso}`,
-  },
-  headerContenedor: {
+  autorBox: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginTop: -4,
+    minHeight: "26px",
   },
-  labelVerde: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: colores.frondoso,
-    letterSpacing: "0.8px",
+  perfilAutor: {
+    display: "flex",
+    alignItems: "center",
+  },
+  alias: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginLeft: "5px",
   },
   tagGrupo: {
     fontSize: 12,
-    fontWeight: "900",
-    backgroundColor: colores.bosque,
+    fontWeight: "800",
     color: "#fff",
-    padding: "5px 12px",
-    borderRadius: 8,
-    textTransform: "uppercase",
+    padding: "4px 10px",
+    borderRadius: 6,
+    letterSpacing: "0.5px",
+  },
+  contenedorVerde: {
+    marginTop: 8,
+    padding: "16px",
+    backgroundColor: "#f0fdf4",
+    borderRadius: 16,
+    border: "1px solid #dcfce7",
+    display: "flex",
+    flexDirection: "column",
+    gap: 4,
+  },
+  labelUbicacion: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: "#2d8b57",
+    opacity: 0.7,
   },
   textoDestacado: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "900",
-    color: colores.bosque,
+    color: "#2f4538",
     margin: 0,
     textTransform: "uppercase",
-    lineHeight: "1.2",
-  },
-  adminData: {
-    fontSize: 9,
-    color: "#94a3b8",
-    marginTop: 10,
-    paddingTop: 8,
-    borderTop: "1px dashed #dcfce7",
-    fontFamily: "monospace",
   },
   filaSecundaria: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 4,
   },
   badgeTipo: {
-    padding: "6px 12px",
-    borderRadius: 10,
-    backgroundColor: "#f1f5f9",
-  },
-  badgeText: {
-    fontSize: 11,
+    marginTop: "11px",
+    padding: "4px 10px",
+    borderRadius: 8,
+    fontSize: 12,
     fontWeight: "800",
-    color: "#475569",
-    textTransform: "uppercase",
   },
-  fecha: { fontSize: 12, color: "#94a3b8", fontWeight: "600" },
-  footerAcciones: {
-    padding: "0 24px 24px 24px",
+  fechaBox: {
+    marginTop: "11px",
     display: "flex",
-    gap: 12,
-    marginTop: 10,
-  },
-  btnAprobar: {
-    flex: 1,
-    padding: "18px",
-    borderRadius: 16,
-    border: "none",
-    backgroundColor: colores.bosque,
-    color: "#fff",
-    fontWeight: "900",
-    fontSize: 13,
-    cursor: "pointer",
-    boxShadow: "0 6px 15px rgba(47, 69, 56, 0.25)",
-  },
-  btnRechazar: {
-    flex: 1,
-    padding: "18px",
-    borderRadius: 16,
-    border: "1px solid #e2e8f0",
-    backgroundColor: "#fff",
-    color: "#94a3b8",
-    fontWeight: "700",
-    fontSize: 11,
-    cursor: "pointer",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 12,
+    fontWeight: "600",
   },
 };

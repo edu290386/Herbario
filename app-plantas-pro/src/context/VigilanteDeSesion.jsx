@@ -24,20 +24,13 @@ export const VigilanteDeSesion = ({ children }) => {
 
       // --- BLOQUE DE DEBUG PARA DISPOSITIVO ---
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.log("=== VIGILANTE: ESTADO DE DISPOSITIVO ===");
-      console.log("1. ¿Navegador detectado como Móvil?:", isMobile);
-      console.log("2. User solo_movil (DB):", user?.solo_movil);
-      console.log("3. ID Laptop en DB:", user?.id_laptop);
-      console.log("4. ID Móvil en DB:", user?.id_movil);
-
+      
       // La prueba de fuego:
       if (user?.solo_movil && !isMobile) {
         console.error(
           "🚨 CRÍTICO: Este usuario tiene 'solo_movil' pero está en Laptop. El Vigilante debería sacarlo.",
         );
       }
-      console.log("========================================");
-      // ----------------------------------------
       
       if (esRutaCritica) {
         // 🚨 1. REGLA SUPREMA: EL MARTILLO DE BANEO

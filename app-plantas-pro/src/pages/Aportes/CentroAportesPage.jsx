@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaCamera, FaIdCard, FaCommentDots, FaArrowLeft } from "react-icons/fa";
+import { FaCamera, FaIdCard, FaCommentDots } from "react-icons/fa";
+import { PiPlantFill } from "react-icons/pi"; // Importado para el icono de la cabecera
 import { FormImagen } from "./FormImagen";
 import { FormNombre } from "./FormNombre";
 import { FormComentario } from "./FormComentario";
-import "./CentroAportesPage.css"
+import { BotonCancelar } from "../../components/ui/BotonCancelar";
+import "./CentroAportesPage.css";
 
 export const CentroAportesPage = () => {
   const { state } = useLocation();
@@ -14,6 +16,7 @@ export const CentroAportesPage = () => {
   // Datos que vienen de la DetallePage
   const { plantaId, nombrePlanta, conteoActual } = state || {};
 
+  // Validación de seguridad si se accede sin estado
   if (!plantaId) {
     return (
       <div style={{ padding: "50px", textAlign: "center" }}>
@@ -29,6 +32,15 @@ export const CentroAportesPage = () => {
         {!opcion ? (
           <div className="oz-menu-centered-wrapper">
             <div className="menu-opciones-grid">
+              <header className="aportes-header-banner">
+                <div className="icon-circle icon-verde header-icon-main">
+                  <PiPlantFill />
+                </div>
+                <div className="header-text-content">
+                  <h1 className="registro-titulo">CONTROL DE APORTES</h1>
+                </div>
+              </header>
+              {/* Opción: Nueva Fotografía */}
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("imagen")}
@@ -38,10 +50,14 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="card-text-content">
                   <h3>Nueva Fotografía</h3>
-                  <p>Envía fotos de hojas, flores, frutos o tallos.</p>
+                  <p>
+                    Envía fotos de las diferentes partes de la planta para la
+                    galería
+                  </p>
                 </div>
               </div>
 
+              {/* Opción: Sugerir Nombre */}
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("nombre")}
@@ -51,10 +67,14 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="card-text-content">
                   <h3>Sugerir Nombre</h3>
-                  <p>¿Conoces otro nombre para esta planta?</p>
+                  <p>
+                    Algunas plantas tienen nombres diferentes en distintas
+                    regiones o países. Compártelos.
+                  </p>
                 </div>
               </div>
 
+              {/* Opción: Dato o Curiosidad */}
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("comentario")}
@@ -63,14 +83,31 @@ export const CentroAportesPage = () => {
                   <FaCommentDots />
                 </div>
                 <div className="card-text-content">
-                  <h3>Dato o Curiosidad</h3>
-                  <p>Comparte consejos de cultivo o usos tradicionales.</p>
+                  <h3>Enviar Comentario</h3>
+                  <p>
+                    Comparte Información o reporta errores y mejoras de la
+                    planta
+                  </p>
+                </div>
+              </div>
+
+              {/* 🟢 EL BOTÓN DE ESCAPE: Volver a la planta */}
+              <div
+                className="registro-botones-footer"
+                style={{ marginTop: "10px" }}
+              >
+                <div className="boton-cancelar-wrapper">
+                  <BotonCancelar
+                    texto="VOLVER A LA PLANTA"
+                    variante="azul-slate-claro"
+                  />
                 </div>
               </div>
             </div>
           </div>
         ) : (
           <div className="formulario-activo-wrapper">
+            {/* Renderizado condicional de los formularios */}
             {opcion === "imagen" && (
               <FormImagen
                 plantaId={plantaId}
@@ -99,4 +136,3 @@ export const CentroAportesPage = () => {
     </div>
   );
 };
-
