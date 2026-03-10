@@ -302,7 +302,7 @@
 @media (max-width: 920px) {
   .burbuja-aporte-flotante {
     top: auto;
-    bottom: 10px;
+    bottom: 180px;
     right: 10px;
   }
 }

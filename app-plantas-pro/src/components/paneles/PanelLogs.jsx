@@ -1,44 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "../../supabaseClient"; // Ajusta esta ruta a tu proyecto
-import { RegistroLog } from "./RegistroLog";
+import React, { useState, useEffect, useCallback } from "react";
+import { logService } from "../../services/logService";
+import { RegistroLog } from "./Actividades/RegistroLog";
+import { TicketAporte } from "./Aportes/TicketAporte"; // Ajusta la ruta si es necesario
 
-export const PanelLogs = ({ user }) => {
+export const PanelLogs = ({ tipo, user }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const esStaff = user?.rol === "Administrador" || user?.rol === "Colaborador";
+
+  const fetchLogs = useCallback(async () => {
+    if (!tipo || !user) return;
+    setLoading(true);
+    try {
+      // Usamos el servicio centralizado
+      const data = await logService.getLogs(tipo, user);
+      setLogs(data);
+    } catch (err) {
+      console.error("Error cargando logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [tipo, user]);
+
   useEffect(() => {
-    const fetchLogs = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("logs")
-          .select("*")
-          // FILTRO ESTRICTO: Solo lo que pediste
-          .in("tipo_accion", ["nueva_planta", "nueva_ubicacion"])
-          .order("created_at", { ascending: false });
-
-        if (!error) setLogs(data || []);
-      } catch (err) {
-        console.error("Error cargando logs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLogs();
-  }, []);
+  }, [fetchLogs]);
 
-  if (loading)
+  // Función temporal vacía para cuando implementemos la lógica de aprobar/rechazar
+  const handleResolver = (ticket, accion) => {
+    console.log(`Acción: ${accion} en el ticket:`, ticket.id);
+  };
+
+  if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
         Sincronizando bitácora...
       </div>
     );
-  if (logs.length === 0)
+  }
+
+  if (logs.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
         Sin registros recientes.
       </div>
     );
+  }
 
   return (
     <div
@@ -49,9 +57,18 @@ export const PanelLogs = ({ user }) => {
         overflowY: "auto",
       }}
     >
-      {logs.map((log) => (
-        <RegistroLog key={log.id} log={log} userRole={user?.rol} />
-      ))}
+      {logs.map((log) =>
+        tipo === "gestion" ? (
+          <TicketAporte
+            key={log.id}
+            ticket={log}
+            isStaff={esStaff}
+            onResolver={handleResolver}
+          />
+        ) : (
+          <RegistroLog key={log.id} log={log} userRole={user?.rol} />
+        ),
+      )}
     </div>
   );
 };

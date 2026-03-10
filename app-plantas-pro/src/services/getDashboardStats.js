@@ -1,4 +1,4 @@
-import { supabase } from "../../../supabaseClient";
+import { supabase } from "../supabaseClient";
 
 export const getDashboardStats = async (userId, grupoId) => {
   // 1. Validación mínima: El userId es obligatorio

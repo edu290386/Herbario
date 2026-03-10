@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import { PiMedal } from "react-icons/pi";
 import { BsCalendar2Check } from "react-icons/bs";
-import { getDashboardStats } from "./getDashboardStats";
+import { getDashboardStats } from "../../../services/getDashboardStats";
 import { AuthContext } from "../../../context/AuthContext";
 import { formatearFechaLocal } from "../../../helpers/timeHelper";
 import { Copyright } from "../../ui/Copyright";

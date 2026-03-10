@@ -1,7 +1,6 @@
-import React, { useState, useRef, useContext } from "react";
+import { useState, useRef, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { uploadImage } from "../../helpers/cloudinaryHelper";
-import { supabase } from "../../supabaseClient";
 import { formatearParaDB } from "../../helpers/textHelper";
 import { GuiaRegistro } from "../Registro/GuiaRegistro";
 import { IoMdCheckmarkCircle, IoMdCloseCircle } from "react-icons/io";
@@ -9,6 +8,7 @@ import { TbCamera, TbTrash } from "react-icons/tb";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
 import { StatusBanner } from "../../components/ui/StatusBanner";
+import { logService } from "../../services/logService";
 import "./FormImagen.css";
 
 export const FormImagen = ({
@@ -43,6 +43,7 @@ export const FormImagen = ({
     setEnviando(true);
 
     try {
+      // 1. Subida a Cloudinary (Esto sigue aquí porque es manejo de archivos)
       const folderPath = `${formatearParaDB(nombrePlanta)}/${etiquetaFoto}`;
       const urlFoto = await uploadImage(archivo, folderPath);
       if (!urlFoto) throw new Error("Error al subir la imagen.");
@@ -52,43 +53,22 @@ export const FormImagen = ({
         url: urlFoto,
       };
 
-      // 1. INSERTAR EN LOGS
-      const { data: logData, error: errorLog } = await supabase
-        .from("logs")
-        .insert([
-          {
-            planta_id: Number(plantaId), // 113 es número, aquí sí va Number
-            usuario_id: user?.id,
-            nombre_planta: nombrePlanta,
-            alias: user?.alias || "Usuario Ozain",
-            grupo_id: user?.grupo_id,
-            tipo_accion: "nueva_imagen",
-            contenido: objetoContenido,
-            revisado: "pendiente",
-            auditado: "pendiente",
-          },
-        ])
-        .select()
-        .single();
-
-      if (errorLog) throw errorLog;
-
-      // 2. INSERTAR EN APORTES
-      // IMPORTANTE: logData.id NO lleva Number() porque es un UUID (string)
-      const { error: errorAportes } = await supabase.from("aportes").insert([
-        {
-          planta_id: Number(plantaId),
-          log_id: logData.id, // Pasamos el string directo '1eaf9305...'
-          contenido: objetoContenido,
-        },
-      ]);
-
-      if (errorAportes) throw errorAportes;
+      // 2. 🟢 USAR EL SERVICE (Reemplaza los pasos 1 y 2 manuales que tenías)
+      await logService.enviarAporte({
+        plantaId: Number(plantaId),
+        nombrePlanta,
+        usuarioId: user?.id,
+        alias: user?.alias || "Usuario Ozain",
+        grupoId: user?.grupo_id,
+        nombre_grupo: user?.nombre_grupo,
+        tipoAccion: "nueva_imagen",
+        contenidoJSON: objetoContenido,
+      });
 
       setExito(true);
       setTimeout(() => onCancel(), 1800);
     } catch (error) {
-      console.error("Error detallado:", error);
+      console.error("Error en el envío:", error);
       alert("Error: " + error.message);
     } finally {
       setEnviando(false);

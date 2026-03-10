@@ -1,5 +1,5 @@
 import React from "react";
-import { RegistroLog } from "../RegistroLog";
+import { RegistroLog } from "./RegistroLog";
 
 const HistorialActividades = ({ actividades, user }) => {
   return (

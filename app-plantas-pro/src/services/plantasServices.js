@@ -85,7 +85,7 @@ export const crearEspecieNueva = async (
     .insert([
       {
         nombres: nombresArray || [nombreEstetico],
-        paises_nombre: [pais || "WORLD"],
+        paises_nombre: [pais || "world"],
         foto_referencial: fotoUrl,
         creador_planta: usuarioId,
         nombres_internacionales: nombresInternacionalesJSON || [],

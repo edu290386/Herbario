@@ -29,6 +29,7 @@ import { StatusBanner } from "../../components/ui/StatusBanner";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { Paginador } from "./Paginador";
 import { ControlAccesos } from "../../components/paneles/Accesos/ControlAccesos";
+import { PanelAportes } from "../../components/paneles/Aportes/PanelAportes";
 
 
 export const HomePage = () => {
@@ -102,15 +103,15 @@ export const HomePage = () => {
       icono: FaRegBell,
       componente: <PanelLogs tipo="actividades" user={user} />,
     },
-    gestion: {
+    // 🟢 AQUÍ CONECTAMOS EL NUEVO PANEL
+    aportes: {
       titulo: "Control de Aportes",
       icono: LuMicroscope,
-      componente: <PanelLogs tipo="gestion" user={user} />,
+      componente: <PanelAportes user={user} />,
     },
   };
 
-  // Obtenemos la configuración actual basada en el estado
-  const configActual = CONFIG_PANELES[tipoPanel] || {};    
+  const configActual = CONFIG_PANELES[tipoPanel] || {};   
       
   return (
     <div className="home-page">
@@ -120,16 +121,7 @@ export const HomePage = () => {
         title={configActual.titulo || "Panel"}
         icon={configActual.icono || TbCloverFilled}
       >
-        {/* 1. Perfil y Estadísticas */}
-        {tipoPanel === "usuario" && <PanelUsuario user={user} />}
-
-        {/* 2. Gestión de Usuarios */}
-        {tipoPanel === "accesos" && <ControlAccesos admin={user} />}
-
-        {/* 3. Muro Social / Noticias (El que lee solo de la tabla 'logs') */}
-        {tipoPanel === "actividades" && (
-          <PanelLogs tipo="actividades" user={user} />
-        )}
+        {configActual.componente}
       </BaseDrawer>
 
       <div className="home-layout-container">
@@ -174,7 +166,7 @@ export const HomePage = () => {
 
             {/* 4. CONTROL DE APORTES (NUEVO: ¡Abierto a todos!) */}
             <button
-              onClick={() => navigate("/aportes")} // ➔ ¡Magia simple y limpia!
+              onClick={() => abrirPanel("aportes")} // 🟢 AHORA SÍ ABRIRÁ EL DRAWER
               className="icon-btn"
             >
               <LuMicroscope size={22} color={colores.frondoso} />
