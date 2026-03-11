@@ -3,18 +3,19 @@
   background: var(--color-gris-suave);
   border: 2px solid var(--color-gris-borde);
   border-radius: 14px;
-  padding: 4px;
+  padding: 8px 4px; /* Un poco más de aire */
   text-align: center;
   font-weight: 900;
   color: var(--color-frondoso);
   font-size: 1.2rem;
+  text-transform: uppercase;
 }
 
 /* Selector de categorías por pestañas/iconos */
 .oz-category-tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 6px;
 }
 
 .oz-tab-item {
@@ -25,7 +26,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0px;
+  gap: 4px;
   cursor: pointer;
   transition: all 0.2s;
   color: #64748b;
@@ -40,50 +41,81 @@
 .oz-tab-icon { font-size: 1.2rem; }
 .oz-tab-label { font-size: 9px; font-weight: 800; text-transform: uppercase; }
 
-/* VISOR BOTÁNICO 3:4 */
+/* ==========================================================================
+   VISOR BOTÁNICO 3:4 (Sincronizado con Panel y Carrusel)
+   ========================================================================== */
 .oz-visor-container {
   width: 100%;
-  aspect-ratio: 3 / 4;
-  background: var(--color-gris-suave);
+  aspect-ratio: 3 / 4; /* Proporción sagrada */
+  background: #1a1a1a; /* Fondo oscuro unificado */
   border: 2px dashed #cbd5e1;
   border-radius: 20px;
   overflow: hidden;
   position: relative;
   transition: all 0.3s;
+  /* Centrado para el modo contain */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .oz-visor-container.has-photo {
   border: 2px solid var(--color-frondoso-border);
-  background: #1a1a1a;
 }
 
 .oz-drop-area {
-  width: 100%; height: 100%;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  cursor: pointer; gap: 8px;
+  width: 100%; 
+  height: 100%;
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  gap: 8px;
+  background: var(--color-gris-suave); /* Fondo gris solo cuando no hay foto */
 }
 
 .oz-cam-circle {
-  width: 55px; height: 55px;
-  background: white; color: var(--color-frondoso);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  width: 55px; 
+  height: 55px;
+  background: white; 
+  color: var(--color-frondoso);
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .oz-drop-area p { font-size: 12px; font-weight: 900; color: var(--color-texto-oscuro); margin: 0; }
 .oz-drop-area span { font-size: 10px; color: #94a3b8; font-weight: 600; }
 
-/* OVERLAY DE PREVIEW */
-.oz-preview-wrapper { width: 100%; height: 100%; position: relative; }
-.oz-img-botanica { width: 100%; height: 100%; object-fit: cover; }
+/* PREVIEW DE IMAGEN (Fidelidad Total) */
+.oz-preview-wrapper { 
+  width: 100%; 
+  height: 100%; 
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oz-img-botanica { 
+  max-width: 100%; 
+  max-height: 100%; 
+  object-fit: contain; /* 🟢 CLAVE: No corta la imagen, la muestra íntegra */
+}
 
 .oz-visor-overlay {
-  position: absolute; inset: 0;
+  position: absolute; 
+  inset: 0;
   padding: 15px;
-  display: flex; flex-direction: column;
+  display: flex; 
+  flex-direction: column;
   justify-content: space-between;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent 20%, rgba(0,0,0,0.4));
+  /* Gradiente para que los botones se vean sobre cualquier foto */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 20%, rgba(0,0,0,0.5));
+  pointer-events: none; /* Deja que los clics pasen a los botones específicos */
 }
 
 .oz-visor-badge {
@@ -94,21 +126,28 @@
   border-radius: 10px;
   font-size: 10px;
   font-weight: 900;
+  pointer-events: auto;
 }
 
 .oz-visor-actions {
   align-self: flex-end;
   display: flex;
   gap: 10px;
+  pointer-events: auto;
 }
 
 .oz-action-btn {
-  width: 42px; height: 42px;
-  border-radius: 12px; border: none;
-  background: white; color: var(--color-texto-oscuro);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  width: 42px; 
+  height: 42px;
+  border-radius: 12px; 
+  border: none;
+  background: white; 
+  color: var(--color-texto-oscuro);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .oz-action-btn.delete { background: #ef4444; color: white; }
-

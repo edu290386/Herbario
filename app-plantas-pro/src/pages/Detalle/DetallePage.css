@@ -48,7 +48,7 @@
 .imagen-botanica {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   /* La animación de fundido (fade-in) se maneja en el componente JS (opacity) */
 }
 
@@ -302,7 +302,7 @@
 @media (max-width: 920px) {
   .burbuja-aporte-flotante {
     top: auto;
-    bottom: 180px;
+    bottom: 140px;
     right: 10px;
   }
 }
