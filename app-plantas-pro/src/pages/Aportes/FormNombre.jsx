@@ -1,12 +1,12 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { supabase } from "../../supabaseClient";
+import { logService } from "../../services/logService";
 import { IoMdCheckmarkCircle, IoMdCloseCircle } from "react-icons/io";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
 import { PAISES_CONFIG } from "../../constants/paisesConfig";
 import { GuiaRegistro } from "../Registro/GuiaRegistro";
-import "./FormNombre.css"; // Usa los mismos estilos base de Registro
+import "./FormNombre.css";
 
 export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
   const { user } = useContext(AuthContext);
@@ -27,45 +27,23 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
     setEnviando(true);
 
     try {
-      // 1. PREPARAR EL CONTENIDO JSON
       const objetoContenido = {
         nombre_sugerido: nuevoNombre.trim(),
         procedencia: paisSeleccionado,
       };
 
-      // 2. INSERTAR EN LOGS (Capturando el ID UUID)
-      const { data: logData, error: errorLog } = await supabase
-        .from("logs")
-        .insert([
-          {
-            planta_id: Number(plantaId),
-            usuario_id: user?.id,
-            nombre_planta: nombrePlanta,
-            alias: user?.alias || "Usuario Ozain",
-            grupo_id: user?.grupo_id,
-            tipo_accion: "nuevo_nombre", // Acción específica
-            contenido: objetoContenido,
-            revisado: "pendiente",
-            auditado: "pendiente",
-          },
-        ])
-        .select()
-        .single();
+      // 🟢 USAMOS EL SERVICIO CENTRALIZADO
+      await logService.enviarAporte({
+        plantaId: Number(plantaId),
+        nombrePlanta,
+        usuarioId: user?.id,
+        alias: user?.alias || "Usuario Ozain",
+        grupoId: user?.grupo_id || "Sin grupo",
+        grupo: user?.grupo || "Sin grupo",
+        tipoAccion: "nuevo_nombre",
+        contenidoJSON: objetoContenido,
+      });
 
-      if (errorLog) throw errorLog;
-
-      // 3. INSERTAR EN APORTES (Vinculación por UUID)
-      const { error: errorAportes } = await supabase.from("aportes").insert([
-        {
-          planta_id: Number(plantaId),
-          log_id: logData.id, // El UUID de la tabla logs
-          contenido: objetoContenido,
-        },
-      ]);
-
-      if (errorAportes) throw errorAportes;
-
-      // 4. ÉXITO
       setExito(true);
       setTimeout(() => onCancel(), 1800);
     } catch (error) {
@@ -80,12 +58,10 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
     <div className="registro-page-container">
       <GuiaRegistro flujo="nuevo nombre" />
       <form onSubmit={manejarEnvio} className="registro-card">
-        {/* Nombre de la planta actual */}
         <div className="registro-section">
           <div className="oz-display-name">{nombrePlanta?.toUpperCase()}</div>
         </div>
 
-        {/* Campo: Nuevo Nombre */}
         <div className="registro-section">
           <label className="registro-label">SUGERIR OTRO NOMBRE</label>
           <input
@@ -98,7 +74,6 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
           />
         </div>
 
-        {/* Campo: Procedencia */}
         <div className="registro-section">
           <label className="registro-label">¿DÓNDE SE USA ESTE NOMBRE?</label>
           <select
@@ -118,7 +93,6 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
           </select>
         </div>
 
-        {/* Validaciones Visuales */}
         <div className="registro-section">
           <div className="registro-validaciones">
             <div className="val-item">
@@ -140,7 +114,6 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
           </div>
         </div>
 
-        {/* Botones */}
         <div className="registro-botones-footer">
           <BotonPrincipal
             type="submit"
@@ -149,7 +122,7 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
             esExitoso={exito}
             disabled={!formularioValido}
           />
-          <div className="boton-cancelar-wrapper">
+          <div className="boton-cancelar-wrapper" onClick={onCancel}>
             <BotonCancelar texto="CANCELAR" variante="azul-slate-claro" />
           </div>
         </div>

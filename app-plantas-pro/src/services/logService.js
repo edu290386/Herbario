@@ -2,8 +2,7 @@ import { supabase } from "../supabaseClient";
 
 export const logService = {
   /**
-   * 1. LECTURA (Bandeja de entrada y Historial)
-   * Maneja tanto la campana de actividades como el panel de gestión de staff.
+   * 1. LECTURA DE LOGS
    */
   getLogs: async (tipoPanel, user) => {
     if (!user || !tipoPanel) return [];
@@ -13,7 +12,6 @@ export const logService = {
         ? ["nueva_planta", "nueva_ubicacion"]
         : ["nueva_imagen", "nuevo_nombre", "nuevo_comentario"];
 
-    // Solo pedimos el JOIN de aportes si estamos en gestión para ver el contenido (fotos/texto)
     const selector = tipoPanel === "gestion" ? "*, aportes(*)" : "*";
 
     let query = supabase
@@ -22,7 +20,6 @@ export const logService = {
       .in("tipo_accion", acciones)
       .order("created_at", { ascending: false });
 
-    // Filtros de Seguridad: El Staff ve todo lo de su grupo, el usuario solo lo suyo.
     if (tipoPanel === "gestion") {
       const esStaff =
         user.rol === "Administrador" || user.rol === "Colaborador";
@@ -36,12 +33,12 @@ export const logService = {
       console.error("Error obteniendo logs:", error);
       throw error;
     }
+
     return data || [];
   },
 
   /**
    * 2. CREACIÓN DE APORTES
-   * Registra el Log (historial) y el Aporte (detalle técnico) de forma atómica.
    */
   enviarAporte: async ({
     plantaId,
@@ -49,11 +46,12 @@ export const logService = {
     usuarioId,
     alias,
     grupoId,
-    nombre_grupo,
+    grupo,
     tipoAccion,
     contenidoJSON,
+    estadoRevisado = "pendiente", // 🟢 Por defecto es pendiente (Imagen/Nombre)
+    mensajeRevisado = null, // 🟢 Por defecto es nulo
   }) => {
-    // PASO 1: Crear el Log con sanitización para evitar NULLs
     const { data: logData, error: logError } = await supabase
       .from("logs")
       .insert([
@@ -63,16 +61,16 @@ export const logService = {
           usuario_id: usuarioId,
           alias: alias,
           grupo_id: grupoId || "Sin grupo",
-          nombre_grupo: nombre_grupo || "Sin grupo",
+          nombre_grupo: grupo || "Sin grupo",
           contenido: contenidoJSON,
           auditado: "pendiente",
-          revisado: "pendiente",
+          revisado: estadoRevisado, // 🟢 Usamos la variable
           latitud: 0,
           longitud: 0,
           ciudad: "No aplica",
           distrito: "No aplica",
           tipo_accion: tipoAccion,
-          mensaje_staff: { revisado: null, auditado: null },
+          mensaje_staff: { revisado: mensajeRevisado, auditado: null }, // 🟢 Usamos la variable
         },
       ])
       .select("id")
@@ -80,12 +78,14 @@ export const logService = {
 
     if (logError) throw logError;
 
-    // PASO 2: Guardar en tabla 'aportes' para mantener la integridad
     const { error: aporteError } = await supabase.from("aportes").insert([
       {
         log_id: logData.id,
         planta_id: plantaId,
+        nombre_planta: nombrePlanta,
         contenido: contenidoJSON,
+        revisado: estadoRevisado, // Sincronizado
+        auditado: "pendiente",
       },
     ]);
 
@@ -95,187 +95,162 @@ export const logService = {
   },
 
   /**
-   * 3. RESOLUCIÓN (Aprobar / Rechazar / Auditar)
-   * Permite que el Admin confirme o se retracte de decisiones previas.
+   * 3. RESOLUCIÓN DE APORTES (Simetría: verificar_ / auditar_)
    */
   resolverAporte: async ({
     logId,
     plantaId,
-    accion, // 'aprobar', 'rechazar', 'auditar_aprobar', 'auditar_rechazar'
+    accion,
     tipoAporte,
     contenidoJSON,
     revisorAlias,
     comentario,
   }) => {
-    const ahora = new Date().toISOString();
+    try {
+      const ahora = new Date().toISOString();
 
-    // 1. Desglosar Acción y Etapa
-    const esAuditoria = accion.startsWith("auditar_");
-    const decision = accion.includes("aprobar") ? "aprobado" : "rechazado";
+      // --- FASE 1: DEFINIR ACCIÓN ---
+      const esBaneo = accion === "banear";
+      const esVerificacion = accion.startsWith("verificar_");
+      const esAuditoria = accion.startsWith("auditar_") || esBaneo;
 
-    // 2. Traer el estado previo de la tabla LOGS para saber si es ratificación o reversión
-    const { data: logActual } = await supabase
-      .from("logs")
-      .select("revisado, mensaje_staff")
-      .eq("id", logId)
-      .single();
+      let estadoFinal = accion.includes("aprobar") ? "aprobado" : "rechazado";
+      if (esBaneo) estadoFinal = "baneado";
 
-    const estadoPrevioRevisado = logActual?.revisado || "pendiente";
+      const { data: logActual } = await supabase.from("logs").select("*").eq("id", logId).single();
+      if (!logActual) throw new Error("Log no encontrado");
 
-    let nuevosMensajes =
-      logActual?.mensaje_staff && typeof logActual.mensaje_staff === "object"
-        ? { ...logActual.mensaje_staff }
-        : { revisado: null, auditado: null };
+      const nombrePlanta = logActual.nombre_planta || "Planta";
+      const estadoPrevioRevisado = logActual.revisado || "pendiente";
 
-    // 3. Preparar datos para la tabla LOGS
-    const updates = {};
-    if (esAuditoria) {
-      // ETAPA 2: ADMINISTRADOR
-      updates.auditado = decision;
-      updates.auditado_por = revisorAlias;
-      updates.fecha_auditado = ahora;
-      nuevosMensajes.auditado =
-        comentario ||
-        (decision === "aprobado"
-          ? "Aporte auditado."
-          : "Aporte observado.");
-    } else {
-      // ETAPA 1: COLABORADOR
-      updates.revisado = decision;
-      updates.revisado_por = revisorAlias;
-      updates.fecha_revision = ahora;
-      nuevosMensajes.revisado =
-        comentario ||
-        (decision === "aprobado" ? "Aporte verificado." : "Aporte observado.");
-    }
-    updates.mensaje_staff = nuevosMensajes;
+      let mensajesStaff = {};
+      try {
+        const raw = logActual.mensaje_staff;
+        if (raw) mensajesStaff = typeof raw === "string" ? JSON.parse(raw) : { ...raw };
+      } catch (e) { mensajesStaff = {}; }
 
-    // 4. Actualizar tabla LOGS
-    const { error: logError } = await supabase
-      .from("logs")
-      .update(updates)
-      .eq("id", logId);
-    if (logError) throw logError;
+      // --- FASE 2: ACTUALIZACIÓN DEL HISTORIAL (LOGS) ---
+      const updatesLogs = { mensaje_staff: mensajesStaff };
 
-    // 5. 🟢 LÓGICA DE NEGOCIO WEB (CARRUSEL, APORTES, CLOUDINARY)
-    if (tipoAporte === "nueva_imagen" || tipoAporte === "nuevo_nombre") {
-      let accionWeb = "ninguna";
-      let eliminarDeCloudinary = false;
-
-      if (!esAuditoria) {
-        // --- REGLAS COLABORADOR ---
-        if (decision === "aprobado") accionWeb = "subir";
-      } else {
-        // --- REGLAS ADMINISTRADOR ---
-        if (decision === "aprobado" && estadoPrevioRevisado === "rechazado")
-          accionWeb = "subir";
-        if (decision === "rechazado" && estadoPrevioRevisado === "aprobado")
-          accionWeb = "bajar";
-
-        // REGLA MAESTRA: Si el Admin rechaza, se destruye todo rastro de la imagen.
-        if (decision === "rechazado" && tipoAporte === "nueva_imagen") {
-          eliminarDeCloudinary = true;
-        }
+      if (esAuditoria) {
+        updatesLogs.auditado = estadoFinal;
+        updatesLogs.auditado_por = revisorAlias;
+        updatesLogs.fecha_auditado = ahora;
+        mensajesStaff.auditado = comentario || (esBaneo ? "Falta grave archivada." : "Aporte auditado.");
+      } else if (esVerificacion) {
+        updatesLogs.revisado = estadoFinal;
+        updatesLogs.revisado_por = revisorAlias;
+        updatesLogs.fecha_revision = ahora;
+        updatesLogs.auditado = "pendiente";
+        mensajesStaff.revisado = comentario || (estadoFinal === "aprobado" ? "Aporte verificado." : "Aporte observado.");
       }
 
+      await supabase.from("logs").update(updatesLogs).eq("id", logId);
+
+      // --- FASE 3: IMPACTO WEB (SUBIR / BAJAR) ---
+      let accionWeb = "ninguna";
+      if (esVerificacion) {
+        if (estadoFinal === "aprobado") accionWeb = "subir";
+      } else if (esAuditoria) {
+        // Subir si el admin aprueba algo que el colaborador rechazó
+        if (estadoFinal === "aprobado" && estadoPrevioRevisado === "rechazado") accionWeb = "subir";
+        // Bajar si el admin rechaza/banea algo que el colaborador ya había aprobado
+        if ((estadoFinal === "rechazado" || esBaneo) && estadoPrevioRevisado === "aprobado") accionWeb = "bajar";
+      }
+
+      // --- FASE 4: LIMPIEZA DE BANDEJA (APORTES) ---
+      const esRechazoDefinitivo = esAuditoria && estadoFinal === "rechazado";
+
+      if (esRechazoDefinitivo || esBaneo) {
+        await supabase.from("aportes").delete().eq("log_id", logId);
+      } else {
+        const updateAportes = {
+          nombre_planta: nombrePlanta,
+          ...(esAuditoria ? { auditado: estadoFinal } : { revisado: estadoFinal }),
+        };
+        await supabase.from("aportes").update(updateAportes).eq("log_id", logId);
+      }
+
+      // --- FASE 5: ACCIONES ESPECÍFICAS (IMAGEN/NOMBRE) ---
       if (tipoAporte === "nueva_imagen") {
         const { url, categoria } = contenidoJSON;
+        const col = `foto_${categoria.toLowerCase()}`;
 
-        // A) GESTIONAR CARRUSEL DE PLANTAS (Inyectar o Quitar)
+        // A. Actualizar tabla plantas (Carrusel)
         if (accionWeb !== "ninguna" && url) {
-          const columnaFoto = `foto_${categoria.toLowerCase()}`;
-          const { data: planta } = await supabase
-            .from("plantas")
-            .select(columnaFoto)
-            .eq("id", plantaId)
-            .single();
-          let fotosActuales = planta?.[columnaFoto] || [];
-
-          if (accionWeb === "subir" && !fotosActuales.includes(url)) {
-            fotosActuales.push(url);
-            await supabase
-              .from("plantas")
-              .update({ [columnaFoto]: fotosActuales })
-              .eq("id", plantaId);
-          } else if (accionWeb === "bajar") {
-            fotosActuales = fotosActuales.filter((f) => f !== url);
-            await supabase
-              .from("plantas")
-              .update({ [columnaFoto]: fotosActuales })
-              .eq("id", plantaId);
-          }
+          const { data: p } = await supabase.from("plantas").select(col).eq("id", plantaId).single();
+          let fotos = p?.[col] || [];
+          if (accionWeb === "subir" && !fotos.includes(url)) fotos.push(url);
+          else if (accionWeb === "bajar") fotos = fotos.filter(f => f !== url);
+          await supabase.from("plantas").update({ [col]: fotos }).eq("id", plantaId);
         }
 
-        // B) DESTRUCCIÓN FINAL Y LIMPIEZA
-        if (eliminarDeCloudinary && url) {
-          console.log(
-            `⚠️ Destrucción Final: Limpiando BD y Cloudinary para -> ${url}`,
-          );
-
-          // B1. Quitar URL de la tabla LOGS (Para que la tarjeta diga "Sin Imagen")
-          const contenidoSinFoto = { ...contenidoJSON, url: "" };
-          await supabase
-            .from("logs")
-            .update({ contenido: contenidoSinFoto })
-            .eq("id", logId);
-
-          // B2. 🟢 Eliminar la fila basura de la tabla APORTES usando log_id
-          const { error: errorAporteDelete } = await supabase
-            .from("aportes")
-            .delete()
-            .eq("log_id", logId);
-          if (errorAporteDelete)
-            console.error(
-              "❌ Error al borrar de tabla aportes:",
-              errorAporteDelete.message,
-            );
-
-          // B3. Destruir en Cloudinary
+        // B. 🟢 BORRADO FÍSICO DE CLOUDINARY (Corregido)
+        // Se ejecuta si es un rechazo final de auditoría (no baneo para dejar evidencia)
+        if (esRechazoDefinitivo && url) {
           try {
             const partes = url.split("/upload/");
             if (partes.length >= 2) {
-              const publicId = decodeURIComponent(
-                partes[1].split("/").slice(1).join("/").split(".")[0],
-              );
+              const pathCompleto = partes[1].split("/");
+              
+              // 🟢 MEJORA: Solo quitamos el primer segmento si es la versión (ej: v1654321)
+              if (pathCompleto[0].startsWith('v') && !isNaN(pathCompleto[0].substring(1))) {
+                pathCompleto.shift();
+              }
+              
+              // El publicId es el path sin la extensión (.jpg, .png, etc.)
+              const publicId = decodeURIComponent(pathCompleto.join("/").split(".")[0]);
+              
+              console.log("Intentando eliminar PublicID:", publicId);
 
               await supabase.functions.invoke("eliminar-ubicacion-completa", {
                 body: { ubiId: null, publicId: publicId },
               });
             }
-          } catch (errorCloudinary) {
-            console.error(
-              "❌ Error al intentar borrar en Cloudinary:",
-              errorCloudinary.message,
-            );
+          } catch (e) {
+            console.error("Error al intentar borrar de Cloudinary:", e.message);
           }
-        } else {
-          // C) 🟢 SINCRONIZAR ESTADO EN LA TABLA APORTES (Si el ticket no fue destruido)
-          const updateAportes = {};
-          if (esAuditoria) {
-            updateAportes.auditado = decision; // Escribe "aprobado"
-          } else {
-            updateAportes.revisado = decision; // Escribe "aprobado" o "rechazado"
-          }
-
-          const { error: errorSync } = await supabase
-            .from("aportes")
-            .update(updateAportes)
-            .eq("log_id", logId);
-
-          if (errorSync)
-            console.error(
-              "❌ Error sincronizando estado en la tabla aportes:",
-              errorSync.message,
-            );
         }
       }
 
-      // D) GESTIONAR TEXTOS (Ej. Nombres)
+      // --- GESTIÓN DE NOMBRES (Limpia) ---
       if (tipoAporte === "nuevo_nombre" && accionWeb !== "ninguna") {
-        // Tu lógica para actualizar textos
-      }
-    }
+        const { nombre_sugerido, procedencia } = contenidoJSON;
+        const nombreAjustado = nombre_sugerido.trim();
+        const paisUpper = (procedencia || "WORLD").toUpperCase();
+        const { data: p } = await supabase.from("plantas").select("nombres_internacionales, nombres, paises_nombre").eq("id", plantaId).single();
+        
+        let jsonN = p?.nombres_internacionales || [];
+        let arrayS = p?.nombres || [];
+        let pIdx = jsonN.findIndex(b => b.pais === paisUpper);
 
-    return { success: true };
+        if (accionWeb === "subir") {
+          const item = { texto: nombreAjustado, verificado: true, rechazado: false };
+          if (pIdx >= 0) {
+            if (!jsonN[pIdx].nombres.find(n => n.texto.toLowerCase() === nombreAjustado.toLowerCase())) jsonN[pIdx].nombres.push(item);
+          } else {
+            jsonN.push({ pais: paisUpper, nombres: [item] });
+          }
+          if (!arrayS.includes(nombreAjustado)) arrayS.push(nombreAjustado);
+        } else if (accionWeb === "bajar") {
+          if (pIdx >= 0) {
+            jsonN[pIdx].nombres = jsonN[pIdx].nombres.filter(n => n.texto.toLowerCase() !== nombreAjustado.toLowerCase());
+            if (jsonN[pIdx].nombres.length === 0) jsonN.splice(pIdx, 1);
+          }
+          arrayS = [...new Set(jsonN.flatMap(b => b.nombres.map(n => n.texto)))];
+        }
+
+        await supabase.from("plantas").update({ 
+          nombres_internacionales: jsonN, 
+          nombres: arrayS, 
+          paises_nombre: [...new Set(jsonN.map(b => b.pais))] 
+        }).eq("id", plantaId);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("🔥 Error en resolverAporte:", error);
+      return { success: false, error: error.message };
+    }
   },
-};
+}

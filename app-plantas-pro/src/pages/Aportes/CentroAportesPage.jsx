@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaCamera, FaIdCard, FaCommentDots } from "react-icons/fa";
-import { PiPlantFill } from "react-icons/pi"; // Importado para el icono de la cabecera
+import { PiPlantFill } from "react-icons/pi";
 import { FormImagen } from "./FormImagen";
 import { FormNombre } from "./FormNombre";
 import { FormComentario } from "./FormComentario";
@@ -13,10 +13,9 @@ export const CentroAportesPage = () => {
   const navigate = useNavigate();
   const [opcion, setOpcion] = useState(null);
 
-  // Datos que vienen de la DetallePage
-  const { plantaId, nombrePlanta, conteoActual } = state || {};
+  const { plantaId, nombrePlanta, conteoActual, nombresExistentes } =
+    state || {};
 
-  // Validación de seguridad si se accede sin estado
   if (!plantaId) {
     return (
       <div style={{ padding: "50px", textAlign: "center" }}>
@@ -38,9 +37,19 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="header-text-content">
                   <h1 className="registro-titulo">CONTROL DE APORTES</h1>
+                  <p
+                    style={{
+                      color: "white",
+                      margin: 0,
+                      fontSize: "0.8rem",
+                      opacity: 0.9,
+                    }}
+                  >
+                    {nombrePlanta}
+                  </p>
                 </div>
               </header>
-              {/* Opción: Nueva Fotografía */}
+
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("imagen")}
@@ -50,14 +59,10 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="card-text-content">
                   <h3>Nueva Fotografía</h3>
-                  <p>
-                    Envía fotos de las diferentes partes de la planta para la
-                    galería
-                  </p>
+                  <p>Envía fotos de las diferentes partes de la planta</p>
                 </div>
               </div>
 
-              {/* Opción: Sugerir Nombre */}
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("nombre")}
@@ -67,14 +72,10 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="card-text-content">
                   <h3>Sugerir Nombre</h3>
-                  <p>
-                    Algunas plantas tienen nombres diferentes en distintas
-                    regiones o países. Compártelos.
-                  </p>
+                  <p>Comparte nombres regionales o de otros países.</p>
                 </div>
               </div>
 
-              {/* Opción: Dato o Curiosidad */}
               <div
                 className="card-opcion-aporte"
                 onClick={() => setOpcion("comentario")}
@@ -84,19 +85,18 @@ export const CentroAportesPage = () => {
                 </div>
                 <div className="card-text-content">
                   <h3>Enviar Comentario</h3>
-                  <p>
-                    Comparte Información o reporta errores y mejoras de la
-                    planta
-                  </p>
+                  <p>Reporta errores o añade información relevante.</p>
                 </div>
               </div>
 
-              {/* 🟢 EL BOTÓN DE ESCAPE: Volver a la planta */}
               <div
                 className="registro-botones-footer"
                 style={{ marginTop: "10px" }}
               >
-                <div className="boton-cancelar-wrapper">
+                <div
+                  className="boton-cancelar-wrapper"
+                  onClick={() => navigate(-1)}
+                >
                   <BotonCancelar
                     texto="VOLVER A LA PLANTA"
                     variante="azul-slate-claro"
@@ -107,7 +107,6 @@ export const CentroAportesPage = () => {
           </div>
         ) : (
           <div className="formulario-activo-wrapper">
-            {/* Renderizado condicional de los formularios */}
             {opcion === "imagen" && (
               <FormImagen
                 plantaId={plantaId}
@@ -120,6 +119,7 @@ export const CentroAportesPage = () => {
               <FormNombre
                 plantaId={plantaId}
                 nombrePlanta={nombrePlanta}
+                nombresExistentes={nombresExistentes || []}
                 onCancel={() => setOpcion(null)}
               />
             )}

@@ -1,69 +1,93 @@
 import { useState } from "react";
-import { FaRegCheckCircle, FaUserEdit } from "react-icons/fa";
+import { FaRegCheckCircle, FaUserEdit, FaBan } from "react-icons/fa";
 import { TiDelete } from "react-icons/ti";
 import { LiaCheckDoubleSolid } from "react-icons/lia";
 
 export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
   const [comentario, setComentario] = useState("");
   const isAdmin = userRole === "Administrador";
-  const canReview = userRole === "Colaborador" || isAdmin;
 
+  // --- LÓGICA DE ESTADOS SIMÉTRICA ---
   const estadoRevisado = ticket.revisado || "pendiente";
   const estadoAuditado = ticket.auditado || "pendiente";
-  const estaAuditado = estadoAuditado !== "pendiente";
+
+  const esBaneado = estadoAuditado === "baneado";
+  const procesoTerminado =
+    estadoAuditado !== "pendiente" && estadoAuditado !== null;
+
+  const esImagen = ticket.tipo_accion === "nueva_imagen";
+  const esNombre = ticket.tipo_accion === "nuevo_nombre";
+  const esComentario = ticket.tipo_accion === "nuevo_comentario";
+
+  const canReview = isAdmin || (userRole === "Colaborador" && !esComentario);
 
   let mensajesStaff = {};
   try {
-    mensajesStaff =
-      typeof ticket.mensaje_staff === "string"
-        ? JSON.parse(ticket.mensaje_staff)
-        : ticket.mensaje_staff || {};
+    const raw = ticket.mensaje_staff;
+    if (raw)
+      mensajesStaff = typeof raw === "string" ? JSON.parse(raw) : { ...raw };
   } catch (error) {
-    console.error("Error parseando mensajes staff:", error);
+    mensajesStaff = {error};
   }
 
   const contenido = ticket.contenido || {};
-  const esImagen = ticket.tipo_accion === "nueva_imagen";
 
   const getBadgeConfig = () => {
-    const final = estaAuditado ? estadoAuditado : estadoRevisado;
+    if (esBaneado) return { texto: "BANEADO", color: "#ffffff", bg: "#000000" };
+    const final = procesoTerminado ? estadoAuditado : estadoRevisado;
     if (final === "aprobado")
       return { texto: "APROBADO", color: "#166534", bg: "#dcfce7" };
     if (final === "rechazado")
-      return { texto: "RECHAZADO", color: "#991b1b", bg: "#fef2f2" };
+      return { texto: "OBSERVADO", color: "#991b1b", bg: "#fef2f2" };
     return { texto: "EN REVISIÓN", color: "#92400e", bg: "#fef3c7" };
   };
 
   const badge = getBadgeConfig();
 
-  const getDecisionIcon = (estado, esAdmin) => {
+  const getDecisionIcon = (estado, esEtapaAudit) => {
     if (estado === "aprobado")
-      return esAdmin ? (
+      return esEtapaAudit ? (
         <LiaCheckDoubleSolid size={16} color="#166534" />
       ) : (
         <FaRegCheckCircle size={14} color="#166534" />
       );
     if (estado === "rechazado") return <TiDelete size={18} color="#dc2626" />;
+    if (estado === "baneado") return <FaBan size={12} color="#000000" />;
     return <FaUserEdit size={14} color="#64748b" />;
   };
 
   const handleAccionDirecta = (accion) => {
+    let comentarioFinal = comentario.trim();
     const requiereComentario =
-      accion === "rechazar" ||
-      (accion === "auditar_rechazar" && estadoRevisado === "aprobado") ||
-      (accion === "auditar_aprobar" && estadoRevisado === "rechazado");
-    if (requiereComentario && !comentario.trim()) {
-      alert("⚠️ Comentario obligatorio para justificar esta acción.");
+      accion.includes("rechazar") || accion === "banear";
+
+    if (requiereComentario && !comentarioFinal) {
+      alert(
+        `⚠️ Comentario obligatorio para el ${accion === "banear" ? "BANEO" : "RECHAZO"}.`,
+      );
       return;
     }
-    onProcesar(ticket.id, accion, comentario);
+
+    if (esComentario && !requiereComentario && !comentarioFinal) {
+      comentarioFinal = "Gracias por tu aporte.";
+    }
+
+    onProcesar(ticket.id, accion, comentarioFinal);
     setComentario("");
   };
 
   return (
     <div style={styles.card}>
+      {/* 1. BANNER PLANTA */}
+      <div style={styles.plantaHeader}>
+        <h1 style={styles.plantaNombre}>
+          {ticket.nombre_planta?.toUpperCase() || "PLANTA"}
+        </h1>
+      </div>
+
+      {/* 2. HEADER INFO (Alias, Badge y Fecha) */}
       <div style={styles.header}>
-        <span style={styles.alias}>@{ticket.alias || "Anónimo"}</span>
+        <span style={styles.alias}>@{ticket.alias || "Usuario"}</span>
         <div
           style={{
             ...styles.badge,
@@ -76,80 +100,99 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
         <span style={styles.fecha}>
           {ticket.created_at
             ? new Date(ticket.created_at).toLocaleDateString()
-            : "--/--/--"}
+            : "--/--"}
         </span>
       </div>
 
-      {(estadoRevisado !== "pendiente" || estaAuditado) && (
-        <div style={styles.historyContainer}>
-          {estadoRevisado !== "pendiente" && (
-            <div style={styles.messageRow}>
-              <div style={styles.iconContainer}>
-                {getDecisionIcon(estadoRevisado, false)}
-              </div>
-              <div style={styles.messageContent}>
-                <span style={styles.messageLabel}>
-                  REVISADO POR: {ticket.revisado_por || "Staff"}
-                </span>
-                <p style={styles.messageText}>
-                  {mensajesStaff.revisado || "Sin observaciones."}
-                </p>
-              </div>
+      {/* 3. HISTORIAL STAFF (Etapa 1 y Etapa 2) */}
+      <div style={styles.historyContainer}>
+        {/* ETAPA 1: VERIFICACIÓN */}
+        {mensajesStaff.revisado && (
+          <div style={styles.messageRow}>
+            <div style={styles.iconContainer}>
+              {getDecisionIcon(estadoRevisado, false)}
             </div>
-          )}
-          {estaAuditado && (
-            <div
-              style={{
-                ...styles.messageRow,
-                marginTop: "10px",
-                borderTop: "1px dashed #e2e8f0",
-                paddingTop: "10px",
-              }}
-            >
-              <div style={styles.iconContainer}>
-                {getDecisionIcon(estadoAuditado, true)}
-              </div>
-              <div style={styles.messageContent}>
-                <span style={styles.messageLabel}>
-                  AUDITADO POR: {ticket.auditado_por || "Admin"}
-                </span>
-                <p style={styles.messageText}>
-                  {mensajesStaff.auditado || "Validación completada."}
-                </p>
-              </div>
+            <div style={styles.messageContent}>
+              <span style={styles.messageLabel}>
+                Revisado por: {ticket.revisado_por}
+              </span>
+              <p style={styles.messageText}>{mensajesStaff.revisado}</p>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      <div style={styles.mediaContainer}>
-        {esImagen ? (
-          <>
-            <div style={styles.tagCategoria}>
-              {contenido.categoria || "APORTE"}
+        {/* ETAPA 2: AUDITORÍA O BANEO */}
+        {procesoTerminado && mensajesStaff.auditado && (
+          <div
+            style={{
+              ...styles.messageRow,
+              marginTop: mensajesStaff.revisado ? "10px" : "0",
+              borderTop: mensajesStaff.revisado ? "1px dashed #ccc" : "none",
+              paddingTop: mensajesStaff.revisado ? "10px" : "0",
+            }}
+          >
+            <div style={styles.iconContainer}>
+              {getDecisionIcon(estadoAuditado, true)}
             </div>
-            {contenido.url ? (
-              <img src={contenido.url} alt="Aporte" style={styles.imagenReal} />
-            ) : (
-              <div style={styles.imagenPlaceholder}>Sin Imagen</div>
-            )}
-          </>
-        ) : (
-          <div style={styles.textoContainer}>
-            <h3 style={styles.textoDestacado}>
-              "{contenido.nombre || "Propuesta"}"
-            </h3>
+            <div style={styles.messageContent}>
+              <span style={styles.messageLabel}>
+                {esBaneado ? "Baneado por:" : "Auditado por:"}{" "}
+                {ticket.auditado_por}
+              </span>
+              <p
+                style={{
+                  ...styles.messageText,
+                  color: esBaneado ? "#dc2626" : "#334155",
+                  fontWeight: esBaneado ? "900" : "normal",
+                }}
+              >
+                {mensajesStaff.auditado}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
+      {/* 4. ÁREA DE CONTENIDO (Imagen, Nombre o Comentario) */}
+      <div style={esImagen ? styles.mediaContainer : styles.fichaCompacta}>
+        {esImagen ? (
+          <>
+            <div style={styles.tagCategoria}>{contenido.categoria}</div>
+            <img src={contenido.url} alt="Aporte" style={styles.imagenReal} />
+          </>
+        ) : (
+          <div style={styles.cuerpoFicha}>
+            {esNombre && (
+              <div style={styles.itemFicha}>
+                <span style={styles.labelFicha}>PROPUESTA ACTUAL</span>
+                <h2 style={styles.valorFichaVerde}>
+                  {contenido.nombre_sugerido}{" "}
+                  <span style={styles.paisParentesis}>
+                    ({contenido.procedencia})
+                  </span>
+                </h2>
+              </div>
+            )}
+            {esComentario && (
+              <div style={styles.itemFicha}>
+                <span style={styles.labelFicha}>COMENTARIO / SABER</span>
+                <p style={styles.valorFichaGris}>
+                  {contenido.texto || contenido.comentario}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 5. ACCIONES (Controles de Moderación Simétricos) */}
       {canReview &&
-        !estaAuditado &&
+        !procesoTerminado &&
         (estadoRevisado === "pendiente" || isAdmin) && (
           <div style={styles.actionContainer}>
             <textarea
               style={styles.inputComentario}
-              placeholder="Comentario..."
+              placeholder="Escribe un motivo o comentario..."
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
               rows={2}
@@ -158,31 +201,44 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
               <div style={{ flex: 1 }}></div>
               <div style={styles.accionesDerecha}>
                 {estadoRevisado === "pendiente" ? (
+                  /* BOTONES ETAPA 1: VERIFICAR */
                   <>
                     <button
                       style={styles.iconBtnRechazar}
-                      onClick={() => handleAccionDirecta("rechazar")}
+                      onClick={() => handleAccionDirecta("verificar_rechazar")}
+                      title="Observar Aporte"
                     >
                       <TiDelete size={34} />
                     </button>
                     <button
                       style={styles.iconBtnAprobar}
-                      onClick={() => handleAccionDirecta("aprobar")}
+                      onClick={() => handleAccionDirecta("verificar_aprobar")}
+                      title="Verificar Aporte"
                     >
                       <FaRegCheckCircle size={24} />
                     </button>
                   </>
                 ) : (
+                  /* BOTONES ETAPA 2: AUDITAR / BANEAR */
                   <>
+                    <button
+                      style={{ ...styles.iconBtnRechazar, color: "#000" }}
+                      onClick={() => handleAccionDirecta("banear")}
+                      title="Banear Usuario"
+                    >
+                      <FaBan size={24} />
+                    </button>
                     <button
                       style={styles.iconBtnRechazar}
                       onClick={() => handleAccionDirecta("auditar_rechazar")}
+                      title="Rechazo Final"
                     >
                       <TiDelete size={34} />
                     </button>
                     <button
                       style={styles.iconBtnAuditar}
                       onClick={() => handleAccionDirecta("auditar_aprobar")}
+                      title="Aprobación Final"
                     >
                       <LiaCheckDoubleSolid size={28} />
                     </button>
@@ -196,6 +252,7 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
   );
 };
 
+// 🟢 ESTILOS COMPLEMENTARIOS INTEGRADOS (Protegidos)
 const styles = {
   card: {
     borderRadius: "16px",
@@ -207,6 +264,12 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   },
+  plantaHeader: {
+    padding: "12px 16px",
+    backgroundColor: "#166534",
+    color: "#fff",
+  },
+  plantaNombre: { fontSize: "1.2rem", fontWeight: "900", margin: 0 },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -214,12 +277,12 @@ const styles = {
     padding: "12px 16px",
     borderBottom: "1px solid #f1f5f9",
   },
-  alias: { fontSize: "0.85rem", fontWeight: "800", color: "#1e293b", flex: 1 },
-  fecha: { fontSize: "0.75rem", color: "#94a3b8", flex: 1, textAlign: "right" },
+  alias: { fontSize: "0.85rem", fontWeight: "800", color: "#1e293b" },
+  fecha: { fontSize: "0.75rem", color: "#94a3b8" },
   badge: {
     fontSize: "0.7rem",
     fontWeight: "900",
-    padding: "2px 6px",
+    padding: "3px 8px",
     borderRadius: "12px",
     minWidth: "85px",
     textAlign: "center",
@@ -231,35 +294,27 @@ const styles = {
   },
   messageRow: { display: "flex", gap: "12px", alignItems: "flex-start" },
   iconContainer: {
-    marginTop: "2px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     minWidth: "16px",
   },
   messageContent: { display: "flex", flexDirection: "column", flex: 1 },
-  messageLabel: {
-    fontSize: "0.7rem",
-    fontWeight: "700",
-    color: "#64748b",
-    marginBottom: "2px",
-  },
+  messageLabel: { fontSize: "0.8rem", fontWeight: "700", color: "#64748b" },
   messageText: {
     margin: "0",
     fontSize: "0.85rem",
     color: "#334155",
-    lineHeight: "1.4",
     fontStyle: "italic",
   },
   mediaContainer: {
     width: "100%",
     aspectRatio: "3 / 4",
     backgroundColor: "#1a1a1a",
-    position: "relative",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    position: "relative",
   },
   imagenReal: { maxWidth: "100%", maxHeight: "100%", objectFit: "contain" },
   tagCategoria: {
@@ -272,8 +327,6 @@ const styles = {
     borderRadius: "4px",
     fontSize: "0.65rem",
     fontWeight: "800",
-    textTransform: "uppercase",
-    zIndex: 2,
   },
   imagenPlaceholder: {
     width: "100%",
@@ -282,19 +335,37 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#e2e8f0",
+    color: "#64748b",
+    fontWeight: "bold",
   },
-  textoDestacado: {
-    fontSize: "1.2rem",
+  fichaCompacta: {
+    width: "100%",
+    padding: "20px 16px",
+    backgroundColor: "#fff",
+    borderBottom: "1px solid #e2e8f0",
+  },
+  cuerpoFicha: { display: "flex", flexDirection: "column", gap: "12px" },
+  itemFicha: { display: "flex", flexDirection: "column", gap: "2px" },
+  valorFichaVerde: {
+    fontSize: "1.3rem",
+    fontWeight: "900",
+    color: "#166534",
+    margin: 0,
+  },
+  paisParentesis: { fontSize: "1rem", color: "#64748b", fontWeight: "600" },
+  labelFicha: {
+    fontSize: "0.65rem",
     fontWeight: "800",
-    color: "#2d5a27",
-    textAlign: "center",
-    padding: "40px 20px",
+    color: "#64748b",
+    textTransform: "uppercase",
   },
-  actionContainer: {
-    padding: "12px 16px",
-    borderTop: "1px solid #f1f5f9",
-    backgroundColor: "#f8fafc",
+  valorFichaGris: {
+    fontSize: "1rem",
+    fontWeight: "700",
+    color: "#475569",
+    margin: 0,
   },
+  actionContainer: { padding: "12px 16px", backgroundColor: "#f8fafc" },
   inputComentario: {
     width: "100%",
     padding: "10px",
@@ -303,13 +374,13 @@ const styles = {
     fontSize: "0.85rem",
     resize: "none",
   },
-  actionBar: {
+  actionBar: { display: "flex", paddingTop: "8px" },
+  accionesDerecha: {
     display: "flex",
-    justifyContent: "space-between",
-    paddingTop: "8px",
+    gap: "14px",
+    marginLeft: "auto",
     alignItems: "center",
   },
-  accionesDerecha: { display: "flex", alignItems: "center", gap: "12px" },
   iconBtnRechazar: {
     background: "none",
     border: "none",

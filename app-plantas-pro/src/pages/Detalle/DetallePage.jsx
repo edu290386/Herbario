@@ -91,8 +91,9 @@ export const DetallePage = () => {
     navigate("/aportes", {
       state: {
         plantaId: planta.id,
-        nombrePlanta: planta.nombres?.[0],
+        nombrePlanta: planta.nombres?.[0] || "Planta sin nombre",
         conteoActual: conteoFotos,
+        nombresExistentes: planta.nombres_internacionales || [],
       },
     });
   };

@@ -73,51 +73,50 @@ export const PanelAportes = ({ user }) => {
         comentario: comentario,
       });
 
-      // ACTUALIZACIÓN VISUAL INMEDIATA EN REACT
-      setAportes((aportesAnteriores) =>
-        aportesAnteriores.map((ticket) => {
+      setAportes((prev) =>
+        prev.map((ticket) => {
           if (String(ticket.id) === String(logId)) {
-            const esAuditoria = accion.startsWith("auditar_");
-            const decision = accion.includes("aprobar")
+            const esBaneo = accion === "banear";
+            const esAuditoria = accion.startsWith("auditar_") || esBaneo;
+            const esVerificacion = accion.startsWith("verificar_");
+
+            let decision = accion.includes("aprobar")
               ? "aprobado"
               : "rechazado";
+            if (esBaneo) decision = "baneado";
 
-            // Parseo seguro
-            let mensajesActuales = {};
-            if (typeof ticket.mensaje_staff === "string") {
-              try {
-                mensajesActuales = JSON.parse(ticket.mensaje_staff);
-              } catch (e) {e}
-            } else if (ticket.mensaje_staff) {
-              mensajesActuales = { ...ticket.mensaje_staff };
+            let mensajes = {};
+            try {
+              mensajes =
+                typeof ticket.mensaje_staff === "string"
+                  ? JSON.parse(ticket.mensaje_staff)
+                  : { ...ticket.mensaje_staff };
+            } catch (e) {
+              mensajes = {e};
             }
 
-            const ticketActualizado = {
-              ...ticket,
-              mensaje_staff: mensajesActuales,
-            };
+            const upd = { ...ticket };
 
             if (esAuditoria) {
-              ticketActualizado.auditado = decision; // Escribe el texto
-              ticketActualizado.auditado_por = aliasStaff;
-              ticketActualizado.fecha_auditado = new Date().toISOString();
-              ticketActualizado.mensaje_staff.auditado =
+              upd.auditado = decision;
+              upd.auditado_por = aliasStaff;
+              upd.fecha_auditado = new Date().toISOString();
+              mensajes.auditado =
                 comentario ||
-                (decision === "aprobado"
-                  ? "Validación oficial completada."
-                  : "Aporte vetado en auditoría.");
-            } else {
-              ticketActualizado.revisado = decision; // Escribe el texto
-              ticketActualizado.revisado_por = aliasStaff;
-              ticketActualizado.fecha_revision = new Date().toISOString();
-              ticketActualizado.mensaje_staff.revisado =
+                (esBaneo ? "Falta grave archivada." : "Aporte auditado.");
+            } else if (esVerificacion) {
+              upd.revisado = decision;
+              upd.revisado_por = aliasStaff;
+              upd.fecha_revision = new Date().toISOString();
+              mensajes.revisado =
                 comentario ||
                 (decision === "aprobado"
                   ? "Aporte verificado."
-                  : "Aporte rechazado.");
+                  : "Aporte observado.");
             }
 
-            return ticketActualizado;
+            upd.mensaje_staff = mensajes;
+            return upd;
           }
           return ticket;
         }),

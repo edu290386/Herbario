@@ -23,7 +23,7 @@ export const FormImagen = ({
   const [preview, setPreview] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
-
+console.log(user)
   const fileInputRef = useRef(null);
   const cupoLleno = conteoActual && conteoActual[etiquetaFoto] >= 3;
   const tieneFotoReal = !!archivo;
@@ -59,8 +59,8 @@ export const FormImagen = ({
         nombrePlanta,
         usuarioId: user?.id,
         alias: user?.alias || "Usuario Ozain",
-        grupoId: user?.grupo_id,
-        nombre_grupo: user?.nombre_grupo,
+        grupoId: user?.grupo_id || "Sin grupo",
+        grupo: user?.grupo || "Sin grupo",
         tipoAccion: "nueva_imagen",
         contenidoJSON: objetoContenido,
       });
