@@ -3,7 +3,12 @@ import { AuthContext } from "../../context/AuthContext";
 import { uploadImage } from "../../helpers/cloudinaryHelper";
 import { formatearParaDB } from "../../helpers/textHelper";
 import { GuiaRegistro } from "../Registro/GuiaRegistro";
-import { IoMdCheckmarkCircle, IoMdCloseCircle } from "react-icons/io";
+import {
+  IoMdCheckmarkCircle,
+  IoMdCloseCircle,
+  IoMdInformationCircle,
+} from "react-icons/io";
+import { HiSparkles } from "react-icons/hi"; // Icono para "Alta Calidad"
 import { TbCamera, TbTrash } from "react-icons/tb";
 import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { BotonCancelar } from "../../components/ui/BotonCancelar";
@@ -18,15 +23,19 @@ export const FormImagen = ({
   onCancel,
 }) => {
   const { user } = useContext(AuthContext);
-  const [etiquetaFoto, setEtiquetaFoto] = useState("hoja");
+  const [etiquetaFoto, setEtiquetaFoto] = useState(null);
   const [archivo, setArchivo] = useState(null);
   const [preview, setPreview] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
-console.log(user)
+
   const fileInputRef = useRef(null);
-  const cupoLleno = conteoActual && conteoActual[etiquetaFoto] >= 3;
+
+  // Lógica de "Reto de Calidad"
+  const tiene3oMas =
+    etiquetaFoto && conteoActual && conteoActual[etiquetaFoto] >= 3;
   const tieneFotoReal = !!archivo;
+  const formularioValido = tieneFotoReal && etiquetaFoto && !enviando;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -38,22 +47,14 @@ console.log(user)
 
   const manejarEnvio = async (e) => {
     if (e) e.preventDefault();
-    if (!archivo || enviando) return;
-
+    if (!formularioValido) return;
     setEnviando(true);
 
     try {
-      // 1. Subida a Cloudinary (Esto sigue aquí porque es manejo de archivos)
       const folderPath = `${formatearParaDB(nombrePlanta)}/${etiquetaFoto}`;
       const urlFoto = await uploadImage(archivo, folderPath);
       if (!urlFoto) throw new Error("Error al subir la imagen.");
 
-      const objetoContenido = {
-        categoria: etiquetaFoto,
-        url: urlFoto,
-      };
-
-      // 2. 🟢 USAR EL SERVICE (Reemplaza los pasos 1 y 2 manuales que tenías)
       await logService.enviarAporte({
         plantaId: Number(plantaId),
         nombrePlanta,
@@ -62,13 +63,13 @@ console.log(user)
         grupoId: user?.grupo_id || "Sin grupo",
         grupo: user?.grupo || "Sin grupo",
         tipoAccion: "nueva_imagen",
-        contenidoJSON: objetoContenido,
+        contenidoJSON: { categoria: etiquetaFoto, url: urlFoto },
       });
 
       setExito(true);
       setTimeout(() => onCancel(), 1800);
     } catch (error) {
-      console.error("Error en el envío:", error);
+      console.error("Error:", error);
       alert("Error: " + error.message);
     } finally {
       setEnviando(false);
@@ -93,8 +94,11 @@ console.log(user)
           <div className="oz-display-name">{nombrePlanta?.toUpperCase()}</div>
         </div>
 
+        {/* 1. SELECCIÓN DE CATEGORÍA */}
         <div className="registro-section">
-          <label className="registro-label">PARTE DE LA PLANTA</label>
+          <label className="registro-label">
+            1. ¿QUÉ PARTE VAS A FOTOGRAFIAR?
+          </label>
           <div className="oz-category-tabs">
             {categoriasBotánicas.map((cat) => (
               <button
@@ -103,14 +107,15 @@ console.log(user)
                 className={`oz-tab-item ${etiquetaFoto === cat.id ? "active" : ""}`}
                 onClick={() => setEtiquetaFoto(cat.id)}
               >
-                <span className="oz-tab-icon">{cat.icon}</span>
                 <span className="oz-tab-label">{cat.label}</span>
               </button>
             ))}
           </div>
         </div>
 
+        {/* 2. VISOR DE IMAGEN */}
         <div className="registro-section">
+          <label className="registro-label">2. CAPTURA O SUBE TU FOTO</label>
           <div
             className={`oz-visor-container ${tieneFotoReal ? "has-photo" : ""}`}
           >
@@ -122,15 +127,14 @@ console.log(user)
                 <div className="oz-cam-circle">
                   <TbCamera size={32} />
                 </div>
-                <p>CARGAR FOTO</p>
-                <span>Cámara o Galería</span>
+                <p>CARGAR IMAGEN</p>
               </div>
             ) : (
               <div className="oz-preview-wrapper">
                 <img src={preview} alt="Aporte" className="oz-img-botanica" />
                 <div className="oz-visor-overlay">
                   <div className="oz-visor-badge">
-                    {etiquetaFoto.toUpperCase()}
+                    {etiquetaFoto ? etiquetaFoto.toUpperCase() : "ELEGIR PARTE"}
                   </div>
                   <div className="oz-visor-actions">
                     <button
@@ -164,29 +168,68 @@ console.log(user)
           </div>
         </div>
 
+        {/* 3. ESTADO DEL APORTE Y VALIDACIONES */}
         <div className="registro-section">
           <div className="registro-validaciones">
+            <div className="val-item">
+              {etiquetaFoto ? (
+                <IoMdCheckmarkCircle color="#2d6a4f" />
+              ) : (
+                <IoMdCloseCircle color="#f44336" />
+              )}
+              <span>Parte seleccionada</span>
+            </div>
+
             <div className="val-item">
               {tieneFotoReal ? (
                 <IoMdCheckmarkCircle color="#2d6a4f" />
               ) : (
                 <IoMdCloseCircle color="#f44336" />
               )}
-              <span>Imagen cargada</span>
+              <span>Imagen lista</span>
             </div>
+
+            {/* 🟢 VALIDACIÓN DE CUPO Y CALIDAD */}
             <div className="val-item">
-              <IoMdCheckmarkCircle color={cupoLleno ? "#f59e0b" : "#2d6a4f"} />
-              <span>
-                {cupoLleno ? "Categoría llena (3/3)" : "Espacio disponible"}
-              </span>
+              {!etiquetaFoto ? (
+                <>
+                  <IoMdInformationCircle color="#94a3b8" />
+                  <span style={{ color: "#94a3b8" }}>
+                    Selecciona parte para ver estado
+                  </span>
+                </>
+              ) : tiene3oMas ? (
+                <>
+                  <HiSparkles color="#f59e0b" />
+                  <span style={{ color: "#b45309", fontWeight: "700" }}>
+                    Reto: Mejorar fotos actuales
+                  </span>
+                </>
+              ) : (
+                <>
+                  <IoMdCheckmarkCircle color="#2d6a4f" />
+                  <span style={{ color: "#2d6a4f", fontWeight: "700" }}>
+                    ¡Se necesitan fotos aquí!
+                  </span>
+                </>
+              )}
             </div>
           </div>
-          {cupoLleno && !enviando && (
+
+          {/* Banner explicativo según el estado */}
+          {etiquetaFoto && (
             <div className="status-banner-wrapper">
-              <StatusBanner
-                status="warning"
-                message="Esta categoría ya tiene 3 fotos. Tu aporte debe ser de alta calidad."
-              />
+              {tiene3oMas ? (
+                <StatusBanner
+                  status="warning"
+                  message="Esta parte ya tiene 3 fotos. Tu aporte solo será aceptado si es más nítido, detallado o mejor iluminado que los actuales."
+                />
+              ) : (
+                <StatusBanner
+                  status="success"
+                  message="¡Genial! Aún faltan fotos en esta categoría. Tu aporte ayudará mucho a completar la ficha."
+                />
+              )}
             </div>
           )}
         </div>
@@ -194,12 +237,12 @@ console.log(user)
         <div className="registro-botones-footer">
           <BotonPrincipal
             type="submit"
-            texto={enviando ? "SUBIENDO..." : "FINALIZAR REPORTE"}
+            texto={enviando ? "ENVIANDO..." : "ENVIAR APORTE"}
             estaCargando={enviando}
             esExitoso={exito}
-            disabled={!tieneFotoReal || enviando}
+            disabled={!formularioValido}
           />
-          <div className="boton-cancelar-wrapper">
+          <div className="boton-cancelar-wrapper" onClick={onCancel}>
             <BotonCancelar texto="CANCELAR" variante="azul-slate-claro" />
           </div>
         </div>
