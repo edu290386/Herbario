@@ -39,7 +39,7 @@ export const FormNombre = ({ plantaId, nombrePlanta, onCancel }) => {
         usuarioId: user?.id,
         alias: user?.alias || "Usuario Ozain",
         grupoId: user?.grupo_id || "Sin grupo",
-        grupo: user?.grupo || "Sin grupo",
+        grupo: user?.grupos?.nombre_grupo || "Sin grupo",
         tipoAccion: "nuevo_nombre",
         contenidoJSON: objetoContenido,
       });

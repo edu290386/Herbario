@@ -46,6 +46,7 @@ export const obtenerDireccion = async (lat, lon) => {
   }
 };
 
+const info = await obtenerDireccion(-11.9415413, -77.08704061);
 // El anclaje global 'auditar' se mantiene igual que en la versión anterior...
-
-//setGPS("-11.86548400", "-77.01673100");
+console.log(info)
+//setGPS("-11.94154130", "-77.08704061");

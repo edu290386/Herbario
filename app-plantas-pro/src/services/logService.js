@@ -52,6 +52,9 @@ export const logService = {
     estadoRevisado = "pendiente", // 🟢 Por defecto es pendiente (Imagen/Nombre)
     mensajeRevisado = null, // 🟢 Por defecto es nulo
   }) => {
+    const ahora = new Date().toISOString();
+    const esAutoAprobado = estadoRevisado === "aprobado";
+    
     const { data: logData, error: logError } = await supabase
       .from("logs")
       .insert([
@@ -64,13 +67,15 @@ export const logService = {
           nombre_grupo: grupo || "Sin grupo",
           contenido: contenidoJSON,
           auditado: "pendiente",
-          revisado: estadoRevisado, // 🟢 Usamos la variable
-          latitud: 0,
-          longitud: 0,
+          revisado: estadoRevisado,
+          revisado_por: esAutoAprobado ? alias : null,
+          fecha_revision: esAutoAprobado ? ahora : null,
+          latitud: null,
+          longitud: null,
           ciudad: "No aplica",
           distrito: "No aplica",
           tipo_accion: tipoAccion,
-          mensaje_staff: { revisado: mensajeRevisado, auditado: null }, // 🟢 Usamos la variable
+          mensaje_staff: { revisado: mensajeRevisado, auditado: null },
         },
       ])
       .select("id")
@@ -127,7 +132,7 @@ export const logService = {
       try {
         const raw = logActual.mensaje_staff;
         if (raw) mensajesStaff = typeof raw === "string" ? JSON.parse(raw) : { ...raw };
-      } catch (e) { mensajesStaff = {}; }
+      } catch (e) { mensajesStaff = {e}; }
 
       // --- FASE 2: ACTUALIZACIÓN DEL HISTORIAL (LOGS) ---
       const updatesLogs = { mensaje_staff: mensajesStaff };

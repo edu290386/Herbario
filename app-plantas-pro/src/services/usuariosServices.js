@@ -3,19 +3,16 @@ import { supabase } from "../supabaseClient";
 export const getUsuarioPorTelefono = async (telefono) => {
   const { data, error } = await supabase
     .from("usuarios")
-    .select(`
+    .select(
+      `
       *,
       grupos!fk_usuario_grupo ( 
         nombre_grupo
       )
-    `)
+    `,
+    )
     .eq("telefono", telefono)
     .single();
-
-  // Aplanamos el dato para la Home
-  if (data && data.grupos) {
-    data.grupo = data.grupos.nombre_grupo;
-  }
 
   return { data, error };
 };
@@ -33,10 +30,9 @@ export const activarUsuario = async (telefono, datos) => {
       alias: datos.alias,
       status: "ACTIVO",
       suscripcion_vence: vence.toISOString(),
-      [datos.columnaID]: datos.deviceID, // id_movil o id_laptop
+      [datos.columnaID]: datos.deviceID,
       updated_at: new Date().toISOString(),
-      // IMPORTANTE: Al activar, también inicializamos el modo por defecto
-      modo_acceso: "solo_movil" 
+      modo_acceso: "solo_movil",
     })
     .eq("telefono", telefono)
     .select();
@@ -48,34 +44,32 @@ export const iniciarSesionSegura = async (
   telefono,
   columnaID,
   deviceID,
-  nuevoTokenPateador
+  nuevoTokenPateador,
 ) => {
   try {
-    // 1. Actualización de seguridad y vinculación
-    // Usamos el nombre de la relación explícita para evitar errores de servidor
     const { data, error } = await supabase
       .from("usuarios")
       .update({
         [columnaID]: deviceID,
-        session_id: crypto.randomUUID(), 
-        login_token: nuevoTokenPateador, // El que patea
+        session_id: crypto.randomUUID(),
+        login_token: nuevoTokenPateador,
         status: "ACTIVO",
       })
       .eq("telefono", telefono)
-      .select(`
+      .select(
+        `
         *,
         grupos!fk_usuario_grupo (
           nombre_grupo
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) throw error;
 
-    // 2. Aplanado del grupo (para la Home)
-    if (data && data.grupos) {
-      data.grupo = data.grupos.nombre_grupo;
-    }
+    // 🟢 ELIMINAMOS EL BLOQUE QUE CREABA 'data.grupo'
+    // Ahora solo devolvemos el objeto tal cual sale de la base de datos.
 
     return { data, error: null };
   } catch (error) {

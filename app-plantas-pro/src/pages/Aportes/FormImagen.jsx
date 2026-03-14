@@ -30,7 +30,7 @@ export const FormImagen = ({
   const [exito, setExito] = useState(false);
 
   const fileInputRef = useRef(null);
-
+console.log(user)
   // Lógica de "Reto de Calidad"
   const tiene3oMas =
     etiquetaFoto && conteoActual && conteoActual[etiquetaFoto] >= 3;
@@ -61,7 +61,7 @@ export const FormImagen = ({
         usuarioId: user?.id,
         alias: user?.alias || "Usuario Ozain",
         grupoId: user?.grupo_id || "Sin grupo",
-        grupo: user?.grupo || "Sin grupo",
+        grupo: user?.grupos?.nombre_grupo || "Sin grupo",
         tipoAccion: "nueva_imagen",
         contenidoJSON: { categoria: etiquetaFoto, url: urlFoto },
       });

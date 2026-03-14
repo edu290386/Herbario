@@ -175,7 +175,7 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
             )}
             {esComentario && (
               <div style={styles.itemFicha}>
-                <span style={styles.labelFicha}>COMENTARIO / SABER</span>
+                <span style={styles.labelFicha}>COMENTARIO</span>
                 <p style={styles.valorFichaGris}>
                   {contenido.texto || contenido.comentario}
                 </p>

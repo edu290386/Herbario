@@ -108,10 +108,19 @@ export const crearEspecieNueva = async (
       nombre_planta: nombreEstetico,
       usuario_id: usuarioId,
       alias: alias,
-      grupo_id: grupoId, // Aquí sí va, según tu esquema de logs
+      grupo_id: grupoId,
       tipo_accion: "nueva_planta",
       contenido: fotoUrl,
+      latitud: null,
+      longitud: null,
+      ciudad: "No aplica",
+      distrito: "No aplica",
       revisado: "pendiente",
+      auditado: "pendiente",
+      mensaje_staff: {
+        auditado: null,
+        revisado: null,
+      },
     },
   ]);
 
@@ -152,6 +161,7 @@ export const agregarUbicacion = async (
         longitud: coords.lng,
         ciudad: datos?.ciudad || "Desconocida",
         distrito: datos?.distrito || "Desconocida",
+        grupo_id: grupoId,
       },
     ])
     .select()
@@ -189,6 +199,10 @@ export const agregarUbicacion = async (
       auditado: "aprobado",
       auditado_por: alias,
       fecha_auditado: ahora,
+      mensaje_staff: {
+        auditado: null,
+        revisado: null,
+      },
     },
   ]);
 
