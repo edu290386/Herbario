@@ -1,12 +1,13 @@
-import { useContext, useEffect, useState, useMemo } from "react";
+import { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 import { AuthContext } from "../../context/AuthContext";
 import { PlantasContext } from "../../context/PlantasContext";
 import {
   normalizarParaBusqueda,
   formatearParaDB,
 } from "../../helpers/textHelper";
-import { resaltarTexto } from "../../helpers/highLightText"; // <-- Importamos tu helper
+import { resaltarTexto } from "../../helpers/highLightText";
 import { colores } from "../../constants/tema";
 import "./HomePage.css";
 
@@ -22,7 +23,7 @@ import { LuMicroscope } from "react-icons/lu";
 
 // Componentes
 import { BaseDrawer } from "../../components/paneles/BaseDrawer";
-import { PanelLogs }  from "../../components/paneles/PanelLogs";
+import { PanelLogs } from "../../components/paneles/PanelLogs";
 import { PanelUsuario } from "../../components/paneles/Perfil/PanelUsuario";
 import { CardPlanta } from "../../components/planta/CardPlanta";
 import { StatusBanner } from "../../components/ui/StatusBanner";
@@ -30,7 +31,6 @@ import { BotonPrincipal } from "../../components/ui/BotonPrincipal";
 import { Paginador } from "./Paginador";
 import { ControlAccesos } from "../../components/paneles/Accesos/ControlAccesos";
 import { PanelAportes } from "../../components/paneles/Aportes/PanelAportes";
-
 
 export const HomePage = () => {
   const { user, logout } = useContext(AuthContext);
@@ -46,9 +46,75 @@ export const HomePage = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [tipoPanel, setTipoPanel] = useState(null);
 
+  // 🟢 ESTADOS INDEPENDIENTES PARA CADA BOTÓN
+  const [pendientesAdmin, setPendientesAdmin] = useState(0); // Para el Microscopio (Rojo)
+  const [novedadesComunidad, setNovedadesComunidad] = useState(0); // Para la Campana (Verde)
+  const [tieneNotificaciones, setTieneNotificaciones] = useState(false); // Punto rojo personal
+
   useEffect(() => {
     cargarPlantasHome(true);
   }, [cargarPlantasHome]);
+
+  // 🟢 LÓGICA DE CONTEO SEPARADA POR CONSULTAS
+  const revisarNotificaciones = useCallback(async () => {
+    if (!user) return;
+
+    // 1. Definimos exactamente qué consideramos un "Aporte"
+    const accionesAportes = [
+      "nuevo_nombre",
+      "nueva_imagen",
+      "nuevo_comentario",
+    ];
+
+    try {
+      // --- CONSULTA PARA EL ADMIN (CONTROL DE APORTES) ---
+      const { count: countAdmin } = await supabase
+        .from("logs")
+        .select("*", { count: "exact", head: true })
+        .in("tipo_accion", accionesAportes) // 👈 ESTO ES LO QUE FALTABA
+        .eq("auditado", "pendiente");
+
+      setPendientesAdmin(countAdmin || 0);
+
+      // --- CONSULTA PARA LA COMUNIDAD (HISTORIAL SEMANAL) ---
+      const haceUnaSemana = new Date();
+      haceUnaSemana.setDate(haceUnaSemana.getDate() - 7);
+
+      const { count: countComunidad } = await supabase
+        .from("logs")
+        .select("*", { count: "exact", head: true })
+        .in("tipo_accion", ["nueva_planta", "nueva_ubicacion"])
+        .gt("created_at", haceUnaSemana.toISOString());
+
+      setNovedadesComunidad(countComunidad || 0);
+
+      // --- CONSULTA PARA EL USUARIO ---
+      const { count: countUser } = await supabase
+        .from("logs")
+        .select("*", { count: "exact", head: true })
+        .eq("usuario_id", user.id)
+        .eq("notificacion_vista", false)
+        .neq("auditado", "pendiente");
+      setTieneNotificaciones((countUser || 0) > 0);
+    } catch (error) {
+      console.error("Error en sincronización:", error);
+    }
+  }, [user]);
+
+  // Manejo de carga segura para ESLint
+  useEffect(() => {
+    let ignore = false;
+    const fetchData = async () => {
+      if (!ignore) await revisarNotificaciones();
+    };
+    fetchData();
+    const onFocus = () => fetchData();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      ignore = true;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [revisarNotificaciones, isPanelOpen]);
 
   const { filtradas, existeExacta } = useMemo(() => {
     const busquedaNorm = normalizarParaBusqueda(busqueda);
@@ -80,7 +146,6 @@ export const HomePage = () => {
   const totalPaginas = Math.ceil(filtradas.length / itemsPorPagina);
   const indiceInicio = (paginaActual - 1) * itemsPorPagina;
 
-  // Lógica abstraída para limpieza visual
   const mostrarMinimalista = filtradas.length > 20 && busqueda.length >= 2;
   const plantasParaMostrar =
     busqueda.length >= 2
@@ -103,7 +168,6 @@ export const HomePage = () => {
       icono: FaRegBell,
       componente: <PanelLogs tipo="actividades" user={user} />,
     },
-    // 🟢 AQUÍ CONECTAMOS EL NUEVO PANEL
     aportes: {
       titulo: "Control de Aportes",
       icono: LuMicroscope,
@@ -111,8 +175,8 @@ export const HomePage = () => {
     },
   };
 
-  const configActual = CONFIG_PANELES[tipoPanel] || {};   
-      
+  const configActual = CONFIG_PANELES[tipoPanel] || {};
+
   return (
     <div className="home-page">
       <BaseDrawer
@@ -127,7 +191,6 @@ export const HomePage = () => {
       <div className="home-layout-container">
         {/* TOP BAR */}
         <div className="home-top-bar">
-          {/* 1. MI PERFIL / ESTADÍSTICAS (Abierto a todos) */}
           <div
             className="user-profile-info"
             onClick={() => abrirPanel("usuario")}
@@ -146,7 +209,6 @@ export const HomePage = () => {
           </div>
 
           <div className="nav-actions">
-            {/* 2. CONTROL DE ACCESOS (Exclusivo para Administrador) */}
             {user?.rol === "Administrador" && (
               <button
                 onClick={() => abrirPanel("accesos")}
@@ -156,23 +218,34 @@ export const HomePage = () => {
               </button>
             )}
 
-            {/* 3. HISTORIAL DE ACTIVIDADES (Abierto a todos - Muro del grupo) */}
+            {/* 🟢 BOTÓN HISTORIAL: Usa novedadesComunidad (Número Verde) */}
             <button
               onClick={() => abrirPanel("actividades")}
-              className="icon-btn"
+              className="icon-btn action-badge-container"
             >
               <FaRegBell size={20} color={colores.frondoso} />
+              {novedadesComunidad > 0 && (
+                <span className="badge-numero-comunidad">
+                  {novedadesComunidad}
+                </span>
+              )}
+              {tieneNotificaciones && <span className="badge-punto"></span>}
             </button>
 
-            {/* 4. CONTROL DE APORTES (NUEVO: ¡Abierto a todos!) */}
+            {/* 🟢 BOTÓN APORTES: Usa pendientesAdmin (Número Rojo) */}
             <button
-              onClick={() => abrirPanel("aportes")} // 🟢 AHORA SÍ ABRIRÁ EL DRAWER
-              className="icon-btn"
+              onClick={() => abrirPanel("aportes")}
+              className="icon-btn action-badge-container"
             >
               <LuMicroscope size={22} color={colores.frondoso} />
+              {(user?.rol === "Administrador" || user?.rol === "Colaborador") &&
+                pendientesAdmin > 0 && (
+                  <span className="badge-numero">
+                    {pendientesAdmin > 99 ? "+99" : pendientesAdmin}
+                  </span>
+                )}
             </button>
 
-            {/* 5. CERRAR SESIÓN */}
             <button onClick={logout} className="icon-btn logout-sep">
               <IoLogOutOutline size={26} />
             </button>
@@ -193,7 +266,6 @@ export const HomePage = () => {
           </div>
         </header>
 
-        {/* ÁREA PRINCIPAL */}
         <main className="main-content-layout">
           {busqueda.length >= 2 && (
             <div className="search-feedback-container">
@@ -229,7 +301,6 @@ export const HomePage = () => {
             </div>
           )}
 
-          {/* Paginación Superior */}
           {busqueda.length < 2 && totalPaginas > 1 && (
             <div className="pagination-wrapper">
               <Paginador
@@ -240,7 +311,6 @@ export const HomePage = () => {
             </div>
           )}
 
-          {/* Grid de Cards (Lógica simplificada) */}
           <div
             className={`${mostrarMinimalista ? "minimalist-list" : "home-grid"} grid-transition`}
           >
@@ -252,7 +322,6 @@ export const HomePage = () => {
                   onClick={() => navigate(`/planta/${p.id}`)}
                 >
                   <div>
-                    {/* Usamos tu helper directamente */}
                     <strong>
                       {resaltarTexto(p.nombres_planta[0], busqueda)}
                     </strong>
@@ -268,7 +337,6 @@ export const HomePage = () => {
             )}
           </div>
 
-          {/* Paginación Inferior */}
           {busqueda.length < 2 && totalPaginas > 1 && (
             <div className="pagination-wrapper">
               <Paginador

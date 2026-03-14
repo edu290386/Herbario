@@ -11,10 +11,23 @@ import "./CentroAportesPage.css";
 export const CentroAportesPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const [opcion, setOpcion] = useState(null);
 
-  const { plantaId, nombrePlanta, conteoActual, nombresExistentes } =
-    state || {};
+  // 1. Recibimos los datos estándar MÁS los nuevos datos del reporte
+  const {
+    plantaId,
+    nombrePlanta,
+    conteoActual,
+    nombresExistentes,
+    flujo, // <-- Sabe si venimos a "reporte_ubicacion"
+    ubicacionRef, // <-- ID de la ubicación a borrar
+    distritoRef, // <-- Distrito de referencia
+  } = state || {};
+
+  // 2. EL INTERRUPTOR MÁGICO
+  // Si venimos a reportar, abrimos "comentario" de frente. Si no, abrimos el menú (null).
+  const [opcion, setOpcion] = useState(
+    flujo === "reporte_ubicacion" ? "comentario" : null,
+  );
 
   if (!plantaId) {
     return (
@@ -24,6 +37,17 @@ export const CentroAportesPage = () => {
       </div>
     );
   }
+
+  // 3. CANCELACIÓN INTELIGENTE
+  const manejarCancelacion = () => {
+    if (flujo === "reporte_ubicacion") {
+      // Si entró para reportar directo, cancelar lo saca de aquí y lo vuelve a la planta
+      navigate(-1);
+    } else {
+      // Si entró por el menú normal, cancelar lo devuelve al menú de aportes
+      setOpcion(null);
+    }
+  };
 
   return (
     <div className="centro-aportes-layout">
@@ -112,7 +136,7 @@ export const CentroAportesPage = () => {
                 plantaId={plantaId}
                 nombrePlanta={nombrePlanta}
                 conteoActual={conteoActual}
-                onCancel={() => setOpcion(null)}
+                onCancel={manejarCancelacion}
               />
             )}
             {opcion === "nombre" && (
@@ -120,14 +144,17 @@ export const CentroAportesPage = () => {
                 plantaId={plantaId}
                 nombrePlanta={nombrePlanta}
                 nombresExistentes={nombresExistentes || []}
-                onCancel={() => setOpcion(null)}
+                onCancel={manejarCancelacion}
               />
             )}
             {opcion === "comentario" && (
               <FormComentario
                 plantaId={plantaId}
                 nombrePlanta={nombrePlanta}
-                onCancel={() => setOpcion(null)}
+                // Pasamos los props de reporte, si existen
+                ubicacionRef={ubicacionRef}
+                distritoRef={distritoRef}
+                onCancel={manejarCancelacion}
               />
             )}
           </div>

@@ -6,55 +6,60 @@ import { logService } from "../../../services/logService";
 export const PanelAportes = ({ user }) => {
   const [aportes, setAportes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null); // 🟢 Estado para capturar errores de carga
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const userRole = user?.rol;
 
-  // 1. Usamos useCallback para estabilizar la función y evitar re-renders innecesarios
   const cargarAportes = useCallback(async () => {
     setLoading(true);
-    setErrorMsg(null); // Limpiamos errores previos al reintentar
+    setErrorMsg(null);
 
     try {
       let query = supabase
         .from("logs")
-        .select(`*`) 
+        .select(`*`)
         .in("tipo_accion", [
           "nueva_imagen",
           "nuevo_nombre",
           "nuevo_comentario",
         ]);
 
-      // Seguridad: Si es Usuario normal, solo ve los suyos
       if (userRole === "Usuario") {
         query = query.eq("usuario_id", user?.id);
       } else {
-        // Staff y Admin ven todo. Ordenamos para que lo más nuevo salga primero
         query = query.order("created_at", { ascending: false });
       }
 
       const { data, error } = await query;
 
-      if (error) throw error; // Lanzamos el error para que caiga en el catch
+      if (error) throw error;
 
       setAportes(data || []);
     } catch (err) {
       console.error("Error técnico al cargar aportes:", err);
-      // 🟢 Guardamos el mensaje exacto que devuelve la base de datos
       setErrorMsg(
         err.message || "Ocurrió un error desconocido al cargar los datos.",
       );
     } finally {
       setLoading(false);
     }
-  }, [userRole, user?.id]); // 🟢 Dependencias correctas de las que depende la función
+  }, [userRole, user?.id]);
 
-  // 2. useEffect ahora puede depender de forma segura de cargarAportes
+  // 🟢 RECARGA INVISIBLE: Carga al entrar y cada vez que la ventana recupera el foco
   useEffect(() => {
     cargarAportes();
+
+    const onWindowFocus = () => {
+      cargarAportes();
+    };
+
+    window.addEventListener("focus", onWindowFocus);
+
+    return () => {
+      window.removeEventListener("focus", onWindowFocus);
+    };
   }, [cargarAportes]);
 
-  // La función que recibe la decisión desde el TicketAporte
   const procesarDecision = async (idParam, accion, comentario) => {
     try {
       const logId = typeof idParam === "object" ? idParam.id : idParam;
@@ -92,7 +97,7 @@ export const PanelAportes = ({ user }) => {
                   ? JSON.parse(ticket.mensaje_staff)
                   : { ...ticket.mensaje_staff };
             } catch (e) {
-              mensajes = {e};
+              mensajes = { e };
             }
 
             const upd = { ...ticket };
@@ -126,7 +131,6 @@ export const PanelAportes = ({ user }) => {
     }
   };
 
-  // Pantalla inicial de carga
   if (loading && aportes.length === 0) {
     return (
       <div style={{ padding: "20px", textAlign: "center", color: "#64748b" }}>
@@ -138,12 +142,13 @@ export const PanelAportes = ({ user }) => {
   return (
     <div
       style={{
-        padding: "10px",
+        padding: "16px",
         backgroundColor: "#f8fafc",
         minHeight: "100vh",
+        maxWidth: "800px",
+        margin: "0 auto",
       }}
     >
-      {/* 🟢 Banner visual de error para ayudar en el diagnóstico de carga */}
       {errorMsg && (
         <div
           style={{
@@ -159,13 +164,20 @@ export const PanelAportes = ({ user }) => {
         </div>
       )}
 
-      {/* Mensaje de estado vacío */}
       {aportes.length === 0 && !loading && !errorMsg ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "40px",
+            color: "#94a3b8",
+            backgroundColor: "#fff",
+            borderRadius: "12px",
+            border: "1px dashed #cbd5e1",
+          }}
+        >
           No hay aportes pendientes en este momento.
         </div>
       ) : (
-        // Renderizado de Tickets
         aportes
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
           .map((ticket) => (

@@ -15,9 +15,12 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
   const procesoTerminado =
     estadoAuditado !== "pendiente" && estadoAuditado !== null;
 
-  const esImagen = ticket.tipo_accion === "nueva_imagen";
   const esNombre = ticket.tipo_accion === "nuevo_nombre";
   const esComentario = ticket.tipo_accion === "nuevo_comentario";
+
+  // Identificamos si este comentario es en realidad un reporte de ubicación
+  const esReporteUbicacion =
+    esComentario && ticket.contenido?.tipo === "reporte_ubicacion";
 
   const canReview = isAdmin || (userRole === "Colaborador" && !esComentario);
 
@@ -27,18 +30,25 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
     if (raw)
       mensajesStaff = typeof raw === "string" ? JSON.parse(raw) : { ...raw };
   } catch (error) {
-    mensajesStaff = {error};
+    mensajesStaff = { error };
   }
 
   const contenido = ticket.contenido || {};
 
   const getBadgeConfig = () => {
     if (esBaneado) return { texto: "BANEADO", color: "#ffffff", bg: "#000000" };
+
+    // 🟢 MAGIA AQUÍ: Si pasó la etapa 1 (o es autoverificado) pero FALTA tu Auditoría
+    if (estadoRevisado === "aprobado" && estadoAuditado === "pendiente") {
+      return { texto: "POR AUDITAR", color: "#0369a1", bg: "#e0f2fe" }; // Azul para que resalte
+    }
+
     const final = procesoTerminado ? estadoAuditado : estadoRevisado;
     if (final === "aprobado")
       return { texto: "APROBADO", color: "#166534", bg: "#dcfce7" };
     if (final === "rechazado")
       return { texto: "OBSERVADO", color: "#991b1b", bg: "#fef2f2" };
+
     return { texto: "EN REVISIÓN", color: "#92400e", bg: "#fef3c7" };
   };
 
@@ -83,6 +93,11 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
         <h1 style={styles.plantaNombre}>
           {ticket.nombre_planta?.toUpperCase() || "PLANTA"}
         </h1>
+        {esReporteUbicacion && contenido.distrito_reportado && (
+          <p style={styles.plantaSubtitulo}>
+            Distrito: {contenido.distrito_reportado}
+          </p>
+        )}
       </div>
 
       {/* 2. HEADER INFO (Alias, Badge y Fecha) */}
@@ -153,34 +168,59 @@ export const TicketAporte = ({ ticket, userRole, onProcesar }) => {
         )}
       </div>
 
-      {/* 4. ÁREA DE CONTENIDO (Imagen, Nombre o Comentario) */}
-      <div style={esImagen ? styles.mediaContainer : styles.fichaCompacta}>
-        {esImagen ? (
-          <>
-            <div style={styles.tagCategoria}>{contenido.categoria}</div>
-            <img src={contenido.url} alt="Aporte" style={styles.imagenReal} />
-          </>
-        ) : (
-          <div style={styles.cuerpoFicha}>
-            {esNombre && (
-              <div style={styles.itemFicha}>
-                <span style={styles.labelFicha}>PROPUESTA ACTUAL</span>
-                <h2 style={styles.valorFichaVerde}>
-                  {contenido.nombre_sugerido}{" "}
-                  <span style={styles.paisParentesis}>
-                    ({contenido.procedencia})
+      {/* 4. ÁREA DE CONTENIDO (ESTILO INSTAGRAM) */}
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        {/* PARTE A: TEXTO (Con márgenes blancos elegantes) */}
+        {(esNombre || esComentario) && (
+          <div style={styles.fichaCompacta}>
+            <div style={styles.cuerpoFicha}>
+              {esNombre && (
+                <div style={styles.itemFicha}>
+                  <span style={styles.labelFicha}>PROPUESTA ACTUAL</span>
+                  <h2 style={styles.valorFichaVerde}>
+                    {contenido.nombre_sugerido}{" "}
+                    <span style={styles.paisParentesis}>
+                      ({contenido.procedencia})
+                    </span>
+                  </h2>
+                </div>
+              )}
+
+              {esComentario && (
+                <div style={styles.itemFicha}>
+                  <span style={styles.labelFicha}>
+                    {esReporteUbicacion ? "MOTIVO DEL REPORTE" : "COMENTARIO"}
                   </span>
-                </h2>
-              </div>
-            )}
-            {esComentario && (
-              <div style={styles.itemFicha}>
-                <span style={styles.labelFicha}>COMENTARIO</span>
-                <p style={styles.valorFichaGris}>
-                  {contenido.texto || contenido.comentario}
-                </p>
-              </div>
-            )}
+                  <p style={styles.valorFichaGris}>
+                    {contenido.texto || contenido.comentario}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* PARTE B: IMAGEN (Sin márgenes, de borde a borde en 3:4) */}
+        {(ticket.tipo_accion === "nueva_imagen" ||
+          (esComentario && contenido.url)) && (
+          <div style={styles.mediaContainer}>
+            <div
+              style={{
+                ...styles.tagCategoria,
+                backgroundColor: esReporteUbicacion
+                  ? "rgba(220, 38, 38, 0.85)"
+                  : "rgba(45, 139, 87, 0.85)",
+              }}
+            >
+              {esComentario
+                ? "REPORTE"
+                : contenido.categoria}
+            </div>
+            <img
+              src={contenido.url}
+              alt="Aporte Visual"
+              style={styles.imagenReal}
+            />
           </div>
         )}
       </div>
@@ -270,6 +310,7 @@ const styles = {
     color: "#fff",
   },
   plantaNombre: { fontSize: "1.2rem", fontWeight: "900", margin: 0 },
+  plantaSubtitulo: { fontSize: "0.8rem", margin: "2px 0 0 0", opacity: 0.9 },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -312,6 +353,7 @@ const styles = {
     aspectRatio: "3 / 4",
     backgroundColor: "#1a1a1a",
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -327,22 +369,12 @@ const styles = {
     borderRadius: "4px",
     fontSize: "0.65rem",
     fontWeight: "800",
-  },
-  imagenPlaceholder: {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#e2e8f0",
-    color: "#64748b",
-    fontWeight: "bold",
+    zIndex: 2,
   },
   fichaCompacta: {
     width: "100%",
     padding: "20px 16px",
     backgroundColor: "#fff",
-    borderBottom: "1px solid #e2e8f0",
   },
   cuerpoFicha: { display: "flex", flexDirection: "column", gap: "12px" },
   itemFicha: { display: "flex", flexDirection: "column", gap: "2px" },

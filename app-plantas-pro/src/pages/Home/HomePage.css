@@ -204,3 +204,43 @@
     padding: 0.6rem 0.8rem;
   }
 }
+
+/* ==========================================================================
+   BADGES (NOTIFICACIONES EN EL MENÚ)
+   ========================================================================== */
+.action-badge-container {
+  position: relative !important;
+}
+
+/* El número de la comunidad (Verde) */
+.badge-numero-comunidad {
+  position: absolute;
+  top: -6px;
+  right: -9px;
+  background-color: #22c55e;
+  /*Verde*/color: white;
+  font-size: 0.55rem;
+  font-weight: 900;
+  padding: 3px 7px;
+  border-radius: 50px;
+  line-height: 1;
+  -webkit-border-radius: 50px;
+  -moz-border-radius: 50px;
+  -ms-border-radius: 50px;
+  -o-border-radius: 50px;
+}
+
+/* El número del Admin (Rojo) */
+.badge-numero {
+  position: absolute;
+  top: -6px;
+  right: -9px;
+  background-color: #ef4444; /* Rojo */
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 900;
+  padding: 3px 7px;
+  border-radius: 50px;
+  line-height: 1;
+}
+

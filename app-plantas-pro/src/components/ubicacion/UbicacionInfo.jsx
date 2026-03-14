@@ -4,6 +4,7 @@ import {
   FaCar,
   FaSatellite,
   FaMapMarkerAlt,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { FaHouse, FaCity, FaUserGroup } from "react-icons/fa6";
 import { SiWaze, SiWhatsapp } from "react-icons/si";
@@ -16,6 +17,7 @@ import { abrirWhatsappPlanta } from "../../helpers/contactHelper.js";
 import { obtenerIdentidad } from "../../helpers/identidadHelper.js";
 import { EtiquetaReciente } from "../ui/EtiquetaReciente";
 import { BotonEliminar } from "../ui/BotonEliminar.jsx";
+import { useNavigate } from "react-router-dom";
 
 export const UbicacionInfo = ({
   ubicacion,
@@ -28,10 +30,10 @@ export const UbicacionInfo = ({
   const { ciudad, distrito, latitud, longitud } = ubicacion;
   const { google, waze } = generarRutas(latitud, longitud);
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const esDueño = user?.id === ubicacion.usuario_id;
   const esAdmin = user?.rol === "Administrador";
-
 
   const manejarNavegacion = (url) => {
     const esPantallaPequeña = window.innerWidth <= 768;
@@ -42,110 +44,73 @@ export const UbicacionInfo = ({
     }
   };
 
+  const handleReportar = () => {
+    navigate("/aportes", {
+      state: {
+        flujo: "reporte_ubicacion",
+        plantaId: ubicacion.planta_id,
+        nombrePlanta: nombrePlanta,
+        ubicacionRef: ubicacion.id,
+        distritoRef: distrito,
+      },
+    });
+  };
+
   return (
-    <div style={styles.contenedor}>
+    <div className="info-detalle-contenedor">
       {/* 1. DISTRITO */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         <FaHouse size={16} color="#000" />
-        <span
-          style={{
-            ...styles.textoFila,
-            fontWeight: "700",
-            fontSize: "0.75rem",
-          }}
-        >
-          {distrito || "Sin Distrito"}
-        </span>
+        <span className="texto-fila-fuerte">{distrito || "Sin Distrito"}</span>
       </div>
 
       {/* 2. CIUDAD */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         <FaCity size={16} color="#000" />
-        <span style={{ ...styles.textoFila, fontSize: "0.75rem" }}>
-          {ciudad || "Lima, Perú"}
-        </span>
+        <span className="texto-fila">{ciudad || "Lima, Perú"}</span>
       </div>
 
       {/* 3. DISTANCIA / SEÑAL */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         {distancia && esReal ? (
-          /* CASO 1: ÉXITO - Tenemos distancia real */
           <>
             <FaCar size={16} color="#2e7d32" />
-            <span
-              style={{
-                ...styles.textoFila,
-                color: "#2e7d32",
-                fontWeight: "700",
-                fontSize: "0.75rem",
-              }}
-            >
-              {distancia}
-            </span>
+            <span className="texto-fila-exito">{distancia}</span>
           </>
         ) : !esReal && distancia ? (
-          /* CASO 2: SEÑAL DÉBIL - Hay distancia pero no es precisa */
           <>
             <FaSatellite size={16} color="#D32F2F" />
-            <span
-              style={{
-                ...styles.textoFila,
-                color: "#D32F2F",
-                fontWeight: "700",
-                fontSize: "0.7rem",
-              }}
-            >
-              SEÑAL DÉBIL
-            </span>
+            <span className="texto-fila-error">SEÑAL DÉBIL</span>
           </>
         ) : (
-          /* CASO 3: EL NUEVO ESTADO - Esperando por el sensor GPS */
           <>
-            <FaMapMarkerAlt size={16} color="#ffa000" />{" "}
-            {/* Icono de pin en naranja */}
-            <span
-              style={{
-                ...styles.textoFila,
-                color: "#ffa000",
-                fontWeight: "700",
-                fontSize: "0.7rem",
-              }}
-            >
-              Esperando coordenadas ...
-            </span>
+            <FaMapMarkerAlt size={16} color="#ffa000" />
+            <span className="texto-fila-alerta">Esperando coordenadas ...</span>
           </>
         )}
       </div>
 
       {/* 4. CREADOR */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         <FaUserPlus size={16} color="#000" />
-        <span
-          style={{
-            ...styles.textoFila,
-            fontSize: "0.75rem",
-            fontStyle: "italic",
-          }}
-        >
+        <span className="texto-fila-italica">
           @{obtenerIdentidad(ubicacion.usuarios)}
         </span>
       </div>
 
       {/* 5. GRUPO */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         <FaUserGroup size={16} color="#000" />
-        <span style={{ ...styles.textoFila, fontSize: "0.75rem" }}>
+        <span className="texto-fila">
           {ubicacion.usuarios?.grupos?.nombre_grupo ?? "Sin grupo"}
         </span>
       </div>
 
       {/* 6. FECHA */}
-      <div style={styles.filaSimple}>
+      <div className="item-fila">
         <FaRegCalendarCheck size={16} color="#000" />
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-          <span
-            style={{ ...styles.textoFila, fontSize: "0.75rem", color: "#666" }}
-          >
+        <div className="contenedor-fecha">
+          <span className="texto-fila-gris">
             {formatearFechaLocal(ubicacion.created_at)}
           </span>
           <EtiquetaReciente fechaISO={ubicacion.created_at} />
@@ -153,18 +118,18 @@ export const UbicacionInfo = ({
       </div>
 
       {/* 7. ACCIONES (Bloque Único) */}
-      <div style={styles.acciones}>
-        <div style={styles.grupoAccionesUnico}>
+      <div className="botones-navegacion">
+        <div className="grupo-acciones-unico">
           <button
             onClick={() => manejarNavegacion(google)}
-            style={styles.btnAction}
+            className="btn-action-icono"
           >
             <BiMapPin color="#B6452C" size={22} />
           </button>
 
           <button
             onClick={() => manejarNavegacion(waze)}
-            style={styles.btnAction}
+            className="btn-action-icono"
           >
             <SiWaze color="#2A9DF4" size={22} />
           </button>
@@ -181,65 +146,30 @@ export const UbicacionInfo = ({
                 userPhone,
               )
             }
-            style={styles.btnAction}
+            className="btn-action-icono"
           >
             <SiWhatsapp color="#25D366" size={22} />
           </button>
 
-          {/* Botón eliminar integrado sin llaves extras */}
-          {(esDueño || esAdmin) && (
-            <div style={styles.btnAction}>
+          {esDueño || esAdmin ? (
+            <div className="btn-action-icono">
               <BotonEliminar
-                usuarioIdCreador={ubicacion.usuario_id}
-                ubiId={ubicacion.id}
-                fotoUrl={ubicacion.foto_contexto}
+                ubicacion={ubicacion}
+                nombrePlanta={nombrePlanta}
                 onEliminar={onEliminar}
               />
             </div>
+          ) : (
+            <button
+              onClick={handleReportar}
+              className="btn-action-icono"
+              title="Reportar ubicación errónea"
+            >
+              <FaExclamationTriangle color="#f57c00" size={20} />
+            </button>
           )}
         </div>
       </div>
     </div>
   );
-};
-
-const styles = {
-  contenedor: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    height: "100%",
-    padding: "2px 0",
-    minWidth: 0,
-  },
-  filaSimple: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    height: "24px",
-  },
-  textoFila: {
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    flex: 1,
-  },
-  acciones: {
-    marginTop: "auto",
-    paddingTop: "8px",
-    borderTop: "1px solid #f0f0f0",
-  },
-  grupoAccionesUnico: {
-    display: "flex",
-    alignItems: "center",
-    gap: "18px",
-  },
-  btnAction: {
-    background: "none",
-    border: "none",
-    padding: 0,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-  },
 };

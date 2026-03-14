@@ -72,7 +72,8 @@ export const crearEspecieNueva = async (
   usuarioId,
   alias,
   pais,
-  grupoId, // Este dato es vital para el log
+  grupoId,
+  nombreGrupo,
   nombresArray,
   nombresInternacionalesJSON,
 ) => {
@@ -109,6 +110,7 @@ export const crearEspecieNueva = async (
       usuario_id: usuarioId,
       alias: alias,
       grupo_id: grupoId,
+      nombre_grupo: nombreGrupo || "Sin grupo",
       tipo_accion: "nueva_planta",
       contenido: fotoUrl,
       latitud: null,
@@ -334,4 +336,68 @@ export const getActividadesCompletas = async () => {
     console.error("Error obteniendo el historial unificado:", error);
     return [];
   }
+};
+
+/**
+ * ==========================================
+ * 6. LOGS Y REPORTES (Nueva Arquitectura)
+ * ==========================================
+ */
+
+export const registrarLogEliminacion = async (ubicacion, nombrePlanta, user, tipoAccion) => {
+  // 1. Creamos la "Caja Negra" (Snapshot de lo que se borró)
+  const snapshot = {
+    datos_eliminados: {
+      id_original: ubicacion.id,
+      distrito: ubicacion.distrito,
+      ciudad: ubicacion.ciudad,
+      coordenadas: `${ubicacion.latitud}, ${ubicacion.longitud}`,
+      foto_url: ubicacion.foto_contexto,
+      creado_por_id: ubicacion.usuario_id
+    },
+    motivo: tipoAccion === 'eliminacion_por_usuario' ? "Eliminada por el dueño" : "Eliminada por administrador",
+    accion_adjunta: "Se eliminó de tabla ubicaciones y Cloudinary"
+  };
+
+  // 2. Insertamos el Log
+  const { error } = await supabase.from("logs").insert([{
+    planta_id: ubicacion.planta_id,
+    nombre_planta: nombrePlanta,
+    usuario_id: user.id,
+    alias: user.alias,
+    grupo_id: user.grupo_id,
+    nombre_grupo: user.nombre_grupo || "Sin grupo",
+    tipo_accion: tipoAccion,
+    contenido: snapshot,
+    // La eliminación es definitiva, nace aprobada y auditada
+    revisado: "aprobado", 
+    auditado: "aprobado",
+    mensaje_staff: { auditado: null, revisado: null }
+  }]);
+
+  if (error) console.error("Error al registrar log de eliminación:", error);
+};
+
+// 👇 Usa esta función en tu pantalla de "Aportes" cuando el flujo sea 'reporte_ubicacion'
+export const enviarReporteUbicacion = async (plantaId, nombrePlanta, ubicacionId, textoReporte, fotoUrlCloudinary, user) => {
+  const { error } = await supabase.from("logs").insert([{
+    planta_id: plantaId,
+    nombre_planta: nombrePlanta,
+    usuario_id: user.id,
+    alias: user.alias,
+    grupo_id: user.grupo_id,
+    nombre_grupo: user.nombre_grupo || "Sin grupo",
+    tipo_accion: "nuevo_comentario", // Reutilizamos el motor
+    contenido: {
+      texto: textoReporte,
+      url: fotoUrlCloudinary || null, // Se guarda en /reportes/ en Cloudinary
+      ref_ubi: ubicacionId // El ancla para que el admin sepa qué borrar
+    },
+    revisado: "aprobado", // Etapa 1: Público para los colaboradores
+    auditado: "pendiente", // Etapa 2: Esperando acción del admin
+    mensaje_staff: { auditado: null, revisado: null }
+  }]);
+
+  if (error) throw error;
+  return true;
 };

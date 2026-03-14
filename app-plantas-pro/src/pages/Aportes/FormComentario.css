@@ -2,16 +2,14 @@
    ESTILOS ESPECÍFICOS PARA FORMCOMENTARIO (ESTILO OZAIN)
    ========================================================================== */
 
-/* Ajuste para el área de texto */
 textarea.registro-input-text {
   min-height: 140px;
   resize: none;
   line-height: 1.5;
   padding: 16px;
-  font-family: inherit; /* Asegura que use la misma fuente que el resto */
+  font-family: inherit; 
 }
 
-/* Efecto focus específico para mejorar la UX al escribir */
 textarea.registro-input-text:focus {
   outline: none;
   border-color: var(--color-frondoso);
@@ -19,7 +17,6 @@ textarea.registro-input-text:focus {
   box-shadow: 0 4px 12px rgba(45, 106, 79, 0.05);
 }
 
-/* Personalización del scrollbar dentro del textarea (opcional para estética limpia) */
 textarea.registro-input-text::-webkit-scrollbar {
   width: 6px;
 }
@@ -33,25 +30,123 @@ textarea.registro-input-text::-webkit-scrollbar-thumb {
   border-radius: 10px;
 }
 
-/* Ajuste para el select de tipo de dato */
-select.registro-input-text {
-  cursor: pointer;
-  appearance: none; /* Quitamos la flecha por defecto para poner una personalizada si se desea */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 18px;
-}
-
-/* Estilo para la vista previa del nombre destacado */
 .oz-display-name {
   background: var(--color-gris-suave);
   border: 2px solid var(--color-gris-borde);
   border-radius: 14px;
-  padding: 12px;
+  padding: 8px 4px;
   text-align: center;
   font-weight: 900;
   color: var(--color-frondoso);
-  font-size: 1.1rem;
-  letter-spacing: 0.5px;
+  font-size: 1.2rem;
+  text-transform: uppercase;
 }
+
+/* ==========================================================================
+   VISOR BOTÁNICO 3:4 (Reutilizado de FormImagen)
+   ========================================================================== */
+.oz-visor-container {
+  width: 100%;
+  aspect-ratio: 3 / 4; 
+  background: #1a1a1a; 
+  border: 2px dashed #cbd5e1;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oz-visor-container.has-photo {
+  border: 2px solid var(--color-frondoso-border);
+}
+
+.oz-drop-area {
+  width: 100%; 
+  height: 100%;
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  gap: 8px;
+  background: var(--color-gris-suave); 
+}
+
+.oz-cam-circle {
+  width: 55px; 
+  height: 55px;
+  background: white; 
+  color: var(--color-frondoso);
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.oz-drop-area p { font-size: 12px; font-weight: 900; color: var(--color-texto-oscuro); margin: 0; }
+.oz-drop-area span { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+/* PREVIEW DE IMAGEN */
+.oz-preview-wrapper { 
+  width: 100%; 
+  height: 100%; 
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oz-img-botanica { 
+  max-width: 100%; 
+  max-height: 100%; 
+  object-fit: contain; 
+}
+
+.oz-visor-overlay {
+  position: absolute; 
+  inset: 0;
+  padding: 15px;
+  display: flex; 
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 20%, rgba(0,0,0,0.5));
+  pointer-events: none; 
+}
+
+.oz-visor-badge {
+  align-self: flex-start;
+  background: var(--color-frondoso);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 900;
+  pointer-events: auto;
+}
+
+.oz-visor-actions {
+  align-self: flex-end;
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.oz-action-btn {
+  width: 42px; 
+  height: 42px;
+  border-radius: 12px; 
+  border: none;
+  background: white; 
+  color: var(--color-texto-oscuro);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.oz-action-btn.delete { background: #ef4444; color: white; }

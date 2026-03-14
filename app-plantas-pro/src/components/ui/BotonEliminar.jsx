@@ -1,32 +1,46 @@
-import { TiDelete } from "react-icons/ti";
-import { useAuth } from "../../hooks/useAuth";
-import { eliminarUbicacionConFoto } from "../../services/plantasServices";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import { useAuth } from "../../hooks/useAuth";
+import {
+  eliminarUbicacionConFoto,
+  registrarLogEliminacion,
+} from "../../services/plantasServices";
 
-export const BotonEliminar = ({
-  usuarioIdCreador,
-  ubiId,
-  fotoUrl,
-  onEliminar,
-}) => {
+export const BotonEliminar = ({ ubicacion, nombrePlanta, onEliminar }) => {
   const { user } = useAuth();
 
   // 🛡️ Lógica de permisos (Dueño o Admin)
-  const esDueño = user?.id === usuarioIdCreador;
+  const esDueño = user?.id === ubicacion.usuario_id;
   const esAdmin = user?.rol === "Administrador";
 
   if (!(esDueño || esAdmin)) return null;
 
   const handleClick = async () => {
-    if (window.confirm("¿Estás seguro de eliminar esta ubicación?")) {
-      // 1. El botón ejecuta la acción en Cloudinary y Supabase
-      const exito = await eliminarUbicacionConFoto(ubiId, fotoUrl);
+    if (
+      window.confirm(
+        "¿Estás seguro de eliminar esta ubicación de forma permanente?",
+      )
+    ) {
+      // 1. Ejecutamos la acción física (Supabase + Cloudinary)
+      const exito = await eliminarUbicacionConFoto(
+        ubicacion.id,
+        ubicacion.foto_contexto,
+      );
 
       if (exito) {
-        // 2. Si sale bien, avisamos al padre para limpiar la pantalla
-        // Usamos el nombre 'onEliminar' que tú prefieres
+        // 2. Si sale bien, creamos el LOG (Caja Negra)
+        const tipoAccion = esDueño
+          ? "eliminacion_por_usuario"
+          : "eliminacion_por_staff";
+        await registrarLogEliminacion(
+          ubicacion,
+          nombrePlanta,
+          user,
+          tipoAccion,
+        );
+
+        // 3. Avisamos al padre (UI)
         if (onEliminar) {
-          onEliminar(ubiId);
+          onEliminar(ubicacion.id);
         }
       } else {
         alert(

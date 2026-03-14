@@ -169,6 +169,7 @@ export const RegistroPlantaPage = () => {
           user?.alias,
           paisSeleccionado.toUpperCase(),
           user?.grupo_id,
+          user?.nombre_grupo,
           [nombreFormateado],
           nombresInternacionalesJSON,
         );
